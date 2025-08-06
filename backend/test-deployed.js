@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'https://trinity-management-system-backend.onrender.com/api';
+const BASE_URL = 'https://trinity-management-system.onrender.com/api';
 
 async function testDeployedAPI() {
   try {

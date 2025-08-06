@@ -17,4 +17,11 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
   },
+  define: {
+    'process.env.VITE_API_BASE_URL': JSON.stringify(
+      process.env.NODE_ENV === 'production' 
+        ? 'https://trinity-management-system.onrender.com/api'
+        : '/api'
+    ),
+  },
 }) 
