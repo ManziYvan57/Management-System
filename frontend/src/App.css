@@ -1,0 +1,32 @@
+.App {
+  text-align: center;
+  padding: 2rem;
+}
+
+.App-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 3rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  color: white;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.App-header h1 {
+  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.App-header p {
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+  opacity: 0.9;
+}
+
+.App-header p:last-child {
+  font-size: 1rem;
+  opacity: 0.7;
+  margin-top: 2rem;
+} 
