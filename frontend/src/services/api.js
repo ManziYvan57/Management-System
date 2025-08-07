@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// API base URL - will use proxy in development, deployed URL in production
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// API base URL - use deployed backend on Render
+const API_BASE_URL = 'https://trinity-management-system.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
