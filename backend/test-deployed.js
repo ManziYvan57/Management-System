@@ -15,14 +15,29 @@ async function testDeployedAPI() {
     // Test 2: Test authentication endpoints
     console.log('2. Testing authentication endpoints...');
     
-    // Test login with test user
-    const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
-      email: 'serge@trinityexpress',
-      password: 'password123'
-    });
+    // Test login with test user - try both formats
+    let loginResponse;
+    try {
+      // Try username format first
+      loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
+        username: 'serge',
+        password: 'password123'
+      });
+      console.log('✅ Login successful with username format');
+    } catch (error) {
+      if (error.response?.data?.errors?.some(e => e.path === 'email')) {
+        // Try email format
+        loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
+          email: 'serge@trinityexpress',
+          password: 'password123'
+        });
+        console.log('✅ Login successful with email format');
+      } else {
+        throw error;
+      }
+    }
     
     const token = loginResponse.data.token;
-    console.log('✅ Login successful');
     console.log('User role:', loginResponse.data.user.role);
     console.log('User permissions:', Object.keys(loginResponse.data.user.permissions));
     console.log('');
