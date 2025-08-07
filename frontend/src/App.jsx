@@ -7,7 +7,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loginForm, setLoginForm] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -74,11 +74,11 @@ function App() {
             
             <form onSubmit={handleLogin} className="login-form">
               <div className="form-group">
-                <label>Email:</label>
+                <label>Username:</label>
                 <input
-                  type="email"
-                  value={loginForm.email}
-                  onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                  type="text"
+                  value={loginForm.username}
+                  onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
                   required
                 />
               </div>
@@ -102,7 +102,7 @@ function App() {
             
             <div className="login-info">
               <p><strong>Test Credentials:</strong></p>
-              <p>Email: serge@trinityexpress</p>
+              <p>Username: serge</p>
               <p>Password: password123</p>
             </div>
           </div>
