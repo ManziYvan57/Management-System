@@ -17,8 +17,8 @@ async function testDeployedAPI() {
     
     // Test login with test user
     const loginResponse = await axios.post(`${BASE_URL}/auth/login`, {
-      username: 'admin',
-      password: 'admin123'
+      email: 'serge@trinityexpress',
+      password: 'password123'
     });
     
     const token = loginResponse.data.token;
