@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Login route
 router.post('/login', [
-  body('username').trim().notEmpty().withMessage('Username is required'),
+  body('email').trim().notEmpty().withMessage('Email is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ], async (req, res) => {
   try {
@@ -18,10 +18,15 @@ router.post('/login', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    // Find user by username
-    const user = await User.findOne({ username: username.toLowerCase() });
+    // Find user by email or username
+    const user = await User.findOne({ 
+      $or: [
+        { email: email.toLowerCase() },
+        { username: email.toLowerCase() }
+      ]
+    });
     
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
