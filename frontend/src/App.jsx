@@ -7,7 +7,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loginForm, setLoginForm] = useState({
-    username: '',
+    email: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -71,15 +71,14 @@ function App() {
         <div className="login-container">
           <div className="login-card">
             <h1>Trinity Management System</h1>
-            <p>Integrated Transport, Garage, Stock, Asset, and Driver Performance Management</p>
             
             <form onSubmit={handleLogin} className="login-form">
               <div className="form-group">
-                <label>Username:</label>
+                <label>Email:</label>
                 <input
-                  type="text"
-                  value={loginForm.username}
-                  onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                  type="email"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
                   required
                 />
               </div>
@@ -103,8 +102,8 @@ function App() {
             
             <div className="login-info">
               <p><strong>Test Credentials:</strong></p>
-              <p>Username: admin</p>
-              <p>Password: admin123</p>
+              <p>Email: serge@trinityexpress</p>
+              <p>Password: password123</p>
             </div>
           </div>
         </div>
@@ -117,7 +116,7 @@ function App() {
       <header className="header">
         <h1>Trinity Management System</h1>
         <div className="user-info">
-          <span>Welcome, {user?.username} ({user?.role})</span>
+          <span>Welcome, {user?.email} ({user?.role})</span>
           <button onClick={handleLogout} className="logout-btn">Logout</button>
         </div>
       </header>

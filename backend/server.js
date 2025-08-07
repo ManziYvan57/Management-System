@@ -21,9 +21,9 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`✅ MongoDB Connected Successfully: ${conn.connection.host}`);
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('❌ Database connection error:', error);
     process.exit(1);
   }
 };
@@ -59,9 +59,13 @@ const PORT = process.env.PORT || 5001;
 
 // Start server
 const startServer = async () => {
+  console.log('🚀 Starting Trinity Management System...');
   await connectDB();
   app.listen(PORT, () => {
-    console.log(`Trinity Management System Server running on port ${PORT}`);
+    console.log(`✅ Trinity Management System Server is running on port ${PORT}`);
+    console.log(`🌐 API Base URL: http://localhost:${PORT}`);
+    console.log(`📊 Health Check: http://localhost:${PORT}/`);
+    console.log('🎯 Ready to handle requests!');
   });
 };
 
