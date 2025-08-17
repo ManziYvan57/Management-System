@@ -96,15 +96,20 @@ app.use(errorHandler);
 // MongoDB connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(
-      process.env.NODE_ENV === 'production' 
-        ? process.env.MONGODB_URI_PROD 
-        : process.env.MONGODB_URI,
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      }
-    );
+    const mongoUri = process.env.NODE_ENV === 'production' 
+      ? process.env.MONGODB_URI_PROD 
+      : process.env.MONGODB_URI;
+
+    if (!mongoUri) {
+      console.error('MongoDB URI is not defined. Please check your environment variables.');
+      console.error('Required: MONGODB_URI (development) or MONGODB_URI_PROD (production)');
+      process.exit(1);
+    }
+
+    const conn = await mongoose.connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
