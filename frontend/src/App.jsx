@@ -1,59 +1,103 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import Login from './pages/Login';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
-import Header from './components/Header';
+import Garage from './pages/Garage/Garage';
+import Inventory from './pages/Inventory';
+import Assets from './pages/Assets';
+import Personnel from './pages/Personnel';
+import Transport from './pages/Transport';
+import Users from './pages/Users';
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Check auth status on load
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = JSON.parse(localStorage.getItem('user') || 'null');
-    
-    if (token) {
-      setIsAuthenticated(true);
-      setUser(userData);
-    }
-    setLoading(false);
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <BrowserRouter>
+    <div className="App">
       <Routes>
-        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />} />
-        
-        <Route path="/" element={
-          isAuthenticated ? (
-            <>
-              <Header 
-                user={user} 
-                onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-                onLogout={() => {
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('user');
-                  setIsAuthenticated(false);
-                  setUser(null);
-                }}
-              />
-              <Dashboard />
-            </>
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        } />
-        
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <Layout title="Dashboard">
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/garage" 
+          element={
+            <ProtectedRoute>
+              <Layout title="Garage Management">
+                <Garage />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/inventory" 
+          element={
+            <ProtectedRoute>
+              <Layout title="Inventory Management">
+                <Inventory />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/assets" 
+          element={
+            <ProtectedRoute>
+              <Layout title="Asset Management">
+                <Assets />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/personnel" 
+          element={
+            <ProtectedRoute>
+              <Layout title="Personnel Management">
+                <Personnel />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/transport" 
+          element={
+            <ProtectedRoute>
+              <Layout title="Transport Operations">
+                <Transport />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/users" 
+          element={
+            <ProtectedRoute>
+              <Layout title="User Management">
+                <Users />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
-    </BrowserRouter>
+    </div>
   );
 }
 

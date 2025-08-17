@@ -1,0 +1,1244 @@
+import React, { useState } from 'react';
+import Layout from '../../components/Layout';
+import './Inventory.css';
+
+const Inventory = () => {
+  const [inventory, setInventory] = useState([
+    {
+      id: 1,
+      name: 'Engine Oil 5W-30',
+      category: 'Lubricants',
+      quantity: 50,
+      minQuantity: 10,
+      unitCost: 15990,
+      supplier: 'AutoParts Pro',
+      location: 'Warehouse A - Shelf 1',
+      lastUpdated: '2024-01-15'
+    },
+    {
+      id: 2,
+      name: 'Brake Pads Front',
+      category: 'Brake System',
+      quantity: 25,
+      minQuantity: 5,
+      unitCost: 45500,
+      supplier: 'Brake Masters',
+      location: 'Warehouse B - Shelf 3',
+      lastUpdated: '2024-01-14'
+    },
+    {
+      id: 3,
+      name: 'Air Filter',
+      category: 'Filters',
+      quantity: 8,
+      minQuantity: 15,
+      unitCost: 12750,
+      supplier: 'Filter World',
+      location: 'Warehouse A - Shelf 2',
+      lastUpdated: '2024-01-13'
+    }
+  ]);
+
+  const [suppliers, setSuppliers] = useState([
+    { id: 1, name: 'AutoParts Pro', contact: 'John Smith', phone: '+1234567890', email: 'john@autopartspro.com' },
+    { id: 2, name: 'Brake Masters', contact: 'Sarah Johnson', phone: '+1234567891', email: 'sarah@brakemasters.com' },
+    { id: 3, name: 'Filter World', contact: 'Mike Davis', phone: '+1234567892', email: 'mike@filterworld.com' }
+  ]);
+
+  const [purchaseOrders, setPurchaseOrders] = useState([
+    {
+      id: 1,
+      supplier: 'AutoParts Pro',
+      items: [{ name: 'Engine Oil 5W-30', quantity: 20, unitCost: 15990 }],
+      totalCost: 319800,
+      status: 'pending',
+      orderDate: new Date().toISOString().split('T')[0],
+      expectedDelivery: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    },
+    {
+      id: 2,
+      supplier: 'Brake Masters',
+      items: [{ name: 'Brake Pads Front', quantity: 10, unitCost: 45500 }],
+      totalCost: 455000,
+      status: 'received',
+      orderDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      expectedDelivery: new Date().toISOString().split('T')[0]
+    },
+    {
+      id: 3,
+      supplier: 'Filter World',
+      items: [{ name: 'Air Filter', quantity: 15, unitCost: 12750 }],
+      totalCost: 191250,
+      status: 'received',
+      orderDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      expectedDelivery: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    }
+  ]);
+
+  const [stockMovements, setStockMovements] = useState([
+    {
+      id: 1,
+      itemName: 'Engine Oil 5W-30',
+      type: 'in',
+      quantity: 20,
+      reason: 'Purchase Order #1',
+      date: '2024-01-15',
+      user: 'Admin'
+    },
+    {
+      id: 2,
+      itemName: 'Brake Pads Front',
+      type: 'out',
+      quantity: 5,
+      reason: 'Work Order #123',
+      date: '2024-01-14',
+      user: 'Mechanic'
+    }
+  ]);
+
+  const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [showEditItemForm, setShowEditItemForm] = useState(false);
+  const [showPurchaseOrderForm, setShowPurchaseOrderForm] = useState(false);
+  const [showSupplierForm, setShowSupplierForm] = useState(false);
+  const [showStockMovementForm, setShowStockMovementForm] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  
+  // Search and Filter State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [supplierFilter, setSupplierFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+
+  const [newItem, setNewItem] = useState({
+    name: '',
+    category: '',
+    quantity: '',
+    minQuantity: '',
+    unitCost: '',
+    supplier: ''
+  });
+
+  const [newPurchaseOrder, setNewPurchaseOrder] = useState({
+    supplier: '',
+    itemName: '',
+    quantity: '',
+    unitCost: '',
+    expectedDelivery: '',
+    isNewItem: false
+  });
+
+  const [newSupplier, setNewSupplier] = useState({
+    name: '',
+    contact: '',
+    phone: '',
+    email: ''
+  });
+
+  const [newStockMovement, setNewStockMovement] = useState({
+    itemName: '',
+    type: 'out', // Only 'out' - items being used/consumed
+    quantity: '',
+    reason: ''
+  });
+
+  // Dashboard Statistics
+  const totalItems = inventory.length;
+  const lowStockItems = inventory.filter(item => item.quantity <= item.minQuantity).length;
+  const outOfStockItems = inventory.filter(item => item.quantity === 0).length;
+  const totalInventoryValue = inventory.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
+  const pendingOrders = purchaseOrders.filter(order => order.status === 'pending').length;
+  
+  // Financial Statistics
+  const totalSpentOnPurchases = purchaseOrders.reduce((sum, order) => sum + order.totalCost, 0);
+  const totalSpentOnReceivedOrders = purchaseOrders
+    .filter(order => order.status === 'received')
+    .reduce((sum, order) => sum + order.totalCost, 0);
+  const pendingOrdersValue = purchaseOrders
+    .filter(order => order.status === 'pending')
+    .reduce((sum, order) => sum + order.totalCost, 0);
+  
+  // Monthly spending (current month)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const monthlySpending = purchaseOrders
+    .filter(order => {
+      const orderDate = new Date(order.orderDate);
+      return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+    })
+    .reduce((sum, order) => sum + order.totalCost, 0);
+
+  const handleInputChange = (e, formType) => {
+    const { name, value } = e.target;
+    switch(formType) {
+      case 'item':
+        setNewItem({ ...newItem, [name]: value });
+        break;
+      case 'purchaseOrder':
+        setNewPurchaseOrder({ ...newPurchaseOrder, [name]: value });
+        break;
+      case 'supplier':
+        setNewSupplier({ ...newSupplier, [name]: value });
+        break;
+      case 'stockMovement':
+        setNewStockMovement({ ...newStockMovement, [name]: value });
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleSubmitItem = (e) => {
+    e.preventDefault();
+    const newInventoryItem = {
+      id: Date.now(),
+      ...newItem,
+      quantity: parseInt(newItem.quantity) || 0,
+      minQuantity: parseInt(newItem.minQuantity) || 0,
+      unitCost: parseFloat(newItem.unitCost) || 0,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    setInventory([...inventory, newInventoryItem]);
+    setNewItem({
+      name: '',
+      category: '',
+      quantity: '',
+      minQuantity: '',
+      unitCost: '',
+      supplier: ''
+    });
+    setShowAddItemForm(false);
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+    setNewItem({
+      name: item.name,
+      category: item.category,
+      quantity: item.quantity.toString(),
+      minQuantity: item.minQuantity.toString(),
+      unitCost: item.unitCost.toString(),
+      supplier: item.supplier
+    });
+    setShowEditItemForm(true);
+  };
+
+  const handleUpdateItem = (e) => {
+    e.preventDefault();
+    const updatedItem = {
+      ...editingItem,
+      ...newItem,
+      quantity: parseInt(newItem.quantity) || 0,
+      minQuantity: parseInt(newItem.minQuantity) || 0,
+      unitCost: parseFloat(newItem.unitCost) || 0,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    setInventory(inventory.map(item => 
+      item.id === editingItem.id ? updatedItem : item
+    ));
+    setNewItem({
+      name: '',
+      category: '',
+      quantity: '',
+      minQuantity: '',
+      unitCost: '',
+      supplier: ''
+    });
+    setEditingItem(null);
+    setShowEditItemForm(false);
+  };
+
+  const handleSubmitPurchaseOrder = (e) => {
+    e.preventDefault();
+    const totalCost = parseInt(newPurchaseOrder.quantity) * parseInt(newPurchaseOrder.unitCost);
+    const newOrder = {
+      id: Date.now(),
+      supplier: newPurchaseOrder.supplier,
+      items: [{ 
+        name: newPurchaseOrder.itemName, 
+        quantity: parseInt(newPurchaseOrder.quantity), 
+        unitCost: parseInt(newPurchaseOrder.unitCost) 
+      }],
+      totalCost: totalCost,
+      status: 'pending',
+      orderDate: new Date().toISOString().split('T')[0],
+      expectedDelivery: newPurchaseOrder.expectedDelivery
+    };
+    setPurchaseOrders([...purchaseOrders, newOrder]);
+    setNewPurchaseOrder({
+      supplier: '',
+      itemName: '',
+      quantity: '',
+      unitCost: '',
+      expectedDelivery: '',
+      isNewItem: false
+    });
+    setShowPurchaseOrderForm(false);
+  };
+
+  const handleSubmitSupplier = (e) => {
+    e.preventDefault();
+    const newSupplierItem = {
+      id: Date.now(),
+      ...newSupplier
+    };
+    setSuppliers([...suppliers, newSupplierItem]);
+    setNewSupplier({
+      name: '',
+      contact: '',
+      phone: '',
+      email: ''
+    });
+    setShowSupplierForm(false);
+  };
+
+  const handleSubmitStockMovement = (e) => {
+    e.preventDefault();
+    const newMovement = {
+      id: Date.now(),
+      ...newStockMovement,
+      quantity: parseInt(newStockMovement.quantity) || 0,
+      date: new Date().toISOString().split('T')[0],
+      user: 'Admin' // In real app, this would be the logged-in user
+    };
+
+    // Update inventory quantity (only reducing for usage)
+    setInventory(inventory.map(item => {
+      if (item.name === newStockMovement.itemName) {
+        const newQuantity = Math.max(0, item.quantity - newMovement.quantity);
+        return { ...item, quantity: newQuantity, lastUpdated: new Date().toISOString().split('T')[0] };
+      }
+      return item;
+    }));
+
+    setStockMovements([...stockMovements, newMovement]);
+    setNewStockMovement({
+      itemName: '',
+      type: 'out', // Only 'out' - items being used/consumed
+      quantity: '',
+      reason: ''
+    });
+    setShowStockMovementForm(false);
+  };
+
+  const handleUpdateQuantity = (itemId, newQuantity) => {
+    setInventory(inventory.map(item =>
+      item.id === itemId 
+        ? { ...item, quantity: parseInt(newQuantity) || 0, lastUpdated: new Date().toISOString().split('T')[0] }
+        : item
+    ));
+  };
+
+  const handleMarkOrderReceived = (orderId) => {
+    setPurchaseOrders(purchaseOrders.map(order =>
+      order.id === orderId ? { ...order, status: 'received' } : order
+    ));
+  };
+
+  const handleItemSelection = (itemName) => {
+    const selectedItem = inventory.find(item => item.name === itemName);
+    if (selectedItem) {
+      setNewPurchaseOrder({
+        ...newPurchaseOrder,
+        itemName: selectedItem.name,
+        unitCost: selectedItem.unitCost,
+        supplier: selectedItem.supplier,
+        isNewItem: false
+      });
+    } else {
+      setNewPurchaseOrder({
+        ...newPurchaseOrder,
+        itemName: '',
+        unitCost: '',
+        supplier: '',
+        isNewItem: true
+      });
+    }
+  };
+
+  // Spending Analysis Functions
+  const getTopSpendingCategory = () => {
+    const categorySpending = {};
+    purchaseOrders.forEach(order => {
+      order.items.forEach(item => {
+        const category = inventory.find(inv => inv.name === item.name)?.category || 'Other';
+        categorySpending[category] = (categorySpending[category] || 0) + (item.quantity * item.unitCost);
+      });
+    });
+    
+    const topCategory = Object.entries(categorySpending)
+      .sort(([,a], [,b]) => b - a)[0];
+    
+    return topCategory ? { category: topCategory[0], amount: topCategory[1] } : null;
+  };
+
+  const getTopSupplier = () => {
+    const supplierSpending = {};
+    purchaseOrders.forEach(order => {
+      supplierSpending[order.supplier] = (supplierSpending[order.supplier] || 0) + order.totalCost;
+    });
+    
+    const topSupplier = Object.entries(supplierSpending)
+      .sort(([,a], [,b]) => b - a)[0];
+    
+    return topSupplier ? { supplier: topSupplier[0], amount: topSupplier[1] } : null;
+  };
+
+  const getAverageOrderValue = () => {
+    if (purchaseOrders.length === 0) return 0;
+    const totalValue = purchaseOrders.reduce((sum, order) => sum + order.totalCost, 0);
+    return Math.round(totalValue / purchaseOrders.length);
+  };
+
+  // Filtered Purchase Orders
+  const filteredPurchaseOrders = purchaseOrders.filter(order => {
+    const matchesSearch = searchTerm === '' || 
+      order.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      order.supplier.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    const matchesSupplier = supplierFilter === 'all' || order.supplier === supplierFilter;
+    
+    let matchesDate = true;
+    if (dateFilter === 'this-month') {
+      const orderDate = new Date(order.orderDate);
+      matchesDate = orderDate.getMonth() === new Date().getMonth() && 
+                   orderDate.getFullYear() === new Date().getFullYear();
+    } else if (dateFilter === 'last-3-months') {
+      const orderDate = new Date(order.orderDate);
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      matchesDate = orderDate >= threeMonthsAgo;
+    }
+    
+    return matchesSearch && matchesStatus && matchesSupplier && matchesDate;
+  });
+
+  const getStockStatus = (item) => {
+    if (item.quantity === 0) return 'out-of-stock';
+    if (item.quantity <= item.minQuantity) return 'low-stock';
+    return 'in-stock';
+  };
+
+  const lowStockItemsList = inventory.filter(item => item.quantity <= item.minQuantity && item.quantity > 0);
+  const outOfStockItemsList = inventory.filter(item => item.quantity === 0);
+
+  return (
+    <div className="inventory-container">
+      <h2>Inventory Management</h2>
+      
+      {/* Mini Dashboard */}
+      <div className="dashboard-stats">
+        <div className="stat-card">
+          <h3>{totalItems}</h3>
+          <p>Total Items</p>
+        </div>
+        <div className="stat-card">
+          <h3>RWF {totalInventoryValue.toLocaleString()}</h3>
+          <p>Current Value</p>
+        </div>
+        <div className="stat-card">
+          <h3>RWF {totalSpentOnReceivedOrders.toLocaleString()}</h3>
+          <p>Total Spent</p>
+        </div>
+        <div className="stat-card">
+          <h3>RWF {monthlySpending.toLocaleString()}</h3>
+          <p>This Month</p>
+        </div>
+      </div>
+
+      
+
+      {(lowStockItemsList.length > 0 || outOfStockItemsList.length > 0) && (
+        <div className="alert warning">
+          <strong>Stock Alerts:</strong> 
+          {lowStockItemsList.length > 0 && ` ${lowStockItemsList.length} low stock items`}
+          {outOfStockItemsList.length > 0 && ` ${outOfStockItemsList.length} out of stock items`}
+        </div>
+      )}
+
+      {pendingOrders > 0 && (
+        <div className="alert info">
+          <strong>Purchase Orders:</strong> {pendingOrders} pending order(s) awaiting delivery
+        </div>
+      )}
+      
+      {/* Quick Actions */}
+      <div className="quick-actions">
+        <button onClick={() => setShowAddItemForm(true)} className="action-btn">
+          Add Item
+        </button>
+        <button onClick={() => setShowPurchaseOrderForm(true)} className="action-btn">
+          Create Purchase Order
+        </button>
+        <button onClick={() => setShowSupplierForm(true)} className="action-btn">
+          Add Supplier
+        </button>
+        <button onClick={() => setShowStockMovementForm(true)} className="action-btn">
+          Record Stock Usage
+        </button>
+      </div>
+
+      {/* Inventory List */}
+      <div className="inventory-list">
+        <h3>Inventory Items</h3>
+        <div className="table-container">
+          <table>
+            <thead>
+                              <tr>
+                                     <th>Name</th>
+                   <th>Category</th>
+                   <th>Quantity</th>
+                   <th>Min Qty</th>
+                   <th>Unit Cost</th>
+                   <th>Total Value</th>
+                   <th>Supplier</th>
+                   <th>Status</th>
+                   <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                              {inventory.map((item) => (
+                  <tr key={item.id} className={`stock-${getStockStatus(item)}`}>
+                                         <td>{item.name}</td>
+                     <td>{item.category}</td>
+                     <td>{item.quantity}</td>
+                     <td>{item.minQuantity}</td>
+                     <td>RWF {item.unitCost.toLocaleString()}</td>
+                     <td>RWF {(item.quantity * item.unitCost).toLocaleString()}</td>
+                     <td>{item.supplier}</td>
+                   <td>
+                     <span className={`status ${getStockStatus(item)}`}>
+                       {getStockStatus(item) === 'out-of-stock' && 'Out of Stock'}
+                       {getStockStatus(item) === 'low-stock' && 'Low Stock'}
+                       {getStockStatus(item) === 'in-stock' && 'In Stock'}
+                     </span>
+                   </td>
+                   <td>
+                     <div className="action-controls">
+                       <button 
+                         onClick={() => handleEditItem(item)}
+                         className="edit-btn"
+                         title="Edit Item"
+                       >
+                         Edit
+                       </button>
+                       <div className="restock-controls">
+                         <input
+                           type="number"
+                           value={item.quantity}
+                           onChange={(e) => handleUpdateQuantity(item.id, e.target.value)}
+                           min="0"
+                           className="restock-input"
+                         />
+                         <button 
+                           onClick={() => handleUpdateQuantity(item.id, item.quantity + 10)}
+                           className="restock-btn"
+                           title="Quick add 10"
+                         >
+                           +10
+                         </button>
+                       </div>
+                     </div>
+                   </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Purchase Orders */}
+      <div className="purchase-orders-list">
+        <div className="section-header">
+          <h3>Purchase Orders</h3>
+          
+          {/* Search and Filter Controls */}
+          <div className="search-filter-controls">
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="Search items or suppliers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+            </div>
+            
+            <div className="filter-controls">
+              <select 
+                value={statusFilter} 
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="received">Received</option>
+              </select>
+              
+              <select 
+                value={supplierFilter} 
+                onChange={(e) => setSupplierFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Suppliers</option>
+                {suppliers.map(supplier => (
+                  <option key={supplier.id} value={supplier.name}>{supplier.name}</option>
+                ))}
+              </select>
+              
+              <select 
+                value={dateFilter} 
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Time</option>
+                <option value="this-month">This Month</option>
+                <option value="last-3-months">Last 3 Months</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Spending Analysis Dashboard */}
+        <div className="spending-dashboard">
+          <div className="spending-stat-card">
+            <h4>Top Category</h4>
+            <div className="spending-value">
+              {getTopSpendingCategory()?.category || 'N/A'}
+            </div>
+            <div className="spending-amount">
+              RWF {getTopSpendingCategory()?.amount.toLocaleString() || '0'}
+            </div>
+          </div>
+          
+          <div className="spending-stat-card">
+            <h4>Top Supplier</h4>
+            <div className="spending-value">
+              {getTopSupplier()?.supplier || 'N/A'}
+            </div>
+            <div className="spending-amount">
+              RWF {getTopSupplier()?.amount.toLocaleString() || '0'}
+            </div>
+          </div>
+          
+          <div className="spending-stat-card">
+            <h4>Average Order</h4>
+            <div className="spending-value">
+              RWF {getAverageOrderValue().toLocaleString()}
+            </div>
+            <div className="spending-subtitle">
+              per order
+            </div>
+          </div>
+          
+          <div className="spending-stat-card">
+            <h4>Orders Found</h4>
+            <div className="spending-value">
+              {filteredPurchaseOrders.length}
+            </div>
+            <div className="spending-subtitle">
+              of {purchaseOrders.length} total
+            </div>
+          </div>
+        </div>
+
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Supplier</th>
+                <th>Items</th>
+                <th>Total Cost</th>
+                <th>Order Date</th>
+                <th>Expected Delivery</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPurchaseOrders.map((order) => (
+                <tr key={order.id}>
+                  <td>#{order.id}</td>
+                  <td>{order.supplier}</td>
+                  <td>
+                    {order.items.map(item => `${item.name} (${item.quantity})`).join(', ')}
+                  </td>
+                  <td>RWF {order.totalCost.toLocaleString()}</td>
+                  <td>{order.orderDate}</td>
+                  <td>{order.expectedDelivery}</td>
+                  <td>
+                    <span className={`status ${order.status}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td>
+                    {order.status === 'pending' && (
+                      <button 
+                        onClick={() => handleMarkOrderReceived(order.id)} 
+                        className="status-btn"
+                      >
+                        Mark Received
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredPurchaseOrders.length === 0 && (
+            <div className="no-results">
+              <p>No purchase orders found matching your search criteria.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Stock Usage */}
+      <div className="stock-movements-list">
+        <h3>Stock Usage</h3>
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Quantity Used</th>
+                <th>Reason</th>
+                <th>User</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stockMovements.map((movement) => (
+                <tr key={movement.id}>
+                  <td>{movement.date}</td>
+                  <td>{movement.itemName}</td>
+                  <td>{movement.quantity}</td>
+                  <td>{movement.reason}</td>
+                  <td>{movement.user}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Suppliers */}
+      <div className="suppliers-list">
+        <h3>Suppliers</h3>
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Contact Person</th>
+                <th>Phone</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              {suppliers.map((supplier) => (
+                <tr key={supplier.id}>
+                  <td>{supplier.name}</td>
+                  <td>{supplier.contact}</td>
+                  <td>{supplier.phone}</td>
+                  <td>{supplier.email}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+             {/* Add Item Form Modal */}
+       {showAddItemForm && (
+         <div className="modal-overlay">
+           <div className="modal">
+             <div className="modal-header">
+               <h3>Add Inventory Item</h3>
+               <button onClick={() => setShowAddItemForm(false)} className="close-btn">
+                 &times;
+               </button>
+             </div>
+             <form onSubmit={handleSubmitItem} className="modal-form">
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="itemName">Item Name:</label>
+                   <input
+                     type="text"
+                     id="itemName"
+                     name="name"
+                     value={newItem.name}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     required
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="category">Category:</label>
+                   <select
+                     id="category"
+                     name="category"
+                     value={newItem.category}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     required
+                   >
+                     <option value="">Select Category</option>
+                     <option value="Lubricants">Lubricants</option>
+                     <option value="Brake System">Brake System</option>
+                     <option value="Filters">Filters</option>
+                     <option value="Electrical">Electrical</option>
+                     <option value="Tires">Tires</option>
+                     <option value="Tools">Tools</option>
+                     <option value="Other">Other</option>
+                   </select>
+                 </div>
+               </div>
+
+               <div className="form-group">
+                 <label htmlFor="supplier">Supplier:</label>
+                 <select
+                   id="supplier"
+                   name="supplier"
+                   value={newItem.supplier}
+                   onChange={(e) => handleInputChange(e, 'item')}
+                   required
+                 >
+                   <option value="">Select Supplier</option>
+                   {suppliers.map(supplier => (
+                     <option key={supplier.id} value={supplier.name}>
+                       {supplier.name}
+                     </option>
+                   ))}
+                 </select>
+               </div>
+
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="quantity">Initial Quantity:</label>
+                   <input
+                     type="number"
+                     id="quantity"
+                     name="quantity"
+                     value={newItem.quantity}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     min="0"
+                     required
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="minQuantity">Minimum Quantity:</label>
+                   <input
+                     type="number"
+                     id="minQuantity"
+                     name="minQuantity"
+                     value={newItem.minQuantity}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     min="0"
+                     required
+                   />
+                 </div>
+               </div>
+
+               <div className="form-group">
+                 <label htmlFor="unitCost">Unit Cost (RWF):</label>
+                 <input
+                   type="number"
+                   id="unitCost"
+                   name="unitCost"
+                   value={newItem.unitCost}
+                   onChange={(e) => handleInputChange(e, 'item')}
+                   min="0"
+                   required
+                 />
+               </div>
+               
+               <div className="form-actions">
+                 <button type="button" onClick={() => setShowAddItemForm(false)} className="cancel-btn">
+                   Cancel
+                 </button>
+                 <button type="submit" className="submit-btn">
+                   Add Item
+                 </button>
+               </div>
+             </form>
+           </div>
+         </div>
+       )}
+
+       {/* Edit Item Form Modal */}
+       {showEditItemForm && (
+         <div className="modal-overlay">
+           <div className="modal">
+             <div className="modal-header">
+               <h3>Edit Inventory Item</h3>
+               <button onClick={() => setShowEditItemForm(false)} className="close-btn">
+                 &times;
+               </button>
+             </div>
+             <form onSubmit={handleUpdateItem} className="modal-form">
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="editItemName">Item Name:</label>
+                   <input
+                     type="text"
+                     id="editItemName"
+                     name="name"
+                     value={newItem.name}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     required
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="editCategory">Category:</label>
+                   <select
+                     id="editCategory"
+                     name="category"
+                     value={newItem.category}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     required
+                   >
+                     <option value="">Select Category</option>
+                     <option value="Lubricants">Lubricants</option>
+                     <option value="Brake System">Brake System</option>
+                     <option value="Filters">Filters</option>
+                     <option value="Electrical">Electrical</option>
+                     <option value="Tires">Tires</option>
+                     <option value="Tools">Tools</option>
+                     <option value="Other">Other</option>
+                   </select>
+                 </div>
+               </div>
+
+               <div className="form-group">
+                 <label htmlFor="editSupplier">Supplier:</label>
+                 <select
+                   id="editSupplier"
+                   name="supplier"
+                   value={newItem.supplier}
+                   onChange={(e) => handleInputChange(e, 'item')}
+                   required
+                 >
+                   <option value="">Select Supplier</option>
+                   {suppliers.map(supplier => (
+                     <option key={supplier.id} value={supplier.name}>
+                       {supplier.name}
+                     </option>
+                   ))}
+                 </select>
+               </div>
+
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="editQuantity">Current Quantity:</label>
+                   <input
+                     type="number"
+                     id="editQuantity"
+                     name="quantity"
+                     value={newItem.quantity}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     min="0"
+                     required
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="editMinQuantity">Minimum Quantity:</label>
+                   <input
+                     type="number"
+                     id="editMinQuantity"
+                     name="minQuantity"
+                     value={newItem.minQuantity}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     min="0"
+                     required
+                   />
+                 </div>
+               </div>
+
+               <div className="form-group">
+                 <label htmlFor="editUnitCost">Unit Cost (RWF):</label>
+                 <input
+                   type="number"
+                   id="editUnitCost"
+                   name="unitCost"
+                   value={newItem.unitCost}
+                   onChange={(e) => handleInputChange(e, 'item')}
+                   min="0"
+                   required
+                 />
+               </div>
+               
+               <div className="form-actions">
+                 <button type="button" onClick={() => setShowEditItemForm(false)} className="cancel-btn">
+                   Cancel
+                 </button>
+                 <button type="submit" className="submit-btn">
+                   Update Item
+                 </button>
+               </div>
+             </form>
+           </div>
+         </div>
+       )}
+
+      {/* Add Supplier Form Modal */}
+      {showSupplierForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Add Supplier</h3>
+              <button onClick={() => setShowSupplierForm(false)} className="close-btn">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSubmitSupplier} className="modal-form">
+              <div className="form-group">
+                <label htmlFor="supplierName">Supplier Name:</label>
+                <input
+                  type="text"
+                  id="supplierName"
+                  name="name"
+                  value={newSupplier.name}
+                  onChange={(e) => handleInputChange(e, 'supplier')}
+                  required
+                />
+              </div>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="contact">Contact Person:</label>
+                  <input
+                    type="text"
+                    id="contact"
+                    name="contact"
+                    value={newSupplier.contact}
+                    onChange={(e) => handleInputChange(e, 'supplier')}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="phone">Phone:</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={newSupplier.phone}
+                    onChange={(e) => handleInputChange(e, 'supplier')}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="email">Email:</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={newSupplier.email}
+                  onChange={(e) => handleInputChange(e, 'supplier')}
+                  required
+                />
+              </div>
+              
+              <div className="form-actions">
+                <button type="button" onClick={() => setShowSupplierForm(false)} className="cancel-btn">
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Add Supplier
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Stock Movement Form Modal */}
+      {showStockMovementForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Record Stock Usage</h3>
+              <button onClick={() => setShowStockMovementForm(false)} className="close-btn">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSubmitStockMovement} className="modal-form">
+              <div className="form-group">
+                <label htmlFor="movementItem">Item:</label>
+                <select
+                  id="movementItem"
+                  name="itemName"
+                  value={newStockMovement.itemName}
+                  onChange={(e) => handleInputChange(e, 'stockMovement')}
+                  required
+                >
+                  <option value="">Select Item</option>
+                  {inventory.map(item => (
+                    <option key={item.id} value={item.name}>
+                      {item.name} (Current: {item.quantity})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="movementQuantity">Quantity:</label>
+                  <input
+                    type="number"
+                    id="movementQuantity"
+                    name="quantity"
+                    value={newStockMovement.quantity}
+                    onChange={(e) => handleInputChange(e, 'stockMovement')}
+                    min="1"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="movementReason">Reason:</label>
+                  <input
+                    type="text"
+                    id="movementReason"
+                    name="reason"
+                    value={newStockMovement.reason}
+                    onChange={(e) => handleInputChange(e, 'stockMovement')}
+                    placeholder="e.g., Work Order, Manual Usage, Loss, etc."
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-actions">
+                <button type="button" onClick={() => setShowStockMovementForm(false)} className="cancel-btn">
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Record Usage
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Purchase Order Form Modal */}
+      {showPurchaseOrderForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Create Purchase Order</h3>
+              <button onClick={() => setShowPurchaseOrderForm(false)} className="close-btn">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSubmitPurchaseOrder} className="modal-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="poSupplier">Supplier:</label>
+                  <select
+                    id="poSupplier"
+                    name="supplier"
+                    value={newPurchaseOrder.supplier}
+                    onChange={(e) => handleInputChange(e, 'purchaseOrder')}
+                    required
+                  >
+                    <option value="">Select Supplier</option>
+                    {suppliers.map(supplier => (
+                      <option key={supplier.id} value={supplier.name}>
+                        {supplier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                                 <div className="form-group">
+                   <label htmlFor="poItemName">Item Name:</label>
+                   <select
+                     id="poItemName"
+                     name="itemName"
+                     value={newPurchaseOrder.itemName}
+                     onChange={(e) => handleItemSelection(e.target.value)}
+                     required
+                   >
+                     <option value="">Select Item</option>
+                     {inventory.map(item => (
+                       <option key={item.id} value={item.name}>
+                         {item.name} (Current: {item.quantity})
+                       </option>
+                     ))}
+                     <option value="new">+ Add New Item</option>
+                   </select>
+                 </div>
+              </div>
+
+                             {newPurchaseOrder.isNewItem && (
+                 <div className="alert info">
+                   <strong>New Item:</strong> Please add this item to inventory first, then create the purchase order.
+                   <button 
+                     type="button" 
+                     onClick={() => setShowAddItemForm(true)}
+                     className="action-btn"
+                     style={{ marginLeft: '10px' }}
+                   >
+                     Add New Item
+                   </button>
+                 </div>
+               )}
+
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="poQuantity">Quantity:</label>
+                   <input
+                     type="number"
+                     id="poQuantity"
+                     name="quantity"
+                     value={newPurchaseOrder.quantity}
+                     onChange={(e) => handleInputChange(e, 'purchaseOrder')}
+                     min="1"
+                     required
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="poUnitCost">Unit Cost (RWF):</label>
+                   <input
+                     type="number"
+                     id="poUnitCost"
+                     name="unitCost"
+                     value={newPurchaseOrder.unitCost}
+                     onChange={(e) => handleInputChange(e, 'purchaseOrder')}
+                     min="0"
+                     required
+                     disabled={!newPurchaseOrder.isNewItem}
+                   />
+                 </div>
+               </div>
+
+              <div className="form-group">
+                <label htmlFor="poExpectedDelivery">Expected Delivery Date:</label>
+                <input
+                  type="date"
+                  id="poExpectedDelivery"
+                  name="expectedDelivery"
+                  value={newPurchaseOrder.expectedDelivery}
+                  onChange={(e) => handleInputChange(e, 'purchaseOrder')}
+                  required
+                />
+              </div>
+              
+              <div className="form-actions">
+                <button type="button" onClick={() => setShowPurchaseOrderForm(false)} className="cancel-btn">
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Create Purchase Order
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Inventory;

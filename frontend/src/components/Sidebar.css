@@ -1,0 +1,90 @@
+.sidebar {
+  /* Background */
+  background: #3a5775;
+  
+  /* Fixed positioning - always visible */
+  position: fixed;
+  top: 70px;
+  left: 0;
+  width: 250px;
+  height: calc(100vh - 70px);
+  z-index: 900;
+}
+
+/* Text and icon colors */
+.sidebar-nav li a {
+  color: rgba(255, 255, 255, 0.9); /* Crisp white with slight transparency */
+}
+
+.menu-icon {
+  color: rgba(255, 255, 255, 0.8); /* Slightly transparent white icons */
+}
+
+/* Hover state */
+.sidebar-nav li a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white; /* Full white on hover */
+}
+
+/* Active/selected state */
+.sidebar-nav li a.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-left: 3px solid #7fb6e6; /* Light blue accent */
+}
+
+.sidebar-nav li a.active .menu-icon {
+  color: #7fb6e6; /* Light blue for active icons */
+}
+
+/* Header text contrast */
+.sidebar-header h3 {
+  color: white;
+  margin-bottom: 10px;
+}
+
+/* User info in sidebar header */
+.user-info {
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info small {
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+
+.user-info small:last-child {
+  color: #7fb6e6;
+  font-weight: 500;
+}
+
+.sidebar-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 10px 0;
+}
+
+.sidebar-nav li a {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  text-decoration: none;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+}
+
+.menu-icon {
+  margin-right: 12px;
+  font-size: 1rem;
+}
+
+.menu-text {
+  font-size: 0.95rem;
+}

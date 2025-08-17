@@ -1,13 +1,15 @@
 {
   "name": "trinity-management-system-backend",
   "version": "1.0.0",
-  "description": "Backend for Trinity Integrated Transport, Garage, Stock, Asset, and Driver Performance Management System",
+  "description": "Backend API for Trinity Integrated Transport, Garage, Stock, Asset, and Driver Performance Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for Node.js backend'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "node seeder.js",
+    "test-server": "node test-server.js"
   },
   "keywords": [
     "trinity",
@@ -16,12 +18,13 @@
     "garage",
     "inventory",
     "assets",
-    "drivers"
+    "drivers",
+    "api",
+    "mongodb"
   ],
   "author": "Trinity Transporter and Distributors Co Ltd",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.11.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -33,8 +36,10 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.4",
-    "twilio": "^4.11.0",
-    "whatwg-url": "^14.2.0"
+    "compression": "^1.7.4",
+    "express-rate-limit": "^6.10.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "xss-clean": "^0.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
