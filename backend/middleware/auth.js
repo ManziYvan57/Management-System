@@ -42,8 +42,8 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Grant access to specific roles
-const authorize = (...roles) => {
+// Grant access to specific roles or module permissions
+const authorize = (...permissions) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -52,7 +52,24 @@ const authorize = (...roles) => {
       });
     }
 
-    if (!roles.includes(req.user.role)) {
+    // If permissions are role-based (e.g., authorize('admin', 'manager'))
+    if (permissions.length === 2 && typeof permissions[0] === 'string' && typeof permissions[1] === 'string') {
+      const [module, action] = permissions;
+      
+      // For now, allow all super_admin and terminal_manager roles to access all modules
+      if (req.user.role === 'super_admin' || req.user.role === 'terminal_manager') {
+        return next();
+      }
+      
+      // For other roles, you can add specific module-based permissions here
+      return res.status(403).json({
+        success: false,
+        error: `User role '${req.user.role}' is not authorized to ${action} in ${module} module`
+      });
+    }
+
+    // If permissions are role-based (e.g., authorize('admin', 'manager'))
+    if (!permissions.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         error: `User role '${req.user.role}' is not authorized to access this route`
