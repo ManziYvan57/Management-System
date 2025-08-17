@@ -26,6 +26,9 @@ const { notFound } = require('./middleware/notFound');
 
 const app = express();
 
+// Trust proxy for rate limiting (required for Render deployment)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(mongoSanitize());
@@ -44,10 +47,12 @@ app.use('/api/', limiter);
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? process.env.CORS_ORIGIN_PROD 
-    : process.env.CORS_ORIGIN,
+    ? ['https://your-frontend-domain.com', 'http://localhost:3002'] // Allow both production and development
+    : ['http://localhost:3002', 'http://localhost:3000'],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 app.use(cors(corsOptions));
 
