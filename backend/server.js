@@ -10,6 +10,8 @@ const xss = require('xss-clean');
 const path = require('path');
 require('dotenv').config();
 
+// Trinity Management System Backend - CORS and Rate Limiting Fixed
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
