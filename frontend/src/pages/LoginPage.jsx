@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authAPI } from '../services/api';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -26,32 +27,20 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: credentials.username,
-          password: credentials.password
-        }),
+      const data = await authAPI.login({
+        username: credentials.username,
+        password: credentials.password
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store user data and token
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', data.token);
-        
-        // Navigate to dashboard
-        navigate('/');
-      } else {
-        setError(data.message || 'Login failed. Please check your credentials.');
-      }
+      // Store user data and token
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.token);
+      
+      // Navigate to dashboard
+      navigate('/');
     } catch (error) {
       console.error('Login error:', error);
-      setError('Network error. Please check your connection and try again.');
+      setError(error.message || 'Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
