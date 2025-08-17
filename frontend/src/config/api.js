@@ -14,7 +14,8 @@ export const API_CONFIG = {
 
 // Helper to get current environment
 export const getCurrentEnvironment = () => {
-  return import.meta.env.DEV ? 'development' : 'production';
+  // Force production mode to use Render backend
+  return 'production';
 };
 
 // Helper to get current API config
