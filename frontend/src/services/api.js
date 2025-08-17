@@ -131,15 +131,43 @@ export const dashboardAPI = {
   }
 };
 
-// Module API functions (placeholder for future implementation)
+// Module API functions
 export const garageAPI = {
-  getWorkOrders: async () => apiRequest('/garage/work-orders'),
-  getStats: async () => apiRequest('/garage/stats')
+  getWorkOrders: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/garage/work-orders${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  createWorkOrder: async (workOrderData) => {
+    return apiRequest('/garage/work-orders', {
+      method: 'POST',
+      body: JSON.stringify(workOrderData)
+    });
+  },
+  
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/garage/stats${queryString ? `?${queryString}` : ''}`);
+  }
 };
 
 export const inventoryAPI = {
-  getAll: async () => apiRequest('/inventory'),
-  getStats: async () => apiRequest('/inventory/stats')
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/inventory${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  create: async (inventoryData) => {
+    return apiRequest('/inventory', {
+      method: 'POST',
+      body: JSON.stringify(inventoryData)
+    });
+  },
+  
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/inventory/stats${queryString ? `?${queryString}` : ''}`);
+  }
 };
 
 export const assetsAPI = {
@@ -179,13 +207,46 @@ export const assetsAPI = {
 };
 
 export const personnelAPI = {
-  getAll: async () => apiRequest('/personnel'),
-  getStats: async () => apiRequest('/personnel/stats')
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/personnel${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  create: async (personnelData) => {
+    return apiRequest('/personnel', {
+      method: 'POST',
+      body: JSON.stringify(personnelData)
+    });
+  },
+  
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/personnel/stats${queryString ? `?${queryString}` : ''}`);
+  }
 };
 
 export const transportAPI = {
-  getRoutes: async () => apiRequest('/transport/routes'),
-  getStats: async () => apiRequest('/transport/stats')
+  getRoutes: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/transport/routes${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getTrips: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/transport/trips${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  createTrip: async (tripData) => {
+    return apiRequest('/transport/trips', {
+      method: 'POST',
+      body: JSON.stringify(tripData)
+    });
+  },
+  
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/transport/stats${queryString ? `?${queryString}` : ''}`);
+  }
 };
 
 export default {

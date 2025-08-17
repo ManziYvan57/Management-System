@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { garageAPI } from '../../services/api';
 import './Garage.css';
 
 const Garage = () => {
   const [workOrders, setWorkOrders] = useState([]);
   const [maintenanceSchedule, setMaintenanceSchedule] = useState([]);
-  const [nextWorkOrderId, setNextWorkOrderId] = useState(1);
-  const [nextMaintenanceId, setNextMaintenanceId] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalWorkOrders: 0,
+    pendingWorkOrders: 0,
+    inProgressWorkOrders: 0,
+    completedWorkOrders: 0,
+    totalCost: 0,
+    averageCompletionTime: 0
+  });
   // Parts will now come from main Inventory system
   const [parts, setParts] = useState([
     { id: 1, name: 'Engine Oil 5W-30', quantity: 50, minQuantity: 10 },
@@ -34,6 +43,46 @@ const Garage = () => {
     nextDue: ''
   });
   // Removed Add Part functionality - parts now managed in Inventory
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [workOrdersResponse, statsResponse] = await Promise.all([
+          garageAPI.getWorkOrders(),
+          garageAPI.getStats()
+        ]);
+        
+        setWorkOrders(workOrdersResponse.data || []);
+        setStats(statsResponse.data || {});
+      } catch (err) {
+        console.error('Error fetching garage data:', err);
+        setError(err.message || 'Failed to fetch garage data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Refresh data after adding/editing
+  const refreshData = async () => {
+    try {
+      const [workOrdersResponse, statsResponse] = await Promise.all([
+        garageAPI.getWorkOrders(),
+        garageAPI.getStats()
+      ]);
+      
+      setWorkOrders(workOrdersResponse.data || []);
+      setStats(statsResponse.data || {});
+    } catch (err) {
+      console.error('Error refreshing garage data:', err);
+    }
+  };
 
   // Dashboard Statistics
   const activeWorkOrders = workOrders.filter(order => !order.endDate).length;
@@ -96,32 +145,11 @@ const Garage = () => {
     setNewPart({ ...newPart, [name]: value.replace(/^0+/, '') });
   };
 
-  const handleSubmitWorkOrder = (e) => {
+  const handleSubmitWorkOrder = async (e) => {
     e.preventDefault();
     
-    if (editingWorkOrder) {
-      // Update existing work order
-      const updatedWorkOrder = {
-        ...editingWorkOrder,
-        ...newWorkOrder,
-        partsUsed: newWorkOrder.selectedParts.map(selectedPart => {
-          const part = parts.find(p => p.id === selectedPart.partId);
-          return { 
-            id: part.id, 
-            name: part.name, 
-            quantity: selectedPart.quantity 
-          };
-        })
-      };
-      
-      setWorkOrders(workOrders.map(order => 
-        order.id === editingWorkOrder.id ? updatedWorkOrder : order
-      ));
-      setEditingWorkOrder(null);
-    } else {
-      // Create new work order
-      const newOrder = {
-        id: nextWorkOrderId,
+    try {
+      const workOrderData = {
         ...newWorkOrder,
         date: newWorkOrder.date || new Date().toISOString().split('T')[0],
         partsUsed: newWorkOrder.selectedParts.map(selectedPart => {
@@ -134,31 +162,36 @@ const Garage = () => {
         })
       };
       
-      setWorkOrders([...workOrders, newOrder]);
-      setNextWorkOrderId(nextWorkOrderId + 1);
-    }
-    
-    // Update parts inventory
-    const updatedParts = parts.map(part => {
-      const selectedPart = newWorkOrder.selectedParts.find(sp => sp.partId === part.id);
-      if (selectedPart) {
-        return { ...part, quantity: Math.max(0, part.quantity - selectedPart.quantity) };
+      if (editingWorkOrder) {
+        // Update existing work order
+        // TODO: Add update API call when backend supports it
+        console.log('Update work order:', workOrderData);
+      } else {
+        // Create new work order
+        await garageAPI.createWorkOrder(workOrderData);
       }
-      return part;
-    });
-    setParts(updatedParts);
-    
-    setNewWorkOrder({ 
-      plateNumber: '', 
-      date: '', 
-      description: '', 
-      selectedParts: [], 
-      endDate: '',
-      priority: 'medium',
-      actualCost: '',
-      workType: 'repair'
-    });
-    setShowWorkOrderForm(false);
+      
+      // Refresh the data
+      await refreshData();
+      
+      // Reset form
+      setNewWorkOrder({ 
+        plateNumber: '', 
+        date: '', 
+        description: '', 
+        selectedParts: [], 
+        endDate: '',
+        priority: 'medium',
+        actualCost: '',
+        workType: 'repair'
+      });
+      
+      setEditingWorkOrder(null);
+      setShowWorkOrderForm(false);
+    } catch (err) {
+      console.error('Error saving work order:', err);
+      alert(err.message || 'Failed to save work order');
+    }
   };
 
   const handleEditWorkOrder = (workOrder) => {
@@ -371,21 +404,37 @@ const Garage = () => {
       <div className="work-order-list">
         <h3>Work Orders</h3>
         <div className="table-container">
-          <table>
-            <thead>
-                              <tr>
-                  <th>ID</th>
-                  <th>Plate</th>
-                  <th>Date</th>
-                  <th>Type</th>
-                  <th>Description</th>
-                  <th>Priority</th>
-                  <th>Parts</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
+          {loading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading work orders...</p>
+            </div>
+          )}
+          
+          {error && (
+            <div className="error-state">
+              <p>Error: {error}</p>
+              <button onClick={refreshData} className="retry-btn">Retry</button>
+            </div>
+          )}
+          
+          {!loading && !error && (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Plate</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Priority</th>
+                    <th>Parts</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
               {workOrders.map((order) => (
                 <tr key={order.id} className={`priority-${order.priority}`}>
                   <td>{order.id}</td>
@@ -436,6 +485,8 @@ const Garage = () => {
               ))}
             </tbody>
           </table>
+            </>
+          )}
         </div>
       </div>
 
