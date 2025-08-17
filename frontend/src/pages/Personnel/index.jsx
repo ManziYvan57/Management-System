@@ -66,8 +66,8 @@ const Personnel = () => {
 
   // Filter personnel based on search and filters
   const filteredPersonnel = personnel.filter(person => {
-    const matchesSearch = person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         person.phone.includes(searchTerm) ||
+    const matchesSearch = (person.name && person.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (person.phone && person.phone.includes(searchTerm)) ||
                          (person.license && person.license.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesType = typeFilter === 'all' || person.type === typeFilter;
