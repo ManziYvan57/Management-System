@@ -4,103 +4,9 @@ import { transportAPI } from '../../services/api';
 import './Transport.css';
 
 const Transport = () => {
-  // Transport Data with Home Routes
-  const [routes, setRoutes] = useState([
-    {
-      id: 1,
-      name: 'Kampala-Nairobi',
-      teamLeader: 'Lorance',
-      vehicles: [
-        { id: 1, plate: 'RAG 599 K', driver: 'Sanya Robert', customerCare: 'Victor Otian', departure: '17:00', status: 'scheduled', homeRoute: 'Kampala-Nairobi', currentRoute: 'Kampala-Nairobi' },
-        { id: 2, plate: 'RAG 596 K', driver: 'Mugesu Kabeso', customerCare: 'Francis Richard', departure: '20:00', status: 'scheduled', homeRoute: 'Kampala-Nairobi', currentRoute: 'Kampala-Nairobi' },
-        { id: 3, plate: 'RAH633B', driver: 'Ojamong Osare', customerCare: 'George Talemwa Wiclif', departure: '17:00', status: 'scheduled', homeRoute: 'Kampala-Nairobi', currentRoute: 'Kampala-Nairobi' },
-        { id: 4, plate: 'SSD 507Z', driver: 'Murima Shora', customerCare: 'Owour Nike', departure: '20:00', status: 'scheduled', homeRoute: 'Kampala-Nairobi', currentRoute: 'Kampala-Nairobi' },
-        { id: 5, plate: 'RAH 630 B', driver: 'Waweru Wilfred', customerCare: 'Ndikubwayo Venuste', departure: '17:00', status: 'scheduled', homeRoute: 'Kampala-Nairobi', currentRoute: 'Kampala-Nairobi' }
-      ],
-      reserveDrivers: ['GEOFREY', 'Laurence'],
-      status: 'active'
-    },
-    {
-      id: 2,
-      name: 'Goma-Cyanika-Kampala',
-      teamLeader: 'NIYONKURU Eric',
-      vehicles: [
-        { id: 6, plate: 'PM RAI 649 B', driver: 'Niyonkuru Eric', customerCare: 'Moses Tumusime', departure: '16:00', status: 'active', homeRoute: 'Goma-Cyanika-Kampala', currentRoute: 'Goma-Cyanika-Kampala' },
-        { id: 7, plate: 'RAH 624 B', driver: 'Murengezi Donate', customerCare: 'Tumukunde Pamella', departure: '19:00', status: 'active', homeRoute: 'Goma-Cyanika-Kampala', currentRoute: 'Goma-Cyanika-Kampala' },
-        { id: 8, plate: 'RAH 628 B', driver: 'Juma Kafero', customerCare: 'Said Gashumba Mike', departure: '16:00', status: 'active', homeRoute: 'Goma-Cyanika-Kampala', currentRoute: 'Goma-Cyanika-Kampala' }
-      ],
-      reserveDrivers: ['Jorome'],
-      status: 'active'
-    },
-    {
-      id: 3,
-      name: 'Nairobi-Kigali',
-      teamLeader: 'BIZURU',
-      vehicles: [
-        { id: 9, plate: 'RA1 836 B', driver: 'Habineza Emmanuel', customerCare: 'Wanjuru Kamusime Robert', departure: '22:30', status: 'scheduled', homeRoute: 'Nairobi-Kigali', currentRoute: 'Nairobi-Kigali' },
-        { id: 10, plate: 'RAI 835 B', driver: 'Anselme', customerCare: 'Dan Mugisha Steven', departure: '23:15', status: 'scheduled', homeRoute: 'Nairobi-Kigali', currentRoute: 'Nairobi-Kigali' },
-        { id: 11, plate: 'RAI 834 B', driver: 'Bayingana Issa', customerCare: 'Moris Murengezi Alex', departure: '00:30', status: 'scheduled', homeRoute: 'Nairobi-Kigali', currentRoute: 'Nairobi-Kigali' },
-        { id: 12, plate: 'RAI 647 B', driver: 'Kwizera Jean', customerCare: 'Cyewupe kwizera ian', departure: '01:45', status: 'scheduled', homeRoute: 'Nairobi-Kigali', currentRoute: 'Nairobi-Kigali' },
-        { id: 13, plate: 'RAH 629 B', driver: 'Nzitabakuze Baptiste', customerCare: 'Francis Gitau MANZI ISMAEL', departure: '03:00', status: 'scheduled', homeRoute: 'Nairobi-Kigali', currentRoute: 'Nairobi-Kigali' }
-      ],
-      reserveDrivers: ['NTAKIRUTIMANA HAMZA'],
-      reserveCCs: ['NGARUKIYINTWARI PATRICK'],
-      status: 'active'
-    },
-    {
-      id: 4,
-      name: 'Kampala-Kigali',
-      teamLeader: 'SEMINEGA',
-      vehicles: [
-        { id: 14, plate: 'RAI 645 B', driver: 'Seminega Issa', customerCare: 'Kalisa Steven', departure: '20:00', status: 'scheduled' },
-        { id: 15, plate: 'RAI 644 B', driver: 'Mugiraneza Damascene', customerCare: 'Mugisha Joseph', departure: '20:00', status: 'scheduled' },
-        { id: 16, plate: 'RAI 646 B', driver: 'Katabarwa Claude', customerCare: 'Agaba Alex', departure: '09:00', status: 'scheduled' },
-        { id: 17, plate: 'RAI 643 B', driver: 'Anaclet Turikumwe', customerCare: 'Nathan Kayonga', departure: '09:00', status: 'scheduled' },
-        { id: 18, plate: 'SSD 594Z', driver: 'Sunday Mutaganda', customerCare: 'Robert', departure: '19:00', status: 'scheduled' },
-        { id: 19, plate: 'RAG 597K', driver: 'Lutakoome Sam', customerCare: 'Akayezu Vivian', departure: '19:00', status: 'scheduled' },
-        { id: 20, plate: 'RAI 645B', driver: 'Seminega Issah', customerCare: 'Kalisa Steven', departure: '20:00', status: 'scheduled' },
-        { id: 21, plate: 'RAI 644B', driver: 'Mugiraneza Damascene', customerCare: 'Mugisha Joseph', departure: '20:00', status: 'scheduled' },
-        { id: 22, plate: 'RAH 631 B', driver: 'Mpazimpaka Danny', customerCare: 'Rutaganda James', departure: '21:00', status: 'scheduled' },
-        { id: 23, plate: 'RAH 632 B', driver: 'Kayinamura Eric', customerCare: 'Tuyishime Yves', departure: '21:00', status: 'scheduled' },
-        { id: 24, plate: 'RAH 627 B', driver: 'Mustafa Mujambura', customerCare: 'Rashid', departure: '21:30', status: 'scheduled' },
-        { id: 25, plate: 'RAG 585 K', driver: 'Twunvikane Jean Bosco', customerCare: 'Bagabo Manaseh', departure: '21:30', status: 'scheduled' },
-        { id: 26, plate: 'RAD 268 R', driver: 'Nambazimana Rene', customerCare: 'Mibukiro Pacifique', departure: '15:30', status: 'scheduled' },
-        { id: 27, plate: 'RAG 598 K', driver: 'Munyazikwiye Niyonshuti', customerCare: 'Armel', departure: '15:30', status: 'scheduled' },
-        { id: 28, plate: 'RAG 595 K', driver: 'MUGABO JOHN GASHEMA', customerCare: '', departure: '22:00', status: 'scheduled' }
-      ],
-      reserveDrivers: ['SEMPUNDU YUSUF', 'EVODE RUSHIRABWOBA', 'ANDRE HARERIMANA'],
-      reserveCCs: ['Patrick Iradukunda', 'HAKIZIMANA DANIEL', 'PAULINE NZEYIMANA'],
-      status: 'active'
-    },
-    {
-      id: 5,
-      name: 'Kampala-Juba',
-      teamLeader: 'MONDAY',
-      vehicles: [
-        { id: 29, plate: 'RAH 625 B', driver: 'Monday Kalema', customerCare: 'Batemeyito Emmanuel', departure: '08:00', status: 'active' },
-        { id: 30, plate: 'RAH 626 B', driver: 'Simon Peter', customerCare: 'Yassin Karimungoma', departure: '08:00', status: 'active' },
-        { id: 31, plate: 'SSD 593 Z', driver: 'Twaha Muhozi', customerCare: 'Robert', departure: '08:00', status: 'active' }
-      ],
-      reserveDrivers: ['KATENDE EZRA'],
-      status: 'active'
-    },
-    {
-      id: 6,
-      name: 'Juba-Bor',
-      teamLeader: 'MANDELA',
-      vehicles: [
-        { id: 32, plate: 'SSD 312 Q', driver: 'Mabil', customerCare: '', departure: '08:00', status: 'active' },
-        { id: 33, plate: 'SSD 271 AB', driver: 'Sammy', customerCare: '', departure: '08:00', status: 'active' },
-        { id: 34, plate: 'SSD 838 P', driver: 'Mandela', customerCare: '', departure: '08:00', status: 'active' }
-      ],
-      parkedVehicles: [
-        'SSD 114 AB', 'SSD 115 AB', 'SSD 839 P', 'RAC 580 C', 'SSD 836 B',
-        'RAE 516 I', 'RAD 246 R', 'RAD 247 R', 'RAE 569 J', 'RAE 344 J',
-        'RAD 266 R', 'RAE 226 I', 'RAD 267 R', 'RAD 265R', 'SSD 171Q',
-        'SSD 172Q', 'RAD 642G'
-      ],
-      status: 'active'
-    }
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   ]);
 
   const [showAddTripForm, setShowAddTripForm] = useState(false);
@@ -120,6 +26,36 @@ const Transport = () => {
     homeRoute: '',
     currentRoute: ''
   });
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await transportAPI.getRoutes();
+        setRoutes(response.data || []);
+      } catch (err) {
+        console.error('Error fetching transport data:', err);
+        setError(err.message || 'Failed to fetch transport data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Refresh data after adding/editing
+  const refreshData = async () => {
+    try {
+      const response = await transportAPI.getRoutes();
+      setRoutes(response.data || []);
+    } catch (err) {
+      console.error('Error refreshing transport data:', err);
+    }
+  };
 
   // Live Display Mode
   const [showLiveDisplay, setShowLiveDisplay] = useState(false);
@@ -263,44 +199,37 @@ const Transport = () => {
     setNewTrip({ ...newTrip, [name]: value });
   };
 
-  const handleSubmitTrip = (e) => {
+  const handleSubmitTrip = async (e) => {
     e.preventDefault();
     
-    if (editingTrip) {
-      // Update existing trip
-      const updatedRoutes = routes.map(route => ({
-        ...route,
-        vehicles: route.vehicles.map(vehicle => 
-          vehicle.id === editingTrip.id ? { ...vehicle, ...newTrip } : vehicle
-        )
-      }));
-      setRoutes(updatedRoutes);
-      setEditingTrip(null);
-    } else {
-      // Add new trip
-      const newTripItem = {
-        id: Date.now(),
-        ...newTrip
-      };
+    try {
+      if (editingTrip) {
+        // Update existing trip
+        // TODO: Add update API call when backend supports it
+        console.log('Update trip:', newTrip);
+      } else {
+        // Add new trip
+        await transportAPI.createTrip(newTrip);
+      }
       
-      const updatedRoutes = routes.map(route => 
-        route.name === newTrip.route 
-          ? { ...route, vehicles: [...route.vehicles, newTripItem] }
-          : route
-      );
-      setRoutes(updatedRoutes);
+      // Refresh the data
+      await refreshData();
+      
+      setNewTrip({
+        route: '',
+        vehicle: '',
+        driver: '',
+        customerCare: '',
+        departure: '',
+        status: 'scheduled'
+      });
+      setEditingTrip(null);
+      setShowAddTripForm(false);
+      setShowEditTripForm(false);
+    } catch (err) {
+      console.error('Error saving trip:', err);
+      alert(err.message || 'Failed to save trip');
     }
-    
-    setNewTrip({
-      route: '',
-      vehicle: '',
-      driver: '',
-      customerCare: '',
-      departure: '',
-      status: 'scheduled'
-    });
-    setShowAddTripForm(false);
-    setShowEditTripForm(false);
   };
 
   const handleEditTrip = (trip) => {
@@ -500,21 +429,37 @@ const Transport = () => {
         </div>
         
         <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Route</th>
-                <th>Vehicle</th>
-                <th>Driver</th>
-                <th>Customer Care</th>
-                <th>Departure</th>
-                <th>Team Leader</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTrips.map((trip) => (
+          {loading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading transport data...</p>
+            </div>
+          )}
+          
+          {error && (
+            <div className="error-state">
+              <p>Error: {error}</p>
+              <button onClick={refreshData} className="retry-btn">Retry</button>
+            </div>
+          )}
+          
+          {!loading && !error && (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Route</th>
+                    <th>Vehicle</th>
+                    <th>Driver</th>
+                    <th>Customer Care</th>
+                    <th>Departure</th>
+                    <th>Team Leader</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTrips.map((trip) => (
                 <tr key={trip.id}>
                   <td>
                     <div className="route-info">
@@ -567,6 +512,8 @@ const Transport = () => {
               ))}
             </tbody>
           </table>
+            </>
+          )}
         </div>
       </div>
 

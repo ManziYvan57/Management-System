@@ -12,68 +12,51 @@ const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Sample data - In real implementation, this would come from API calls
   const [dashboardData, setDashboardData] = useState({
-    // Garage Data
-    garage: {
-      totalWorkOrders: 24,
-      pendingWorkOrders: 8,
-      completedWorkOrders: 16,
-      vehiclesInMaintenance: 5,
-      criticalAlerts: 2,
-      monthlySpending: 2500000, // RWF
-      topIssues: ['Engine Problems', 'Brake System', 'Electrical Issues']
-    },
-    
-    // Inventory Data
-    inventory: {
-      totalItems: 156,
-      lowStockItems: 12,
-      outOfStockItems: 3,
-      totalValue: 45000000, // RWF
-      monthlySpending: 8500000, // RWF
-      topCategories: ['Engine Parts', 'Brake System', 'Electrical']
-    },
-    
-    // Assets Data
-    assets: {
-      totalAssets: 89,
-      activeAssets: 76,
-      underMaintenance: 8,
-      retiredAssets: 5,
-      totalValue: 125000000, // RWF
-      depreciation: 15000000, // RWF
-      categories: {
-        vehicles: 45,
-        equipment: 28,
-        tools: 16
-      }
-    },
-    
-    // Personnel Data
-    personnel: {
-      totalPersonnel: 67,
-      drivers: 45,
-      customerCare: 12,
-      mechanics: 8,
-      management: 2,
-      activePersonnel: 65,
-      onLeave: 2,
-      performanceScore: 92
-    },
-    
-    // Transport Data
-    transport: {
-      totalRoutes: 6,
-      activeRoutes: 6,
-      totalVehicles: 34,
-      todayTrips: 28,
-      inTransit: 12,
-      completedToday: 16,
-      onTimePercentage: 94,
-      totalPersonnel: 67
-    }
+    garage: {},
+    inventory: {},
+    assets: {},
+    personnel: {},
+    transport: {}
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch dashboard data from API
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [overviewRes, financialRes, operationsRes, maintenanceRes] = await Promise.all([
+          dashboardAPI.getOverview(),
+          dashboardAPI.getFinancial(),
+          dashboardAPI.getOperations(),
+          dashboardAPI.getMaintenance()
+        ]);
+        
+        setDashboardData({
+          overview: overviewRes.data || {},
+          financial: financialRes.data || {},
+          operations: operationsRes.data || {},
+          maintenance: maintenanceRes.data || {},
+          garage: maintenanceRes.data || {},
+          inventory: operationsRes.data || {},
+          assets: financialRes.data || {},
+          personnel: operationsRes.data || {},
+          transport: operationsRes.data || {}
+        });
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err.message || 'Failed to fetch dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   // Update current time every second
   useEffect(() => {

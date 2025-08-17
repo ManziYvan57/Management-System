@@ -4,14 +4,9 @@ import { personnelAPI } from '../../services/api';
 import './Personnel.css';
 
 const Personnel = () => {
-  // Personnel Data from the deployment document
-  const [personnel, setPersonnel] = useState([
-    // Sample data - will add full data in next edit
-    { id: 1, name: 'Lorance', type: 'driver', role: 'team-leader', route: 'Kampala-Nairobi', status: 'active', phone: '+256-XXX-XXX-XXX', license: 'DL-001', experience: '8 years' },
-    { id: 2, name: 'Sanya Robert', type: 'driver', role: 'driver', route: 'Kampala-Nairobi', status: 'active', phone: '+256-XXX-XXX-XXX', license: 'DL-002', experience: '5 years' },
-    { id: 3, name: 'Victor Otian', type: 'customer-care', role: 'staff', route: 'Kampala-Nairobi', status: 'active', phone: '+256-XXX-XXX-XXX', experience: '3 years' },
-    { id: 4, name: 'GEOFREY', type: 'driver', role: 'reserve', route: 'Standby', status: 'reserve', phone: '+256-XXX-XXX-XXX', license: 'DL-R001', experience: '6 years' }
-  ]);
+  const [personnel, setPersonnel] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [showAddPersonnelForm, setShowAddPersonnelForm] = useState(false);
   const [showEditPersonnelForm, setShowEditPersonnelForm] = useState(false);
@@ -31,6 +26,36 @@ const Personnel = () => {
     license: '',
     experience: ''
   });
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await personnelAPI.getAll();
+        setPersonnel(response.data || []);
+      } catch (err) {
+        console.error('Error fetching personnel data:', err);
+        setError(err.message || 'Failed to fetch personnel data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Refresh data after adding/editing
+  const refreshData = async () => {
+    try {
+      const response = await personnelAPI.getAll();
+      setPersonnel(response.data || []);
+    } catch (err) {
+      console.error('Error refreshing personnel data:', err);
+    }
+  };
 
   // Dashboard Statistics
   const totalPersonnel = personnel.length;
@@ -58,42 +83,39 @@ const Personnel = () => {
     setNewPersonnel({ ...newPersonnel, [name]: value });
   };
 
-  const handleSubmitPersonnel = (e) => {
+  const handleSubmitPersonnel = async (e) => {
     e.preventDefault();
     
-    if (editingPersonnel) {
-      // Update existing personnel
-      const updatedPersonnel = {
-        ...editingPersonnel,
-        ...newPersonnel
-      };
+    try {
+      if (editingPersonnel) {
+        // Update existing personnel
+        // TODO: Add update API call when backend supports it
+        console.log('Update personnel:', newPersonnel);
+      } else {
+        // Add new personnel
+        await personnelAPI.create(newPersonnel);
+      }
       
-      setPersonnel(personnel.map(p => 
-        p.id === editingPersonnel.id ? updatedPersonnel : p
-      ));
+      // Refresh the data
+      await refreshData();
+      
+      setNewPersonnel({
+        name: '',
+        type: 'driver',
+        role: 'driver',
+        route: '',
+        status: 'active',
+        phone: '',
+        license: '',
+        experience: ''
+      });
       setEditingPersonnel(null);
-    } else {
-      // Add new personnel
-      const newPersonnelItem = {
-        id: Date.now(),
-        ...newPersonnel
-      };
-      
-      setPersonnel([...personnel, newPersonnelItem]);
+      setShowAddPersonnelForm(false);
+      setShowEditPersonnelForm(false);
+    } catch (err) {
+      console.error('Error saving personnel:', err);
+      alert(err.message || 'Failed to save personnel');
     }
-    
-    setNewPersonnel({
-      name: '',
-      type: 'driver',
-      role: 'driver',
-      route: '',
-      status: 'active',
-      phone: '',
-      license: '',
-      experience: ''
-    });
-    setShowAddPersonnelForm(false);
-    setShowEditPersonnelForm(false);
   };
 
   const handleEditPersonnel = (person) => {
@@ -210,21 +232,37 @@ const Personnel = () => {
            </div>
          </div>
         <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Role</th>
-                <th>Route</th>
-                <th>Status</th>
-                <th>Phone</th>
-                <th>License/Experience</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-                         <tbody>
-               {filteredPersonnel.map((person) => (
+          {loading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading personnel...</p>
+            </div>
+          )}
+          
+          {error && (
+            <div className="error-state">
+              <p>Error: {error}</p>
+              <button onClick={refreshData} className="retry-btn">Retry</button>
+            </div>
+          )}
+          
+          {!loading && !error && (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Role</th>
+                    <th>Route</th>
+                    <th>Status</th>
+                    <th>Phone</th>
+                    <th>License/Experience</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPersonnel.map((person) => (
                 <tr key={person.id}>
                   <td>{person.name}</td>
                   <td>{person.type === 'driver' ? 'Driver' : 'Customer Care'}</td>
@@ -243,8 +281,10 @@ const Personnel = () => {
                    </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
+                            </tbody>
+              </table>
+            </>
+          )}
         </div>
       </div>
 

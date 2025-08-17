@@ -14,62 +14,9 @@ const Inventory = () => {
     outOfStockItems: 0
   });
 
-  const [suppliers, setSuppliers] = useState([
-    { id: 1, name: 'AutoParts Pro', contact: 'John Smith', phone: '+1234567890', email: 'john@autopartspro.com' },
-    { id: 2, name: 'Brake Masters', contact: 'Sarah Johnson', phone: '+1234567891', email: 'sarah@brakemasters.com' },
-    { id: 3, name: 'Filter World', contact: 'Mike Davis', phone: '+1234567892', email: 'mike@filterworld.com' }
-  ]);
-
-  const [purchaseOrders, setPurchaseOrders] = useState([
-    {
-      id: 1,
-      supplier: 'AutoParts Pro',
-      items: [{ name: 'Engine Oil 5W-30', quantity: 20, unitCost: 15990 }],
-      totalCost: 319800,
-      status: 'pending',
-      orderDate: new Date().toISOString().split('T')[0],
-      expectedDelivery: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    },
-    {
-      id: 2,
-      supplier: 'Brake Masters',
-      items: [{ name: 'Brake Pads Front', quantity: 10, unitCost: 45500 }],
-      totalCost: 455000,
-      status: 'received',
-      orderDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      expectedDelivery: new Date().toISOString().split('T')[0]
-    },
-    {
-      id: 3,
-      supplier: 'Filter World',
-      items: [{ name: 'Air Filter', quantity: 15, unitCost: 12750 }],
-      totalCost: 191250,
-      status: 'received',
-      orderDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      expectedDelivery: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    }
-  ]);
-
-  const [stockMovements, setStockMovements] = useState([
-    {
-      id: 1,
-      itemName: 'Engine Oil 5W-30',
-      type: 'in',
-      quantity: 20,
-      reason: 'Purchase Order #1',
-      date: '2024-01-15',
-      user: 'Admin'
-    },
-    {
-      id: 2,
-      itemName: 'Brake Pads Front',
-      type: 'out',
-      quantity: 5,
-      reason: 'Work Order #123',
-      date: '2024-01-14',
-      user: 'Mechanic'
-    }
-  ]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [stockMovements, setStockMovements] = useState([]);
 
   const [showAddItemForm, setShowAddItemForm] = useState(false);
   const [showEditItemForm, setShowEditItemForm] = useState(false);
