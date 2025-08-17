@@ -7,7 +7,6 @@ const Transport = () => {
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  ]);
 
   const [showAddTripForm, setShowAddTripForm] = useState(false);
   const [showEditTripForm, setShowEditTripForm] = useState(false);
