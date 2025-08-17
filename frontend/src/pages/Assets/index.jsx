@@ -1,71 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { FaBus, FaTools, FaCogs } from 'react-icons/fa';
+import { assetsAPI } from '../../services/api';
 import './Assets.css';
 
 const Assets = () => {
-  const [assets, setAssets] = useState([
-    {
-      id: 1,
-      name: 'Bus #001',
-      category: 'Bus',
-      type: 'Passenger Bus',
-      model: 'Toyota Coaster',
-      year: 2020,
-      registrationNumber: 'RAB 123A',
-      purchaseCost: 45000000,
-      purchaseDate: '2020-03-15',
-      currentValue: 36000000,
-      maintenanceCost: 1250000,
-      status: 'active',
-      location: 'Main Garage',
-      insuranceExpiry: '2024-12-31',
-      lastMaintenance: '2024-01-10',
-      nextMaintenance: '2024-04-10',
-      assignedTo: 'John Driver',
-      notes: 'Primary route bus'
-    },
-    {
-      id: 2,
-      name: 'Diagnostic Scanner',
-      category: 'Equipment',
-      type: 'Diagnostic Tool',
-      model: 'OBD-II Scanner Pro',
-      year: 2022,
-      registrationNumber: '',
-      purchaseCost: 250000,
-      purchaseDate: '2022-06-20',
-      currentValue: 200000,
-      maintenanceCost: 45000,
-      status: 'active',
-      location: 'Garage Workshop',
-      insuranceExpiry: '',
-      lastMaintenance: '2024-02-15',
-      nextMaintenance: '2024-05-15',
-      assignedTo: 'Mechanic Team',
-      notes: 'Used for engine diagnostics'
-    },
-    {
-      id: 3,
-      name: 'Bus #002',
-      category: 'Bus',
-      type: 'Passenger Bus',
-      model: 'Isuzu NPR',
-      year: 2019,
-      registrationNumber: 'RAB 456B',
-      purchaseCost: 52000000,
-      purchaseDate: '2019-08-10',
-      currentValue: 39000000,
-      maintenanceCost: 850000,
-      status: 'maintenance',
-      location: 'Main Garage',
-      insuranceExpiry: '2024-11-30',
-      lastMaintenance: '2024-01-25',
-      nextMaintenance: '2024-04-25',
-      assignedTo: 'Sarah Driver',
-      notes: 'Currently under repair'
-    }
-  ]);
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalAssets: 0,
+    activeAssets: 0,
+    maintenanceAssets: 0,
+    inactiveAssets: 0,
+    totalValue: 0,
+    totalMaintenanceCost: 0
+  });
 
   const [maintenanceHistory, setMaintenanceHistory] = useState([
     {
@@ -97,7 +47,45 @@ const Assets = () => {
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
 
-  // Calculate maintenance cost from work orders (will be connected to Garage module)
+  // Fetch assets from API
+  useEffect(() => {
+    const fetchAssets = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [assetsResponse, statsResponse] = await Promise.all([
+          assetsAPI.getAll(),
+          assetsAPI.getStats()
+        ]);
+        
+        setAssets(assetsResponse.data || []);
+        setStats(statsResponse.data || {});
+      } catch (err) {
+        console.error('Error fetching assets:', err);
+        setError(err.message || 'Failed to fetch assets');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAssets();
+  }, []);
+
+  // Refresh assets after adding/editing/deleting
+  const refreshAssets = async () => {
+    try {
+      const [assetsResponse, statsResponse] = await Promise.all([
+        assetsAPI.getAll(),
+        assetsAPI.getStats()
+      ]);
+      
+      setAssets(assetsResponse.data || []);
+      setStats(statsResponse.data || {});
+    } catch (err) {
+      console.error('Error refreshing assets:', err);
+    }
+  };
   const calculateMaintenanceCost = (assetId) => {
     // This will be replaced with actual work order data from Garage module
     // For now, using sample data to demonstrate the concept
@@ -177,34 +165,44 @@ const Assets = () => {
     }
   };
 
-  const handleSubmitAsset = (e) => {
+  const handleSubmitAsset = async (e) => {
     e.preventDefault();
-    const newAssetItem = {
-      id: Date.now(),
-      ...newAsset,
-      year: parseInt(newAsset.year) || 0,
-      purchaseCost: parseFloat(newAsset.purchaseCost) || 0,
-      currentValue: parseFloat(newAsset.purchaseCost) || 0, // Initially same as purchase cost
-      status: 'active',
-      lastMaintenance: '',
-      nextMaintenance: ''
-    };
-    setAssets([...assets, newAssetItem]);
-    setNewAsset({
-      name: '',
-      category: '',
-      type: '',
-      model: '',
-      year: '',
-      registrationNumber: '',
-      purchaseCost: '',
-      purchaseDate: '',
-      location: '',
-      insuranceExpiry: '',
-      assignedTo: '',
-      notes: ''
-    });
-    setShowAddAssetForm(false);
+    
+    try {
+      const assetData = {
+        ...newAsset,
+        year: parseInt(newAsset.year) || 0,
+        purchaseCost: parseFloat(newAsset.purchaseCost) || 0,
+        currentValue: parseFloat(newAsset.purchaseCost) || 0, // Initially same as purchase cost
+        status: 'active'
+      };
+      
+      await assetsAPI.create(assetData);
+      
+      // Refresh the assets list
+      await refreshAssets();
+      
+      // Reset form
+      setNewAsset({
+        name: '',
+        category: '',
+        type: '',
+        model: '',
+        year: '',
+        registrationNumber: '',
+        purchaseCost: '',
+        purchaseDate: '',
+        location: '',
+        insuranceExpiry: '',
+        assignedTo: '',
+        notes: ''
+      });
+      
+      setShowAddAssetForm(false);
+    } catch (err) {
+      console.error('Error creating asset:', err);
+      alert(err.message || 'Failed to create asset');
+    }
   };
 
   const handleEditAsset = (asset) => {
@@ -226,33 +224,43 @@ const Assets = () => {
     setShowEditAssetForm(true);
   };
 
-  const handleUpdateAsset = (e) => {
+  const handleUpdateAsset = async (e) => {
     e.preventDefault();
-    const updatedAsset = {
-      ...editingAsset,
-      ...newAsset,
-      year: parseInt(newAsset.year) || 0,
-      purchaseCost: parseFloat(newAsset.purchaseCost) || 0
-    };
-    setAssets(assets.map(asset => 
-      asset.id === editingAsset.id ? updatedAsset : asset
-    ));
-    setNewAsset({
-      name: '',
-      category: '',
-      type: '',
-      model: '',
-      year: '',
-      registrationNumber: '',
-      purchaseCost: '',
-      purchaseDate: '',
-      location: '',
-      insuranceExpiry: '',
-      assignedTo: '',
-      notes: ''
-    });
-    setEditingAsset(null);
-    setShowEditAssetForm(false);
+    
+    try {
+      const assetData = {
+        ...newAsset,
+        year: parseInt(newAsset.year) || 0,
+        purchaseCost: parseFloat(newAsset.purchaseCost) || 0
+      };
+      
+      await assetsAPI.update(editingAsset._id, assetData);
+      
+      // Refresh the assets list
+      await refreshAssets();
+      
+      // Reset form
+      setNewAsset({
+        name: '',
+        category: '',
+        type: '',
+        model: '',
+        year: '',
+        registrationNumber: '',
+        purchaseCost: '',
+        purchaseDate: '',
+        location: '',
+        insuranceExpiry: '',
+        assignedTo: '',
+        notes: ''
+      });
+      
+      setEditingAsset(null);
+      setShowEditAssetForm(false);
+    } catch (err) {
+      console.error('Error updating asset:', err);
+      alert(err.message || 'Failed to update asset');
+    }
   };
 
   const handleSubmitMaintenance = (e) => {
@@ -450,24 +458,40 @@ const Assets = () => {
         </div>
 
         <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Asset Name</th>
-                <th>Category</th>
-                <th>Model/Type</th>
-                <th>Registration</th>
-                <th>Age</th>
-                <th>Purchase Cost</th>
-                <th>Current Value</th>
-                <th>Maintenance Cost</th>
-                <th>Status</th>
-                <th>Location</th>
-                <th>Assigned To</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          {loading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading assets...</p>
+            </div>
+          )}
+          
+          {error && (
+            <div className="error-state">
+              <p>Error: {error}</p>
+              <button onClick={refreshAssets} className="retry-btn">Retry</button>
+            </div>
+          )}
+          
+          {!loading && !error && (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Asset Name</th>
+                    <th>Category</th>
+                    <th>Model/Type</th>
+                    <th>Registration</th>
+                    <th>Age</th>
+                    <th>Purchase Cost</th>
+                    <th>Current Value</th>
+                    <th>Maintenance Cost</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Assigned To</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
               {filteredAssets.map((asset) => (
                 <tr key={asset.id} className={`asset-${asset.status}`}>
                   <td>
@@ -540,6 +564,8 @@ const Assets = () => {
             <div className="no-results">
               <p>No assets found matching your search criteria.</p>
             </div>
+          )}
+            </>
           )}
         </div>
       </div>

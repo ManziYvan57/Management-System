@@ -143,8 +143,39 @@ export const inventoryAPI = {
 };
 
 export const assetsAPI = {
-  getAll: async () => apiRequest('/assets'),
-  getStats: async () => apiRequest('/assets/stats')
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/assets${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getById: async (id) => {
+    return apiRequest(`/assets/${id}`);
+  },
+  
+  create: async (assetData) => {
+    return apiRequest('/assets', {
+      method: 'POST',
+      body: JSON.stringify(assetData)
+    });
+  },
+  
+  update: async (id, assetData) => {
+    return apiRequest(`/assets/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(assetData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/assets/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/assets/stats/overview${queryString ? `?${queryString}` : ''}`);
+  }
 };
 
 export const personnelAPI = {
