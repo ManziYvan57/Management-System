@@ -65,12 +65,14 @@ const Transport = () => {
   // Dashboard Statistics - Made reactive to state changes
   const dashboardStats = React.useMemo(() => {
     const totalRoutes = routes.length;
-    const totalVehicles = routes.reduce((sum, route) => sum + route.vehicles.length, 0);
+    const totalVehicles = routes.reduce((sum, route) => sum + (route.vehicles?.length || 0), 0);
     
     // Count trips by status
     const tripsByStatus = routes.reduce((acc, route) => {
-      route.vehicles.forEach(vehicle => {
-        acc[vehicle.status] = (acc[vehicle.status] || 0) + 1;
+      (route.vehicles || []).forEach(vehicle => {
+        if (vehicle.status) {
+          acc[vehicle.status] = (acc[vehicle.status] || 0) + 1;
+        }
       });
       return acc;
     }, {});
@@ -83,8 +85,8 @@ const Transport = () => {
     
     // Calculate total personnel more accurately
     const totalPersonnel = routes.reduce((sum, route) => {
-      const drivers = route.vehicles.length;
-      const customerCare = route.vehicles.filter(v => v.customerCare && v.customerCare.trim() !== '').length;
+      const drivers = route.vehicles?.length || 0;
+      const customerCare = (route.vehicles || []).filter(v => v.customerCare && v.customerCare.trim() !== '').length;
       const reserves = (route.reserveDrivers?.length || 0) + (route.reserveCCs?.length || 0);
       return sum + drivers + customerCare + reserves;
     }, 0);
@@ -135,15 +137,15 @@ const Transport = () => {
 
   // Filter trips based on search and filters
   const filteredTrips = routes.flatMap(route => 
-    route.vehicles.map(vehicle => ({
+    (route.vehicles || []).map(vehicle => ({
       ...vehicle,
       routeName: route.name,
       teamLeader: route.teamLeader
     }))
   ).filter(trip => {
-    const matchesSearch = trip.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         trip.driver.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         trip.routeName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (trip.plate && trip.plate.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (trip.driver && trip.driver.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (trip.routeName && trip.routeName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesRoute = routeFilter === 'all' || trip.routeName === routeFilter;
     const matchesStatus = statusFilter === 'all' || trip.status === statusFilter;
