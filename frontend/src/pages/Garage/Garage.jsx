@@ -452,7 +452,10 @@ const Garage = () => {
                      </span>
                    </td>
                    <td>
-                     {order.partsUsed.map(part => `${part.name} (${part.quantity})`).join(', ') || 'None'}
+                     {order.partsUsed && order.partsUsed.length > 0 
+                       ? order.partsUsed.map(part => `${part.name} (${part.quantity})`).join(', ')
+                       : 'None'
+                     }
                    </td>
                   <td>
                     {order.endDate ? (
@@ -629,7 +632,7 @@ const Garage = () => {
               <div className="parts-selection">
                 <h4>Select Parts (from main Inventory):</h4>
                 <ul>
-                  {parts.map((part) => {
+                  {parts && parts.length > 0 ? parts.map((part) => {
                     const isSelected = newWorkOrder.selectedParts.find(sp => sp.partId === part.id);
                     const selectedPart = isSelected ? isSelected : null;
                     return (
@@ -660,7 +663,7 @@ const Garage = () => {
                         </div>
                       </li>
                     );
-                  })}
+                  }) : <li>No parts available</li>}
                 </ul>
               </div>
               

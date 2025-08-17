@@ -28,19 +28,40 @@ export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
   if (token) {
     defaultOptions.headers.Authorization = `Bearer ${token}`;
+    console.log('🔑 Using token for API request:', token.substring(0, 20) + '...');
+  } else {
+    console.log('⚠️ No token found for API request');
   }
+
+  console.log('🌐 Making API request to:', url);
 
   try {
     const response = await fetch(url, defaultOptions);
     const data = await response.json();
     
     if (!response.ok) {
+      console.error('❌ API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: url,
+        data: data
+      });
+      
+      if (response.status === 401) {
+        console.error('🔒 Authentication failed - token may be invalid or expired');
+        // Clear invalid token
+        localStorage.removeItem('token');
+        // Redirect to login
+        window.location.href = '/login';
+      }
+      
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
     
+    console.log('✅ API request successful:', data);
     return data;
   } catch (error) {
-    console.error('API Request Error:', error);
+    console.error('❌ API Request Error:', error);
     throw error;
   }
 };
