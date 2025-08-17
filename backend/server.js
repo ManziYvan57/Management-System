@@ -68,6 +68,29 @@ if (process.env.NODE_ENV === 'development') {
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: '🚀 Trinity Management System API is running successfully!',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    endpoints: {
+      health: '/health',
+      api: '/api',
+      auth: '/api/auth',
+      users: '/api/users',
+      garage: '/api/garage',
+      inventory: '/api/inventory',
+      assets: '/api/assets',
+      personnel: '/api/personnel',
+      transport: '/api/transport',
+      dashboard: '/api/dashboard'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -96,22 +119,33 @@ app.use(errorHandler);
 // MongoDB connection
 const connectDB = async () => {
   try {
+    console.log('🔌 Attempting to connect to MongoDB...');
+    
     const mongoUri = process.env.MONGODB_URI;
 
     if (!mongoUri) {
-      console.error('MongoDB URI is not defined. Please check your environment variables.');
+      console.error('❌ MongoDB URI is not defined. Please check your environment variables.');
       console.error('Required: MONGODB_URI');
       process.exit(1);
     }
 
+    console.log('📡 Connecting to MongoDB Atlas...');
+    
     const conn = await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log('✅ MongoDB Connected Successfully!');
+    console.log(`   📍 Host: ${conn.connection.host}`);
+    console.log(`   🗄️  Database: ${conn.connection.name}`);
+    console.log(`   🔗 Connection State: ${conn.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+    console.log('🎉 Database connection established and ready!');
+    
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('❌ MongoDB connection failed!');
+    console.error('   Error:', error.message);
+    console.error('   Please check your MongoDB URI and network connection.');
     process.exit(1);
   }
 };
@@ -121,31 +155,46 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
+    console.log('🚀 Starting Trinity Management System...');
+    console.log('='.repeat(60));
+    
+    // Connect to database
     await connectDB();
     
+    // Start server
     app.listen(PORT, () => {
-      console.log(`🚀 Trinity Management System API running on port ${PORT}`);
+      console.log('='.repeat(60));
+      console.log('🎉 Trinity Management System API Started Successfully!');
+      console.log('='.repeat(60));
+      console.log(`🌐 Server URL: http://localhost:${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-      console.log(`📚 API Documentation: http://localhost:${PORT}${apiPrefix}`);
+      console.log(`🔗 Health Check: http://localhost:${PORT}/health`);
+      console.log(`📚 API Base: http://localhost:${PORT}${apiPrefix}`);
+      console.log(`🔐 Auth Endpoint: http://localhost:${PORT}${apiPrefix}/auth`);
+      console.log('='.repeat(60));
+      console.log('✅ Server is ready to handle requests!');
+      console.log('='.repeat(60));
     });
   } catch (error) {
-    console.error('Server startup error:', error);
+    console.error('❌ Server startup failed!');
+    console.error('   Error:', error.message);
     process.exit(1);
   }
 };
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.log(`Error: ${err.message}`);
-  // Close server & exit process
+  console.log('❌ Unhandled Promise Rejection!');
+  console.log(`   Error: ${err.message}`);
+  console.log('   Shutting down the server...');
   process.exit(1);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.log(`Error: ${err.message}`);
-  console.log('Shutting down the server due to uncaught exception');
+  console.log('❌ Uncaught Exception!');
+  console.log(`   Error: ${err.message}`);
+  console.log('   Shutting down the server due to uncaught exception');
   process.exit(1);
 });
 
