@@ -7,7 +7,7 @@ export const API_CONFIG = {
   },
   // Production (Render) - UPDATE THIS URL!
   production: {
-    baseURL: 'https://trinity-management-backend.onrender.com', // ⚠️ UPDATE THIS WITH YOUR ACTUAL RENDER URL
+    baseURL: 'https://trinity-management-system.onrender.com', // ✅ Your actual Render URL
     apiPrefix: '/api'
   }
 };
