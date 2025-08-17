@@ -96,13 +96,11 @@ app.use(errorHandler);
 // MongoDB connection
 const connectDB = async () => {
   try {
-    const mongoUri = process.env.NODE_ENV === 'production' 
-      ? process.env.MONGODB_URI_PROD 
-      : process.env.MONGODB_URI;
+    const mongoUri = process.env.MONGODB_URI;
 
     if (!mongoUri) {
       console.error('MongoDB URI is not defined. Please check your environment variables.');
-      console.error('Required: MONGODB_URI (development) or MONGODB_URI_PROD (production)');
+      console.error('Required: MONGODB_URI');
       process.exit(1);
     }
 
