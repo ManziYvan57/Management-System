@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaUserTie, FaUsers, FaUserCheck, FaUserClock, FaRoute, FaBus } from 'react-icons/fa';
+import { personnelAPI } from '../../services/api';
 import './Personnel.css';
 
 const Personnel = () => {

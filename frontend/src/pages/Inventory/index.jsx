@@ -4,41 +4,15 @@ import { inventoryAPI } from '../../services/api';
 import './Inventory.css';
 
 const Inventory = () => {
-  const [inventory, setInventory] = useState([
-    {
-      id: 1,
-      name: 'Engine Oil 5W-30',
-      category: 'Lubricants',
-      quantity: 50,
-      minQuantity: 10,
-      unitCost: 15990,
-      supplier: 'AutoParts Pro',
-      location: 'Warehouse A - Shelf 1',
-      lastUpdated: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Brake Pads Front',
-      category: 'Brake System',
-      quantity: 25,
-      minQuantity: 5,
-      unitCost: 45500,
-      supplier: 'Brake Masters',
-      location: 'Warehouse B - Shelf 3',
-      lastUpdated: '2024-01-14'
-    },
-    {
-      id: 3,
-      name: 'Air Filter',
-      category: 'Filters',
-      quantity: 8,
-      minQuantity: 15,
-      unitCost: 12750,
-      supplier: 'Filter World',
-      location: 'Warehouse A - Shelf 2',
-      lastUpdated: '2024-01-13'
-    }
-  ]);
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    totalItems: 0,
+    totalValue: 0,
+    lowStockItems: 0,
+    outOfStockItems: 0
+  });
 
   const [suppliers, setSuppliers] = useState([
     { id: 1, name: 'AutoParts Pro', contact: 'John Smith', phone: '+1234567890', email: 'john@autopartspro.com' },
@@ -142,6 +116,46 @@ const Inventory = () => {
     reason: ''
   });
 
+  // Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [inventoryResponse, statsResponse] = await Promise.all([
+          inventoryAPI.getAll(),
+          inventoryAPI.getStats()
+        ]);
+        
+        setInventory(inventoryResponse.data || []);
+        setStats(statsResponse.data || {});
+      } catch (err) {
+        console.error('Error fetching inventory data:', err);
+        setError(err.message || 'Failed to fetch inventory data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Refresh data after adding/editing
+  const refreshData = async () => {
+    try {
+      const [inventoryResponse, statsResponse] = await Promise.all([
+        inventoryAPI.getAll(),
+        inventoryAPI.getStats()
+      ]);
+      
+      setInventory(inventoryResponse.data || []);
+      setStats(statsResponse.data || {});
+    } catch (err) {
+      console.error('Error refreshing inventory data:', err);
+    }
+  };
+
   // Dashboard Statistics
   const totalItems = inventory.length;
   const lowStockItems = inventory.filter(item => item.quantity <= item.minQuantity).length;
@@ -188,26 +202,38 @@ const Inventory = () => {
     }
   };
 
-  const handleSubmitItem = (e) => {
+  const handleSubmitItem = async (e) => {
     e.preventDefault();
-    const newInventoryItem = {
-      id: Date.now(),
-      ...newItem,
-      quantity: parseInt(newItem.quantity) || 0,
-      minQuantity: parseInt(newItem.minQuantity) || 0,
-      unitCost: parseFloat(newItem.unitCost) || 0,
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    setInventory([...inventory, newInventoryItem]);
-    setNewItem({
-      name: '',
-      category: '',
-      quantity: '',
-      minQuantity: '',
-      unitCost: '',
-      supplier: ''
-    });
-    setShowAddItemForm(false);
+    
+    try {
+      const inventoryData = {
+        ...newItem,
+        quantity: parseInt(newItem.quantity) || 0,
+        minQuantity: parseInt(newItem.minQuantity) || 0,
+        unitCost: parseFloat(newItem.unitCost) || 0,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      };
+      
+      await inventoryAPI.create(inventoryData);
+      
+      // Refresh the data
+      await refreshData();
+      
+      // Reset form
+      setNewItem({
+        name: '',
+        category: '',
+        quantity: '',
+        minQuantity: '',
+        unitCost: '',
+        supplier: ''
+      });
+      
+      setShowAddItemForm(false);
+    } catch (err) {
+      console.error('Error creating inventory item:', err);
+      alert(err.message || 'Failed to create inventory item');
+    }
   };
 
   const handleEditItem = (item) => {
@@ -479,25 +505,41 @@ const Inventory = () => {
         </button>
       </div>
 
-      {/* Inventory List */}
+            {/* Inventory List */}
       <div className="inventory-list">
         <h3>Inventory Items</h3>
         <div className="table-container">
-          <table>
-            <thead>
-                              <tr>
-                                     <th>Name</th>
-                   <th>Category</th>
-                   <th>Quantity</th>
-                   <th>Min Qty</th>
-                   <th>Unit Cost</th>
-                   <th>Total Value</th>
-                   <th>Supplier</th>
-                   <th>Status</th>
-                   <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
+          {loading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading inventory items...</p>
+            </div>
+          )}
+          
+          {error && (
+            <div className="error-state">
+              <p>Error: {error}</p>
+              <button onClick={refreshData} className="retry-btn">Retry</button>
+            </div>
+          )}
+          
+          {!loading && !error && (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Min Qty</th>
+                    <th>Unit Cost</th>
+                    <th>Total Value</th>
+                    <th>Supplier</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
                               {inventory.map((item) => (
                   <tr key={item.id} className={`stock-${getStockStatus(item)}`}>
                                          <td>{item.name}</td>
@@ -545,6 +587,8 @@ const Inventory = () => {
               ))}
             </tbody>
           </table>
+            </>
+          )}
         </div>
       </div>
 

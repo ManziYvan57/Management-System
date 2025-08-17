@@ -5,6 +5,7 @@ import {
   FaChartLine, FaChartBar, FaChartPie, FaCalendarAlt,
   FaDollarSign, FaWrench, FaTruck, FaUserTie
 } from 'react-icons/fa';
+import { dashboardAPI } from '../../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {

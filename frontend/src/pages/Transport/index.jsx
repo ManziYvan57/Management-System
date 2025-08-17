@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaRoute, FaBus, FaUserTie, FaClock, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
+import { transportAPI } from '../../services/api';
 import './Transport.css';
 
 const Transport = () => {
