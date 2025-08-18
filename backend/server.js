@@ -18,6 +18,8 @@ const userRoutes = require('./routes/users');
 const garageRoutes = require('./routes/garage');
 const inventoryRoutes = require('./routes/inventory');
 const assetRoutes = require('./routes/assets');
+const vehicleRoutes = require('./routes/vehicles');
+const equipmentRoutes = require('./routes/equipment');
 const personnelRoutes = require('./routes/personnel');
 const transportRoutes = require('./routes/transport');
 const dashboardRoutes = require('./routes/dashboard');
@@ -91,6 +93,8 @@ app.get('/', (req, res) => {
       garage: '/api/garage',
       inventory: '/api/inventory',
       assets: '/api/assets',
+      vehicles: '/api/vehicles',
+      equipment: '/api/equipment',
       personnel: '/api/personnel',
       transport: '/api/transport',
       dashboard: '/api/dashboard'
@@ -115,6 +119,8 @@ app.use(`${apiPrefix}/users`, userRoutes);
 app.use(`${apiPrefix}/garage`, garageRoutes);
 app.use(`${apiPrefix}/inventory`, inventoryRoutes);
 app.use(`${apiPrefix}/assets`, assetRoutes);
+app.use(`${apiPrefix}/vehicles`, vehicleRoutes);
+app.use(`${apiPrefix}/equipment`, equipmentRoutes);
 app.use(`${apiPrefix}/personnel`, personnelRoutes);
 app.use(`${apiPrefix}/transport`, transportRoutes);
 app.use(`${apiPrefix}/dashboard`, dashboardRoutes);

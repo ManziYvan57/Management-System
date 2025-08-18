@@ -227,6 +227,88 @@ export const assetsAPI = {
   }
 };
 
+// Vehicles API functions
+export const vehiclesAPI = {
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/vehicles${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getById: async (id) => {
+    return apiRequest(`/vehicles/${id}`);
+  },
+  
+  create: async (vehicleData) => {
+    return apiRequest('/vehicles', {
+      method: 'POST',
+      body: JSON.stringify(vehicleData)
+    });
+  },
+  
+  update: async (id, vehicleData) => {
+    return apiRequest(`/vehicles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(vehicleData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/vehicles/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  getStats: async () => {
+    return apiRequest('/vehicles/stats/overview');
+  },
+  
+  getAvailable: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/vehicles/available${queryString ? `?${queryString}` : ''}`);
+  }
+};
+
+// Equipment API functions
+export const equipmentAPI = {
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/equipment${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getById: async (id) => {
+    return apiRequest(`/equipment/${id}`);
+  },
+  
+  create: async (equipmentData) => {
+    return apiRequest('/equipment', {
+      method: 'POST',
+      body: JSON.stringify(equipmentData)
+    });
+  },
+  
+  update: async (id, equipmentData) => {
+    return apiRequest(`/equipment/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(equipmentData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/equipment/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  getStats: async () => {
+    return apiRequest('/equipment/stats/overview');
+  },
+  
+  getAvailable: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/equipment/available${queryString ? `?${queryString}` : ''}`);
+  }
+};
+
 export const personnelAPI = {
   getAll: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
