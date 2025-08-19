@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaCar, FaSave } from 'react-icons/fa';
+import { FaTimes, FaBus, FaSave } from 'react-icons/fa';
 import './Assets.css';
 
 const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }) => {
@@ -80,7 +80,8 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
       // Clean up the data before submitting
       const submitData = {
         ...formData,
-        assignedDriver: formData.assignedDriver.trim() === '' ? null : formData.assignedDriver,
+        assignedDriver: formData.assignedDriver.trim() === '' ? null : 
+          (formData.assignedDriver && formData.assignedDriver.length === 24 ? formData.assignedDriver : null),
         purchaseCost: parseFloat(formData.purchaseCost) || 0,
         currentValue: parseFloat(formData.currentValue) || 0,
         seatingCapacity: parseInt(formData.seatingCapacity) || 0,
@@ -103,11 +104,11 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
   return (
     <div className="modal-overlay">
       <div className="modal-content vehicle-form-modal">
-        <div className="modal-header">
-          <h2>
-            <FaCar />
-            {mode === 'add' ? 'Add New Vehicle' : 'Edit Vehicle'}
-          </h2>
+                 <div className="modal-header">
+           <h2>
+             <FaBus />
+             {mode === 'add' ? 'Add New Vehicle' : 'Edit Vehicle'}
+           </h2>
           <button className="close-button" onClick={onClose}>
             <FaTimes />
           </button>

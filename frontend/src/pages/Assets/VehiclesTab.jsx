@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaCar, FaUser, FaRoute, FaCalendar, FaDollarSign } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaBus, FaUser, FaRoute, FaCalendar, FaDollarSign } from 'react-icons/fa';
 import { vehiclesAPI } from '../../services/api';
 import VehicleForm from './VehicleForm';
 import './Assets.css';
@@ -203,9 +203,9 @@ const VehiclesTab = () => {
       {/* Vehicles Table */}
       <div className="table-container">
         {vehicles.length === 0 ? (
-          <div className="empty-state">
-            <FaCar className="empty-icon" />
-            <h3>No vehicles found</h3>
+                             <div className="empty-state">
+                     <FaBus className="empty-icon" />
+                     <h3>No vehicles found</h3>
             <p>Add your first vehicle to get started</p>
             <button 
               className="add-button"
@@ -234,12 +234,12 @@ const VehiclesTab = () => {
             <tbody>
               {vehicles.map((vehicle) => (
                 <tr key={vehicle._id}>
-                  <td>
-                    <div className="plate-number">
-                      <FaCar />
-                      <span>{vehicle.plateNumber}</span>
-                    </div>
-                  </td>
+                                             <td>
+                             <div className="plate-number">
+                               <FaBus />
+                               <span>{vehicle.plateNumber}</span>
+                             </div>
+                           </td>
                   <td>
                     <div className="vehicle-info">
                       <strong>{vehicle.make}</strong>
