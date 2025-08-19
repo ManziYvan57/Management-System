@@ -1275,39 +1275,52 @@ label {
   align-items: center;
   justify-content: center;
   margin: 0 0.125rem;
+  color: inherit;
+}
+
+.action-btn svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .view-btn {
   background-color: #e0f2fe;
-  color: #0369a1;
+  color: #0369a1 !important;
   border: 1px solid #bae6fd;
 }
 
 .view-btn:hover {
   background-color: #bae6fd;
-  color: #0c4a6e;
+  color: #0c4a6e !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .edit-btn {
   background-color: #fef3c7;
-  color: #92400e;
+  color: #92400e !important;
   border: 1px solid #fde68a;
 }
 
 .edit-btn:hover {
   background-color: #fde68a;
-  color: #78350f;
+  color: #78350f !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .delete-btn {
   background-color: #fee2e2;
-  color: #991b1b;
+  color: #991b1b !important;
   border: 1px solid #fecaca;
 }
 
 .delete-btn:hover {
   background-color: #fecaca;
-  color: #7f1d1d;
+  color: #7f1d1d !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .empty-state {

@@ -284,35 +284,35 @@ const VehiclesTab = () => {
                     </span>
                   </td>
                   <td>
-                    <div className="action-buttons">
-                      <button
-                        className="action-btn view-btn"
-                        title="View Details"
-                        onClick={() => {
-                          setEditingVehicle(vehicle);
-                          setShowEditForm(true);
-                        }}
-                      >
-                        <FaEye />
-                      </button>
-                      <button
-                        className="action-btn edit-btn"
-                        title="Edit Vehicle"
-                        onClick={() => {
-                          setEditingVehicle(vehicle);
-                          setShowEditForm(true);
-                        }}
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        className="action-btn delete-btn"
-                        title="Delete Vehicle"
-                        onClick={() => handleDeleteVehicle(vehicle._id)}
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
+                                         <div className="action-buttons">
+                       <button
+                         className="action-btn view-btn"
+                         title="View Details"
+                         onClick={() => {
+                           setEditingVehicle(vehicle);
+                           setShowEditForm(true);
+                         }}
+                       >
+                         <FaEye style={{ fontSize: '14px' }} />
+                       </button>
+                       <button
+                         className="action-btn edit-btn"
+                         title="Edit Vehicle"
+                         onClick={() => {
+                           setEditingVehicle(vehicle);
+                           setShowEditForm(true);
+                         }}
+                       >
+                         <FaEdit style={{ fontSize: '14px' }} />
+                       </button>
+                       <button
+                         className="action-btn delete-btn"
+                         title="Delete Vehicle"
+                         onClick={() => handleDeleteVehicle(vehicle._id)}
+                       >
+                         <FaTrash style={{ fontSize: '14px' }} />
+                       </button>
+                     </div>
                   </td>
                 </tr>
               ))}
