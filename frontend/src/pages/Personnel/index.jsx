@@ -1,575 +1,548 @@
 import React, { useState, useEffect } from 'react';
-import { FaUserTie, FaUsers, FaUserCheck, FaUserClock, FaRoute, FaBus } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaUser, FaIdCard, FaPhone, FaEnvelope, FaCalendar, FaMapMarkerAlt, FaCar, FaRoute, FaExclamationTriangle, FaCheckCircle, FaClock, FaStar } from 'react-icons/fa';
 import { personnelAPI } from '../../services/api';
+import PersonnelForm from './PersonnelForm';
+import InfractionForm from './InfractionForm';
 import './Personnel.css';
 
 const Personnel = () => {
   const [personnel, setPersonnel] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const [showAddPersonnelForm, setShowAddPersonnelForm] = useState(false);
-  const [showEditPersonnelForm, setShowEditPersonnelForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showInfractionForm, setShowInfractionForm] = useState(false);
   const [editingPersonnel, setEditingPersonnel] = useState(null);
+  const [selectedPersonnel, setSelectedPersonnel] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [routeFilter, setRouteFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [terminalFilter, setTerminalFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
-  const [newPersonnel, setNewPersonnel] = useState({
-    name: '',
-    type: 'driver',
-    role: 'driver',
-    route: '',
-    status: 'active',
-    phone: '',
-    license: '',
-    experience: ''
-  });
-
-  // Fetch data from API
+  // Fetch personnel on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await personnelAPI.getAll();
-        setPersonnel(response.data || []);
-      } catch (err) {
-        console.error('Error fetching personnel data:', err);
-        setError(err.message || 'Failed to fetch personnel data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchPersonnel();
   }, []);
 
-  // Refresh data after adding/editing
-  const refreshData = async () => {
+  const fetchPersonnel = async () => {
     try {
-      const response = await personnelAPI.getAll();
+      setLoading(true);
+      setError(null);
+      
+      const params = {};
+      if (searchTerm) params.search = searchTerm;
+      if (roleFilter) params.role = roleFilter;
+      if (departmentFilter) params.department = departmentFilter;
+      if (terminalFilter) params.terminal = terminalFilter;
+      if (statusFilter) params.employmentStatus = statusFilter;
+      
+      const response = await personnelAPI.getAll(params);
       setPersonnel(response.data || []);
     } catch (err) {
-      console.error('Error refreshing personnel data:', err);
+      console.error('Error fetching personnel:', err);
+      setError(err.message || 'Failed to fetch personnel');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Dashboard Statistics
-  const totalPersonnel = personnel.length;
-  const activeDrivers = personnel.filter(p => p.type === 'driver' && p.status === 'active').length;
-  const activeCustomerCare = personnel.filter(p => p.type === 'customer-care' && p.status === 'active').length;
-  const reservePersonnel = personnel.filter(p => p.role === 'reserve').length;
-  const teamLeaders = personnel.filter(p => p.role === 'team-leader').length;
+  const handleAddPersonnel = async (personnelData) => {
+    try {
+      await personnelAPI.create(personnelData);
+      setShowAddForm(false);
+      fetchPersonnel();
+    } catch (err) {
+      console.error('Error adding personnel:', err);
+      throw err;
+    }
+  };
 
-  // Filter personnel based on search and filters
+  const handleEditPersonnel = async (id, personnelData) => {
+    try {
+      await personnelAPI.update(id, personnelData);
+      setShowEditForm(false);
+      setEditingPersonnel(null);
+      fetchPersonnel();
+    } catch (err) {
+      console.error('Error updating personnel:', err);
+      throw err;
+    }
+  };
+
+  const handleDeletePersonnel = async (id) => {
+    if (window.confirm('Are you sure you want to delete this personnel?')) {
+      try {
+        await personnelAPI.delete(id);
+        fetchPersonnel();
+      } catch (err) {
+        console.error('Error deleting personnel:', err);
+        alert('Failed to delete personnel');
+      }
+    }
+  };
+
+  const handleAddInfraction = async (personnelId, infractionData) => {
+    try {
+      await personnelAPI.addInfraction(personnelId, infractionData);
+      setShowInfractionForm(false);
+      setSelectedPersonnel(null);
+      fetchPersonnel();
+    } catch (err) {
+      console.error('Error adding infraction:', err);
+      throw err;
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchPersonnel();
+  };
+
+  const handleFilterChange = () => {
+    fetchPersonnel();
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'all') {
+      setRoleFilter('');
+    } else {
+      setRoleFilter(tab);
+    }
+    fetchPersonnel();
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'active': return 'status-active';
+      case 'inactive': return 'status-inactive';
+      case 'suspended': return 'status-suspended';
+      case 'terminated': return 'status-terminated';
+      case 'on_leave': return 'status-on-leave';
+      default: return 'status-default';
+    }
+  };
+
+  const getRoleBadgeClass = (role) => {
+    switch (role) {
+      case 'driver': return 'role-driver';
+      case 'team_leader': return 'role-team-leader';
+      case 'customer_care': return 'role-customer-care';
+      case 'mechanic': return 'role-mechanic';
+      case 'supervisor': return 'role-supervisor';
+      case 'manager': return 'role-manager';
+      case 'admin': return 'role-admin';
+      default: return 'role-other';
+    }
+  };
+
+  const getDepartmentBadgeClass = (department) => {
+    switch (department) {
+      case 'operations': return 'dept-operations';
+      case 'maintenance': return 'dept-maintenance';
+      case 'customer_service': return 'dept-customer-service';
+      case 'administration': return 'dept-administration';
+      case 'finance': return 'dept-finance';
+      default: return 'dept-other';
+    }
+  };
+
+  const getPointsColor = (points) => {
+    if (points >= 80) return 'points-good';
+    if (points >= 50) return 'points-warning';
+    return 'points-danger';
+  };
+
+  const getLicenseStatusColor = (status) => {
+    switch (status) {
+      case 'valid': return 'license-valid';
+      case 'expiring_soon': return 'license-warning';
+      case 'expired': return 'license-expired';
+      default: return 'license-unknown';
+    }
+  };
+
   const filteredPersonnel = personnel.filter(person => {
-    const matchesSearch = (person.name && person.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (person.phone && person.phone.includes(searchTerm)) ||
-                         (person.license && person.license.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesType = typeFilter === 'all' || person.type === typeFilter;
-    const matchesRole = routeFilter === 'all' || person.role === routeFilter;
-    const matchesStatus = statusFilter === 'all' || person.status === statusFilter;
-    
-    return matchesSearch && matchesType && matchesRole && matchesStatus;
+    if (activeTab === 'all') return true;
+    return person.role === activeTab;
   });
 
-  // Form handling functions
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewPersonnel({ ...newPersonnel, [name]: value });
-  };
+  if (loading) {
+    return (
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+        <p>Loading personnel...</p>
+      </div>
+    );
+  }
 
-  const handleSubmitPersonnel = async (e) => {
-    e.preventDefault();
-    
-    try {
-      if (editingPersonnel) {
-        // Update existing personnel
-        // TODO: Add update API call when backend supports it
-        console.log('Update personnel:', newPersonnel);
-      } else {
-        // Add new personnel
-        await personnelAPI.create(newPersonnel);
-      }
-      
-      // Refresh the data
-      await refreshData();
-      
-      setNewPersonnel({
-        name: '',
-        type: 'driver',
-        role: 'driver',
-        route: '',
-        status: 'active',
-        phone: '',
-        license: '',
-        experience: ''
-      });
-      setEditingPersonnel(null);
-      setShowAddPersonnelForm(false);
-      setShowEditPersonnelForm(false);
-    } catch (err) {
-      console.error('Error saving personnel:', err);
-      alert(err.message || 'Failed to save personnel');
-    }
-  };
-
-  const handleEditPersonnel = (person) => {
-    setEditingPersonnel(person);
-    setNewPersonnel({
-      name: person.name,
-      type: person.type,
-      role: person.role,
-      route: person.route,
-      status: person.status,
-      phone: person.phone,
-      license: person.license || '',
-      experience: person.experience
-    });
-    setShowEditPersonnelForm(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingPersonnel(null);
-    setNewPersonnel({
-      name: '',
-      type: 'driver',
-      role: 'driver',
-      route: '',
-      status: 'active',
-      phone: '',
-      license: '',
-      experience: ''
-    });
-    setShowAddPersonnelForm(false);
-    setShowEditPersonnelForm(false);
-  };
+  if (error) {
+    return (
+      <div className="error-message">
+        <h3>Error Loading Personnel</h3>
+        <p>{error}</p>
+        <button onClick={fetchPersonnel}>Retry</button>
+      </div>
+    );
+  }
 
   return (
     <div className="personnel-container">
-      <h2>Personnel Management</h2>
-      
-      {/* Mini Dashboard */}
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <h3>{totalPersonnel}</h3>
-          <p>Total Personnel</p>
+      {/* Header */}
+      <div className="personnel-header">
+        <div className="header-left">
+          <h2>Personnel Management</h2>
+          <span className="personnel-count">{personnel.length} personnel</span>
         </div>
-        <div className="stat-card">
-          <h3>{activeDrivers}</h3>
-          <p>Active Drivers</p>
-        </div>
-        <div className="stat-card">
-          <h3>{activeCustomerCare}</h3>
-          <p>Customer Care Staff</p>
-        </div>
-        <div className="stat-card">
-          <h3>{reservePersonnel}</h3>
-          <p>Reserve Personnel</p>
+        
+        <div className="header-right">
+          <button 
+            className="add-button"
+            onClick={() => setShowAddForm(true)}
+          >
+            <FaPlus />
+            Add Personnel
+          </button>
         </div>
       </div>
 
-             {/* Quick Actions */}
-       <div className="quick-actions">
-         <button onClick={() => setShowAddPersonnelForm(true)} className="action-btn">
-           Add Personnel
-         </button>
-       </div>
+      {/* Tabs */}
+      <div className="tabs-container">
+        <div className="tabs-header">
+          <button 
+            className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => handleTabChange('all')}
+          >
+            All Personnel
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'driver' ? 'active' : ''}`}
+            onClick={() => handleTabChange('driver')}
+          >
+            Drivers
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'team_leader' ? 'active' : ''}`}
+            onClick={() => handleTabChange('team_leader')}
+          >
+            Team Leaders
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'customer_care' ? 'active' : ''}`}
+            onClick={() => handleTabChange('customer_care')}
+          >
+            Customer Care
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'mechanic' ? 'active' : ''}`}
+            onClick={() => handleTabChange('mechanic')}
+          >
+            Mechanics
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'supervisor' ? 'active' : ''}`}
+            onClick={() => handleTabChange('supervisor')}
+          >
+            Supervisors
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'manager' ? 'active' : ''}`}
+            onClick={() => handleTabChange('manager')}
+          >
+            Managers
+          </button>
+        </div>
+      </div>
 
-               {/* Personnel List */}
-       <div className="personnel-list">
-         <div className="list-header">
-           <h3>Personnel Directory</h3>
-           <div className="header-controls">
-             <div className="search-box">
-               <input
-                 type="text"
-                 placeholder="Search personnel..."
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-                 className="search-input"
-               />
-             </div>
-             
-             <div className="filter-group">
-               <select
-                 value={typeFilter}
-                 onChange={(e) => setTypeFilter(e.target.value)}
-                 className="filter-select"
-               >
-                 <option value="all">All Types</option>
-                 <option value="driver">Drivers</option>
-                 <option value="customer-care">Customer Care</option>
-               </select>
-               
-               <select
-                 value={routeFilter}
-                 onChange={(e) => setRouteFilter(e.target.value)}
-                 className="filter-select"
-               >
-                 <option value="all">All Roles</option>
-                 <option value="driver">Driver</option>
-                 <option value="team-leader">Team Leader</option>
-                 <option value="staff">Staff</option>
-                 <option value="reserve">Reserve</option>
-               </select>
-               
-               <select
-                 value={statusFilter}
-                 onChange={(e) => setStatusFilter(e.target.value)}
-                 className="filter-select"
-               >
-                 <option value="all">All Status</option>
-                 <option value="active">Active</option>
-                 <option value="reserve">Reserve</option>
-                 <option value="sick">Sick</option>
-               </select>
-             </div>
-           </div>
-         </div>
-        <div className="table-container">
-          {loading && (
-            <div className="loading-state">
-              <div className="loading-spinner"></div>
-              <p>Loading personnel...</p>
-            </div>
-          )}
-          
-          {error && (
-            <div className="error-state">
-              <p>Error: {error}</p>
-              <button onClick={refreshData} className="retry-btn">Retry</button>
-            </div>
-          )}
-          
-          {!loading && !error && (
-            <>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Role</th>
-                    <th>Route</th>
-                    <th>Status</th>
-                    <th>Phone</th>
-                    <th>License/Experience</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPersonnel.map((person) => (
-                <tr key={person.id}>
-                  <td>{person.name}</td>
-                  <td>{person.type === 'driver' ? 'Driver' : 'Customer Care'}</td>
-                  <td>{person.role === 'team-leader' ? 'Team Leader' : person.role}</td>
-                  <td>{person.route}</td>
-                  <td>{person.status}</td>
-                  <td>{person.phone}</td>
-                  <td>{person.type === 'driver' ? person.license : person.experience}</td>
-                                     <td>
-                     <button 
-                       className="edit-btn" 
-                       onClick={() => handleEditPersonnel(person)}
-                     >
-                       Edit
-                     </button>
-                   </td>
+      {/* Search and Filter Controls */}
+      <div className="search-filter-container">
+        <form onSubmit={handleSearch} className="search-form">
+          <div className="search-input-group">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search by name, email, employee ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button type="submit" className="search-button">
+              Search
+            </button>
+          </div>
+        </form>
+
+        <div className="filter-controls">
+          <div className="filter-group">
+            <label>Department:</label>
+            <select 
+              value={departmentFilter} 
+              onChange={(e) => {
+                setDepartmentFilter(e.target.value);
+                handleFilterChange();
+              }}
+            >
+              <option value="">All Departments</option>
+              <option value="operations">Operations</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="customer_service">Customer Service</option>
+              <option value="administration">Administration</option>
+              <option value="finance">Finance</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Terminal:</label>
+            <select 
+              value={terminalFilter} 
+              onChange={(e) => {
+                setTerminalFilter(e.target.value);
+                handleFilterChange();
+              }}
+            >
+              <option value="">All Terminals</option>
+              <option value="Kigali">Kigali</option>
+              <option value="Kampala">Kampala</option>
+              <option value="Nairobi">Nairobi</option>
+              <option value="Juba">Juba</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Status:</label>
+            <select 
+              value={statusFilter} 
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                handleFilterChange();
+              }}
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+              <option value="terminated">Terminated</option>
+              <option value="on_leave">On Leave</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Personnel Table */}
+      <div className="table-container">
+        {filteredPersonnel.length === 0 ? (
+          <div className="empty-state">
+            <FaUser className="empty-icon" />
+            <h3>No personnel found</h3>
+            <p>Add your first personnel member to get started</p>
+            <button 
+              className="add-button"
+              onClick={() => setShowAddForm(true)}
+            >
+              <FaPlus />
+              Add Personnel
+            </button>
+          </div>
+        ) : (
+          <table className="personnel-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Terminal</th>
+                <th>Status</th>
+                <th>Contact</th>
+                <th>Driver Info</th>
+                <th>Performance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPersonnel.map((person) => (
+                <tr key={person._id}>
+                  <td>
+                    <div className="employee-info">
+                      <div className="employee-avatar">
+                        <FaUser />
+                      </div>
+                      <div className="employee-details">
+                        <strong>{person.firstName} {person.lastName}</strong>
+                        <span className="employee-id">{person.employeeId}</span>
+                        <span className="hire-date">
+                          <FaCalendar />
+                          Hired: {new Date(person.hireDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className={`role-badge ${getRoleBadgeClass(person.role)}`}>
+                      {person.role.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`department-badge ${getDepartmentBadgeClass(person.department)}`}>
+                      {person.department.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="terminal-badge">
+                      {person.terminal}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${getStatusBadgeClass(person.employmentStatus)}`}>
+                      {person.employmentStatus.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="contact-info">
+                      <div className="contact-item">
+                        <FaEnvelope />
+                        <span>{person.email}</span>
+                      </div>
+                      <div className="contact-item">
+                        <FaPhone />
+                        <span>{person.phoneNumber}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    {person.role === 'driver' ? (
+                      <div className="driver-info">
+                        {person.licenseNumber && (
+                          <div className="license-info">
+                            <FaIdCard />
+                            <span>{person.licenseNumber}</span>
+                            {person.licenseExpiryDate && (
+                              <span className={`license-status ${getLicenseStatusColor(person.licenseStatus)}`}>
+                                {person.licenseStatus}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {person.assignedVehicle && (
+                          <div className="vehicle-info">
+                            <FaCar />
+                            <span>{person.assignedVehicle.plateNumber}</span>
+                          </div>
+                        )}
+                        {person.assignedRoute && (
+                          <div className="route-info">
+                            <FaRoute />
+                            <span>{person.assignedRoute}</span>
+                          </div>
+                        )}
+                        <div className={`points-info ${getPointsColor(person.drivingPoints)}`}>
+                          <span>{person.drivingPoints} points</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="not-driver">N/A</span>
+                    )}
+                  </td>
+                  <td>
+                    <div className="performance-info">
+                      <div className="rating">
+                        <FaStar />
+                        <span>{person.performanceRating}/5</span>
+                      </div>
+                      {person.lastEvaluationDate && (
+                        <div className="evaluation-date">
+                          <FaCalendar />
+                          <span>{new Date(person.lastEvaluationDate).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="action-btn view-btn"
+                        title="View Details"
+                        onClick={() => {
+                          setEditingPersonnel(person);
+                          setShowEditForm(true);
+                        }}
+                      >
+                        <FaEye />
+                      </button>
+                      <button
+                        className="action-btn edit-btn"
+                        title="Edit Personnel"
+                        onClick={() => {
+                          setEditingPersonnel(person);
+                          setShowEditForm(true);
+                        }}
+                      >
+                        <FaEdit />
+                      </button>
+                      {person.role === 'driver' && (
+                        <button
+                          className="action-btn infraction-btn"
+                          title="Add Infraction"
+                          onClick={() => {
+                            setSelectedPersonnel(person);
+                            setShowInfractionForm(true);
+                          }}
+                        >
+                          <FaExclamationTriangle />
+                        </button>
+                      )}
+                      <button
+                        className="action-btn delete-btn"
+                        title="Delete Personnel"
+                        onClick={() => handleDeletePersonnel(person._id)}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
-                            </tbody>
-              </table>
-            </>
-          )}
-        </div>
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* Add Personnel Form Modal */}
-      {showAddPersonnelForm && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Add New Personnel</h3>
-              <button onClick={handleCancelEdit} className="close-btn">
-                &times;
-              </button>
-            </div>
-            <form onSubmit={handleSubmitPersonnel} className="modal-form">
-              <div className="form-group">
-                <label htmlFor="name">Full Name:</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={newPersonnel.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="type">Type:</label>
-                  <select
-                    id="type"
-                    name="type"
-                    value={newPersonnel.type}
-                    onChange={handleInputChange}
-                  >
-                    <option value="driver">Driver</option>
-                    <option value="customer-care">Customer Care</option>
-                  </select>
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="role">Role:</label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={newPersonnel.role}
-                    onChange={handleInputChange}
-                  >
-                    <option value="driver">Driver</option>
-                    <option value="team-leader">Team Leader</option>
-                    <option value="staff">Staff</option>
-                    <option value="reserve">Reserve</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="route">Route:</label>
-                  <select
-                    id="route"
-                    name="route"
-                    value={newPersonnel.route}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Route</option>
-                    <option value="Kampala-Nairobi">Kampala-Nairobi</option>
-                    <option value="Goma-Cyanika-Kampala">Goma-Cyanika-Kampala</option>
-                    <option value="Nairobi-Kigali">Nairobi-Kigali</option>
-                    <option value="Kampala-Kigali">Kampala-Kigali</option>
-                    <option value="Kampala-Juba">Kampala-Juba</option>
-                    <option value="Juba-Bor">Juba-Bor</option>
-                    <option value="Standby">Standby</option>
-                  </select>
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="status">Status:</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={newPersonnel.status}
-                    onChange={handleInputChange}
-                  >
-                    <option value="active">Active</option>
-                    <option value="reserve">Reserve</option>
-                    <option value="sick">Sick</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="phone">Phone Number:</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={newPersonnel.phone}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                {newPersonnel.type === 'driver' ? (
-                  <div className="form-group">
-                    <label htmlFor="license">License Number:</label>
-                    <input
-                      type="text"
-                      id="license"
-                      name="license"
-                      value={newPersonnel.license}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                ) : (
-                  <div className="form-group">
-                    <label htmlFor="experience">Experience:</label>
-                    <input
-                      type="text"
-                      id="experience"
-                      name="experience"
-                      value={newPersonnel.experience}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 3 years"
-                      required
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" onClick={handleCancelEdit} className="cancel-btn">
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  Add Personnel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Add Personnel Modal */}
+      {showAddForm && (
+        <PersonnelForm
+          isOpen={showAddForm}
+          onClose={() => setShowAddForm(false)}
+          onSubmit={handleAddPersonnel}
+          mode="add"
+        />
       )}
 
-      {/* Edit Personnel Form Modal */}
-      {showEditPersonnelForm && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Edit Personnel</h3>
-              <button onClick={handleCancelEdit} className="close-btn">
-                &times;
-              </button>
-            </div>
-            <form onSubmit={handleSubmitPersonnel} className="modal-form">
-              <div className="form-group">
-                <label htmlFor="editName">Full Name:</label>
-                <input
-                  type="text"
-                  id="editName"
-                  name="name"
-                  value={newPersonnel.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="editType">Type:</label>
-                  <select
-                    id="editType"
-                    name="type"
-                    value={newPersonnel.type}
-                    onChange={handleInputChange}
-                  >
-                    <option value="driver">Driver</option>
-                    <option value="customer-care">Customer Care</option>
-                  </select>
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="editRole">Role:</label>
-                  <select
-                    id="editRole"
-                    name="role"
-                    value={newPersonnel.role}
-                    onChange={handleInputChange}
-                  >
-                    <option value="driver">Driver</option>
-                    <option value="team-leader">Team Leader</option>
-                    <option value="staff">Staff</option>
-                    <option value="reserve">Reserve</option>
-                  </select>
-                </div>
-              </div>
+      {/* Edit Personnel Modal */}
+      {showEditForm && editingPersonnel && (
+        <PersonnelForm
+          isOpen={showEditForm}
+          onClose={() => {
+            setShowEditForm(false);
+            setEditingPersonnel(null);
+          }}
+          onSubmit={(data) => handleEditPersonnel(editingPersonnel._id, data)}
+          mode="edit"
+          personnel={editingPersonnel}
+        />
+      )}
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="editRoute">Route:</label>
-                  <select
-                    id="editRoute"
-                    name="route"
-                    value={newPersonnel.route}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Route</option>
-                    <option value="Kampala-Nairobi">Kampala-Nairobi</option>
-                    <option value="Goma-Cyanika-Kampala">Goma-Cyanika-Kampala</option>
-                    <option value="Nairobi-Kigali">Nairobi-Kigali</option>
-                    <option value="Kampala-Kigali">Kampala-Kigali</option>
-                    <option value="Kampala-Juba">Kampala-Juba</option>
-                    <option value="Juba-Bor">Juba-Bor</option>
-                    <option value="Standby">Standby</option>
-                  </select>
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="editStatus">Status:</label>
-                  <select
-                    id="editStatus"
-                    name="status"
-                    value={newPersonnel.status}
-                    onChange={handleInputChange}
-                  >
-                    <option value="active">Active</option>
-                    <option value="reserve">Reserve</option>
-                    <option value="sick">Sick</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="editPhone">Phone Number:</label>
-                  <input
-                    type="tel"
-                    id="editPhone"
-                    name="phone"
-                    value={newPersonnel.phone}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                {newPersonnel.type === 'driver' ? (
-                  <div className="form-group">
-                    <label htmlFor="editLicense">License Number:</label>
-                    <input
-                      type="text"
-                      id="editLicense"
-                      name="license"
-                      value={newPersonnel.license}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                ) : (
-                  <div className="form-group">
-                    <label htmlFor="editExperience">Experience:</label>
-                    <input
-                      type="text"
-                      id="editExperience"
-                      name="experience"
-                      value={newPersonnel.experience}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 3 years"
-                      required
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" onClick={handleCancelEdit} className="cancel-btn">
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  Update Personnel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Add Infraction Modal */}
+      {showInfractionForm && selectedPersonnel && (
+        <InfractionForm
+          isOpen={showInfractionForm}
+          onClose={() => {
+            setShowInfractionForm(false);
+            setSelectedPersonnel(null);
+          }}
+          onSubmit={(data) => handleAddInfraction(selectedPersonnel._id, data)}
+          personnel={selectedPersonnel}
+        />
       )}
     </div>
   );

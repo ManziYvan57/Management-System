@@ -315,6 +315,10 @@ export const personnelAPI = {
     return apiRequest(`/personnel${queryString ? `?${queryString}` : ''}`);
   },
   
+  getById: async (id) => {
+    return apiRequest(`/personnel/${id}`);
+  },
+  
   create: async (personnelData) => {
     return apiRequest('/personnel', {
       method: 'POST',
@@ -322,9 +326,41 @@ export const personnelAPI = {
     });
   },
   
+  update: async (id, personnelData) => {
+    return apiRequest(`/personnel/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(personnelData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/personnel/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
   getStats: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/personnel/stats${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`/personnel/stats/overview${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getDrivers: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/personnel/drivers${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  addInfraction: async (id, infractionData) => {
+    return apiRequest(`/personnel/${id}/infractions`, {
+      method: 'POST',
+      body: JSON.stringify(infractionData)
+    });
+  },
+  
+  updateInfraction: async (id, infractionId, infractionData) => {
+    return apiRequest(`/personnel/${id}/infractions/${infractionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(infractionData)
+    });
   }
 };
 

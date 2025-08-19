@@ -1,215 +1,539 @@
 const express = require('express');
 const router = express.Router();
+const Personnel = require('../models/Personnel');
+const Vehicle = require('../models/Vehicle');
 const { protect, authorize } = require('../middleware/auth');
+const { body, validationResult } = require('express-validator');
+
+// Validation middleware
+const validatePersonnel = [
+  body('firstName').trim().isLength({ min: 1 }).withMessage('First name is required'),
+  body('lastName').trim().isLength({ min: 1 }).withMessage('Last name is required'),
+  body('email').isEmail().withMessage('Please enter a valid email'),
+  body('phoneNumber').matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid phone number'),
+  body('dateOfBirth').isISO8601().withMessage('Please enter a valid date of birth'),
+  body('gender').isIn(['male', 'female', 'other']).withMessage('Please select a valid gender'),
+  body('employeeId').trim().isLength({ min: 1 }).withMessage('Employee ID is required'),
+  body('role').isIn(['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'other']).withMessage('Please select a valid role'),
+  body('department').isIn(['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'other']).withMessage('Please select a valid department'),
+  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Please select a valid terminal'),
+  body('hireDate').isISO8601().withMessage('Please enter a valid hire date'),
+  body('employmentStatus').optional().isIn(['active', 'inactive', 'suspended', 'terminated', 'on_leave']).withMessage('Please select a valid employment status'),
+  body('salary').optional().isNumeric().withMessage('Salary must be a number'),
+  body('licenseNumber').optional().trim(),
+  body('licenseType').optional().isIn(['A', 'B', 'C', 'D', 'E', 'F']).withMessage('Please select a valid license type'),
+  body('licenseExpiryDate').optional().isISO8601().withMessage('Please enter a valid license expiry date'),
+  body('drivingPoints').optional().isInt({ min: 0, max: 100 }).withMessage('Driving points must be between 0 and 100'),
+  body('assignedVehicle').optional().isMongoId().withMessage('Please enter a valid vehicle ID'),
+  body('assignedRoute').optional().trim(),
+  body('performanceRating').optional().isFloat({ min: 1, max: 5 }).withMessage('Performance rating must be between 1 and 5'),
+  body('lastEvaluationDate').optional().isISO8601().withMessage('Please enter a valid evaluation date'),
+  body('workSchedule.shift').optional().isIn(['morning', 'afternoon', 'night', 'flexible']).withMessage('Please select a valid shift'),
+  body('workSchedule.workingDays').optional().isArray().withMessage('Working days must be an array'),
+  body('workSchedule.startTime').optional().trim(),
+  body('workSchedule.endTime').optional().trim(),
+  body('notes').optional().trim(),
+  body('skills').optional().isArray().withMessage('Skills must be an array'),
+  body('languages').optional().isArray().withMessage('Languages must be an array')
+];
 
 // @desc    Get all personnel
 // @route   GET /api/personnel
 // @access  Private
-router.get('/', protect, async (req, res) => {
+router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, department, status, terminal } = req.query;
+    const {
+      search,
+      role,
+      department,
+      terminal,
+      employmentStatus,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build query
+    const query = {};
     
-    // Build query based on user role and terminal
-    let query = { isActive: true };
-    
-    // Terminal-based filtering
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
-    
-    // Search functionality
     if (search) {
       query.$or = [
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
         { employeeId: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } }
+        { phoneNumber: { $regex: search, $options: 'i' } }
       ];
     }
     
-    // Filter by department
-    if (department) {
-      query.department = department;
-    }
+    if (role) query.role = role;
+    if (department) query.department = department;
+    if (terminal) query.terminal = terminal;
+    if (employmentStatus) query.employmentStatus = employmentStatus;
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    // Execute query with pagination
+    const skip = (page - 1) * limit;
     
-    // Filter by status
-    if (status) {
-      query.status = status;
-    }
-    
-    // Mock personnel data
-    const mockPersonnel = [
-      {
-        _id: '1',
-        employeeId: 'EMP001',
-        firstName: 'John',
-        lastName: 'Driver',
-        email: 'john.driver@trinity.com',
-        phone: '+250700000001',
-        department: 'drivers',
-        position: 'Senior Driver',
-        hireDate: '2020-03-15',
-        salary: 450000,
-        status: 'active',
-        licenseNumber: 'DL123456',
-        licenseExpiry: '2025-12-31',
-        emergencyContact: {
-          name: 'Jane Driver',
-          phone: '+250700000002',
-          relationship: 'Spouse'
-        },
-        terminal: req.user.terminal || 'kigali',
-        createdBy: req.user.id
-      },
-      {
-        _id: '2',
-        employeeId: 'EMP002',
-        firstName: 'Sarah',
-        lastName: 'Mechanic',
-        email: 'sarah.mechanic@trinity.com',
-        phone: '+250700000003',
-        department: 'garage',
-        position: 'Lead Mechanic',
-        hireDate: '2019-08-10',
-        salary: 550000,
-        status: 'active',
-        certifications: ['ASE Certified', 'Diesel Engine Specialist'],
-        emergencyContact: {
-          name: 'Mike Mechanic',
-          phone: '+250700000004',
-          relationship: 'Brother'
-        },
-        terminal: req.user.terminal || 'kigali',
-        createdBy: req.user.id
-      },
-      {
-        _id: '3',
-        employeeId: 'EMP003',
-        firstName: 'David',
-        lastName: 'Manager',
-        email: 'david.manager@trinity.com',
-        phone: '+250700000005',
-        department: 'management',
-        position: 'Operations Manager',
-        hireDate: '2018-01-15',
-        salary: 750000,
-        status: 'active',
-        emergencyContact: {
-          name: 'Lisa Manager',
-          phone: '+250700000006',
-          relationship: 'Spouse'
-        },
-        terminal: req.user.terminal || 'kigali',
-        createdBy: req.user.id
-      }
-    ];
-    
-    const total = mockPersonnel.length;
-    
-    res.status(200).json({
+    const personnel = await Personnel.find(query)
+      .populate('assignedVehicle', 'plateNumber make model')
+      .populate('supervisor', 'firstName lastName employeeId')
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Personnel.countDocuments(query);
+
+    res.json({
       success: true,
-      count: mockPersonnel.length,
-      total,
+      data: personnel,
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrev: page > 1
-      },
-      data: mockPersonnel
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
     console.error('Error fetching personnel:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching personnel',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @desc    Get personnel by ID
+// @route   GET /api/personnel/:id
+// @access  Private
+router.get('/:id', protect, authorize('personnel', 'read'), async (req, res) => {
+  try {
+    const personnel = await Personnel.findById(req.params.id)
+      .populate('assignedVehicle', 'plateNumber make model year')
+      .populate('supervisor', 'firstName lastName employeeId role')
+      .populate('createdBy', 'firstName lastName')
+      .populate('updatedBy', 'firstName lastName');
+
+    if (!personnel) {
+      return res.status(404).json({ success: false, message: 'Personnel not found' });
+    }
+
+    res.json({ success: true, data: personnel });
+  } catch (error) {
+    console.error('Error fetching personnel:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
 // @desc    Create new personnel
 // @route   POST /api/personnel
 // @access  Private
-router.post('/', protect, authorize('personnel', 'create'), async (req, res) => {
+router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, async (req, res) => {
   try {
-    const personnelData = {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    // Check if email already exists
+    const existingEmail = await Personnel.findOne({ email: req.body.email });
+    if (existingEmail) {
+      return res.status(400).json({ success: false, message: 'Email already exists' });
+    }
+
+    // Check if employee ID already exists
+    const existingEmployeeId = await Personnel.findOne({ employeeId: req.body.employeeId });
+    if (existingEmployeeId) {
+      return res.status(400).json({ success: false, message: 'Employee ID already exists' });
+    }
+
+    // Check if license number already exists (for drivers)
+    if (req.body.role === 'driver' && req.body.licenseNumber) {
+      const existingLicense = await Personnel.findOne({ licenseNumber: req.body.licenseNumber });
+      if (existingLicense) {
+        return res.status(400).json({ success: false, message: 'License number already exists' });
+      }
+    }
+
+    // Validate assigned vehicle exists (if provided)
+    if (req.body.assignedVehicle) {
+      const vehicle = await Vehicle.findById(req.body.assignedVehicle);
+      if (!vehicle) {
+        return res.status(400).json({ success: false, message: 'Assigned vehicle not found' });
+      }
+    }
+
+    const personnel = new Personnel({
       ...req.body,
-      terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
-      createdBy: req.user.id,
-      status: 'active'
-    };
-    
-    // Mock response for now
-    const mockPersonnel = {
-      _id: Date.now().toString(),
-      ...personnelData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    res.status(201).json({
-      success: true,
-      message: 'Personnel created successfully',
-      data: mockPersonnel
+      createdBy: req.user.id
     });
+
+    await personnel.save();
+
+    const populatedPersonnel = await Personnel.findById(personnel._id)
+      .populate('assignedVehicle', 'plateNumber make model')
+      .populate('supervisor', 'firstName lastName employeeId');
+
+    res.status(201).json({ success: true, data: populatedPersonnel });
   } catch (error) {
     console.error('Error creating personnel:', error);
-    res.status(400).json({
-      success: false,
-      message: 'Error creating personnel',
-      error: error.message
-    });
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @desc    Update personnel
+// @route   PUT /api/personnel/:id
+// @access  Private
+router.put('/:id', protect, authorize('personnel', 'edit'), validatePersonnel, async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const personnel = await Personnel.findById(req.params.id);
+    if (!personnel) {
+      return res.status(404).json({ success: false, message: 'Personnel not found' });
+    }
+
+    // Check if email already exists (excluding current personnel)
+    if (req.body.email && req.body.email !== personnel.email) {
+      const existingEmail = await Personnel.findOne({ email: req.body.email });
+      if (existingEmail) {
+        return res.status(400).json({ success: false, message: 'Email already exists' });
+      }
+    }
+
+    // Check if employee ID already exists (excluding current personnel)
+    if (req.body.employeeId && req.body.employeeId !== personnel.employeeId) {
+      const existingEmployeeId = await Personnel.findOne({ employeeId: req.body.employeeId });
+      if (existingEmployeeId) {
+        return res.status(400).json({ success: false, message: 'Employee ID already exists' });
+      }
+    }
+
+    // Check if license number already exists (for drivers)
+    if (req.body.role === 'driver' && req.body.licenseNumber && req.body.licenseNumber !== personnel.licenseNumber) {
+      const existingLicense = await Personnel.findOne({ licenseNumber: req.body.licenseNumber });
+      if (existingLicense) {
+        return res.status(400).json({ success: false, message: 'License number already exists' });
+      }
+    }
+
+    // Validate assigned vehicle exists (if provided)
+    if (req.body.assignedVehicle) {
+      const vehicle = await Vehicle.findById(req.body.assignedVehicle);
+      if (!vehicle) {
+        return res.status(400).json({ success: false, message: 'Assigned vehicle not found' });
+      }
+    }
+
+    // Remove createdBy from update to prevent modification
+    delete req.body.createdBy;
+
+    const updatedPersonnel = await Personnel.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...req.body,
+        updatedBy: req.user.id
+      },
+      { new: true, runValidators: true }
+    ).populate('assignedVehicle', 'plateNumber make model')
+     .populate('supervisor', 'firstName lastName employeeId');
+
+    res.json({ success: true, data: updatedPersonnel });
+  } catch (error) {
+    console.error('Error updating personnel:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @desc    Delete personnel
+// @route   DELETE /api/personnel/:id
+// @access  Private
+router.delete('/:id', protect, authorize('personnel', 'delete'), async (req, res) => {
+  try {
+    const personnel = await Personnel.findById(req.params.id);
+    if (!personnel) {
+      return res.status(404).json({ success: false, message: 'Personnel not found' });
+    }
+
+    await Personnel.findByIdAndDelete(req.params.id);
+
+    res.json({ success: true, message: 'Personnel deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting personnel:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
 // @desc    Get personnel statistics
-// @route   GET /api/personnel/stats
+// @route   GET /api/personnel/stats/overview
 // @access  Private
-router.get('/stats', protect, async (req, res) => {
+router.get('/stats/overview', protect, authorize('personnel', 'read'), async (req, res) => {
   try {
     const { terminal } = req.query;
-    
-    // Build query based on user role and terminal
-    let query = { isActive: true };
-    
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
-    
-    // Mock statistics
-    const stats = {
-      totalPersonnel: 25,
-      activePersonnel: 23,
-      onLeavePersonnel: 2,
-      totalSalary: 12500000,
-      departments: [
-        { name: 'Drivers', count: 12, avgSalary: 450000 },
-        { name: 'Garage', count: 6, avgSalary: 550000 },
-        { name: 'Management', count: 4, avgSalary: 750000 },
-        { name: 'Transport', count: 3, avgSalary: 500000 }
-      ],
-      recentHires: [
-        { name: 'John Driver', date: '2024-01-15', department: 'Drivers' },
-        { name: 'Sarah Mechanic', date: '2024-01-10', department: 'Garage' }
-      ]
-    };
-    
-    res.status(200).json({
+    const query = terminal ? { terminal } : {};
+
+    const [
+      totalPersonnel,
+      activePersonnel,
+      drivers,
+      teamLeaders,
+      customerCare,
+      mechanics,
+      supervisors,
+      managers,
+      admins,
+      otherRoles,
+      personnelByTerminal,
+      personnelByDepartment,
+      personnelByStatus,
+      recentHires,
+      expiringLicenses
+    ] = await Promise.all([
+      Personnel.countDocuments(query),
+      Personnel.countDocuments({ ...query, employmentStatus: 'active' }),
+      Personnel.countDocuments({ ...query, role: 'driver' }),
+      Personnel.countDocuments({ ...query, role: 'team_leader' }),
+      Personnel.countDocuments({ ...query, role: 'customer_care' }),
+      Personnel.countDocuments({ ...query, role: 'mechanic' }),
+      Personnel.countDocuments({ ...query, role: 'supervisor' }),
+      Personnel.countDocuments({ ...query, role: 'manager' }),
+      Personnel.countDocuments({ ...query, role: 'admin' }),
+      Personnel.countDocuments({ ...query, role: 'other' }),
+      Personnel.aggregate([
+        { $match: query },
+        { $group: { _id: '$terminal', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      Personnel.aggregate([
+        { $match: query },
+        { $group: { _id: '$department', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      Personnel.aggregate([
+        { $match: query },
+        { $group: { _id: '$employmentStatus', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      Personnel.find({ ...query, hireDate: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } })
+        .select('firstName lastName role hireDate')
+        .sort({ hireDate: -1 })
+        .limit(5),
+      Personnel.find({
+        ...query,
+        role: 'driver',
+        licenseExpiryDate: {
+          $gte: new Date(),
+          $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        }
+      })
+        .select('firstName lastName licenseExpiryDate licenseNumber')
+        .sort({ licenseExpiryDate: 1 })
+        .limit(10)
+    ]);
+
+    res.json({
       success: true,
-      data: stats
+      data: {
+        totalPersonnel,
+        activePersonnel,
+        roleBreakdown: {
+          drivers,
+          teamLeaders,
+          customerCare,
+          mechanics,
+          supervisors,
+          managers,
+          admins,
+          otherRoles
+        },
+        personnelByTerminal,
+        personnelByDepartment,
+        personnelByStatus,
+        recentHires,
+        expiringLicenses
+      }
     });
   } catch (error) {
-    console.error('Error fetching personnel stats:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching personnel statistics',
-      error: error.message
+    console.error('Error fetching personnel statistics:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @desc    Get drivers only
+// @route   GET /api/personnel/drivers
+// @access  Private
+router.get('/drivers', protect, authorize('personnel', 'read'), async (req, res) => {
+  try {
+    const {
+      search,
+      terminal,
+      employmentStatus,
+      licenseStatus,
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    const query = { role: 'driver' };
+    
+    if (search) {
+      query.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { licenseNumber: { $regex: search, $options: 'i' } },
+        { employeeId: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (terminal) query.terminal = terminal;
+    if (employmentStatus) query.employmentStatus = employmentStatus;
+
+    // Filter by license status
+    if (licenseStatus) {
+      const today = new Date();
+      const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      
+      switch (licenseStatus) {
+        case 'expired':
+          query.licenseExpiryDate = { $lt: today };
+          break;
+        case 'expiring_soon':
+          query.licenseExpiryDate = { $gte: today, $lte: thirtyDaysFromNow };
+          break;
+        case 'valid':
+          query.licenseExpiryDate = { $gt: thirtyDaysFromNow };
+          break;
+      }
+    }
+
+    const skip = (page - 1) * limit;
+    
+    const drivers = await Personnel.find(query)
+      .populate('assignedVehicle', 'plateNumber make model')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Personnel.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: drivers,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
     });
+  } catch (error) {
+    console.error('Error fetching drivers:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @desc    Add infraction to personnel
+// @route   POST /api/personnel/:id/infractions
+// @access  Private
+router.post('/:id/infractions', protect, authorize('personnel', 'edit'), [
+  body('date').isISO8601().withMessage('Please enter a valid date'),
+  body('type').trim().isLength({ min: 1 }).withMessage('Infraction type is required'),
+  body('description').optional().trim(),
+  body('points').isInt({ min: 0 }).withMessage('Points must be a positive number'),
+  body('severity').isIn(['minor', 'major', 'critical']).withMessage('Please select a valid severity'),
+  body('status').optional().isIn(['pending', 'resolved', 'appealed']).withMessage('Please select a valid status'),
+  body('notes').optional().trim()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const personnel = await Personnel.findById(req.params.id);
+    if (!personnel) {
+      return res.status(404).json({ success: false, message: 'Personnel not found' });
+    }
+
+    const infraction = {
+      date: req.body.date,
+      type: req.body.type,
+      description: req.body.description,
+      points: req.body.points,
+      severity: req.body.severity,
+      status: req.body.status || 'pending',
+      notes: req.body.notes
+    };
+
+    // Update driving points for drivers
+    if (personnel.role === 'driver') {
+      personnel.drivingPoints = Math.max(0, personnel.drivingPoints - req.body.points);
+    }
+
+    personnel.infractions.push(infraction);
+    personnel.updatedBy = req.user.id;
+
+    await personnel.save();
+
+    const updatedPersonnel = await Personnel.findById(req.params.id)
+      .populate('assignedVehicle', 'plateNumber make model')
+      .populate('supervisor', 'firstName lastName employeeId');
+
+    res.json({ success: true, data: updatedPersonnel });
+  } catch (error) {
+    console.error('Error adding infraction:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// @desc    Update infraction status
+// @route   PUT /api/personnel/:id/infractions/:infractionId
+// @access  Private
+router.put('/:id/infractions/:infractionId', protect, authorize('personnel', 'edit'), [
+  body('status').isIn(['pending', 'resolved', 'appealed']).withMessage('Please select a valid status'),
+  body('notes').optional().trim()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const personnel = await Personnel.findById(req.params.id);
+    if (!personnel) {
+      return res.status(404).json({ success: false, message: 'Personnel not found' });
+    }
+
+    const infraction = personnel.infractions.id(req.params.infractionId);
+    if (!infraction) {
+      return res.status(404).json({ success: false, message: 'Infraction not found' });
+    }
+
+    infraction.status = req.body.status;
+    if (req.body.notes) {
+      infraction.notes = req.body.notes;
+    }
+
+    personnel.updatedBy = req.user.id;
+    await personnel.save();
+
+    const updatedPersonnel = await Personnel.findById(req.params.id)
+      .populate('assignedVehicle', 'plateNumber make model')
+      .populate('supervisor', 'firstName lastName employeeId');
+
+    res.json({ success: true, data: updatedPersonnel });
+  } catch (error) {
+    console.error('Error updating infraction:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
