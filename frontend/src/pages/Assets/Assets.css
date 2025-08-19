@@ -1279,9 +1279,10 @@ label {
 }
 
 .action-btn svg {
-  width: 14px;
-  height: 14px;
-  display: block;
+  width: 14px !important;
+  height: 14px !important;
+  display: block !important;
+  color: inherit !important;
 }
 
 .view-btn {

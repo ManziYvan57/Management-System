@@ -238,33 +238,33 @@ const EquipmentTab = () => {
                   </td>
                   <td>
                                          <div className="action-buttons">
-                       <button
-                         className="action-btn view-btn"
-                         title="View Details"
-                         onClick={() => {
-                           setEditingEquipment(item);
-                           setShowEditForm(true);
-                         }}
-                       >
-                         <FaEye style={{ fontSize: '14px' }} />
-                       </button>
-                       <button
-                         className="action-btn edit-btn"
-                         title="Edit Equipment"
-                         onClick={() => {
-                           setEditingEquipment(item);
-                           setShowEditForm(true);
-                         }}
-                       >
-                         <FaEdit style={{ fontSize: '14px' }} />
-                       </button>
-                       <button
-                         className="action-btn delete-btn"
-                         title="Delete Equipment"
-                         onClick={() => handleDeleteEquipment(item._id)}
-                       >
-                         <FaTrash style={{ fontSize: '14px' }} />
-                       </button>
+                                               <button
+                          className="action-btn view-btn"
+                          title="View Details"
+                          onClick={() => {
+                            setEditingEquipment(item);
+                            setShowEditForm(true);
+                          }}
+                        >
+                          <FaEye />
+                        </button>
+                        <button
+                          className="action-btn edit-btn"
+                          title="Edit Equipment"
+                          onClick={() => {
+                            setEditingEquipment(item);
+                            setShowEditForm(true);
+                          }}
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="action-btn delete-btn"
+                          title="Delete Equipment"
+                          onClick={() => handleDeleteEquipment(item._id)}
+                        >
+                          <FaTrash />
+                        </button>
                      </div>
                   </td>
                 </tr>
