@@ -3,6 +3,7 @@
   padding: 2rem;
   font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
   background-color: #f9fafb;
+  min-height: 100vh;
 }
 
 .assets-header {
@@ -29,6 +30,8 @@
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  margin: 0 auto;
+  max-width: 1200px;
 }
 
 .tabs-header {
@@ -49,6 +52,8 @@
   cursor: pointer;
   transition: all 0.2s;
   border-bottom: 3px solid transparent;
+  flex: 1;
+  justify-content: center;
 }
 
 .tab-button:hover {
@@ -64,15 +69,7 @@
 
 .tab-content {
   padding: 0;
-}
-
-.assets-container h2 {
-  font-size: 1.8rem;
-  color: #111827;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-  border-bottom: 2px solid #d1d5db;
-  padding-bottom: 0.75rem;
+  min-height: 400px;
 }
 
 /* Dashboard Statistics */
@@ -994,7 +991,8 @@ label {
 
 /* Vehicles Tab Styles */
 .vehicles-tab {
-  padding: 1rem;
+  padding: 2rem;
+  background-color: white;
 }
 
 .tab-header {
@@ -1361,33 +1359,33 @@ label {
   cursor: pointer;
 }
 
-/* Responsive Design for Vehicle Form */
+/* Responsive Design */
 @media (max-width: 768px) {
-  .vehicle-form-modal {
-    width: 95%;
-    margin: 1rem;
+  .assets-container {
+    padding: 1rem;
   }
   
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .tabs-container {
+    margin: 0;
+    border-radius: 8px;
   }
   
-  .modal-header {
-    padding: 1rem 1.5rem;
-  }
-  
-  .vehicle-form {
-    padding: 1.5rem;
-  }
-  
-  .form-actions {
+  .tabs-header {
     flex-direction: column;
   }
   
-  .submit-button,
-  .cancel-button {
-    width: 100%;
+  .tab-button {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: none;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: #3b82f6;
+  }
+  
+  .vehicles-tab {
+    padding: 1rem;
   }
   
   .tab-header {
@@ -1415,5 +1413,32 @@ label {
   
   .action-buttons {
     flex-direction: column;
+  }
+  
+  .vehicle-form-modal {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .modal-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .vehicle-form {
+    padding: 1.5rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .submit-button,
+  .cancel-button {
+    width: 100%;
   }
 }
