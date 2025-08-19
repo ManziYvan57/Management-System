@@ -63,16 +63,16 @@ const VehicleSchema = new mongoose.Schema({
   // Financial information
   purchaseCost: {
     type: Number,
-    required: [true, 'Please provide purchase cost'],
+    default: 0,
     min: [0, 'Purchase cost cannot be negative']
   },
   purchaseDate: {
     type: Date,
-    required: [true, 'Please provide purchase date']
+    default: Date.now
   },
   currentValue: {
     type: Number,
-    required: [true, 'Please provide current value'],
+    default: 0,
     min: [0, 'Current value cannot be negative']
   },
   
@@ -87,7 +87,13 @@ const VehicleSchema = new mongoose.Schema({
   // Assignment information
   assignedDriver: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    validate: {
+      validator: function(v) {
+        return v === null || v === undefined || (typeof v === 'string' && v.trim() === '') || mongoose.Types.ObjectId.isValid(v);
+      },
+      message: 'Invalid driver ID format'
+    }
   },
   assignedRoute: {
     type: String,
@@ -98,7 +104,7 @@ const VehicleSchema = new mongoose.Schema({
   terminal: {
     type: String,
     required: [true, 'Please specify terminal'],
-    enum: ['kigali', 'kampala', 'nairobi', 'juba']
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba']
   },
   currentLocation: {
     type: String,

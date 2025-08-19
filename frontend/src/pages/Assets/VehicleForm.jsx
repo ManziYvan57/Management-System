@@ -15,7 +15,10 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
     mileage: 0,
     fuelConsumption: 0,
     assignedDriver: '',
-    assignedRoute: ''
+    assignedRoute: '',
+    purchaseCost: 0,
+    purchaseDate: new Date().toISOString().split('T')[0],
+    currentValue: 0
   });
 
   const [errors, setErrors] = useState({});
@@ -35,7 +38,10 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
         mileage: vehicle.mileage || 0,
         fuelConsumption: vehicle.fuelConsumption || 0,
         assignedDriver: vehicle.assignedDriver?._id || '',
-        assignedRoute: vehicle.assignedRoute || ''
+        assignedRoute: vehicle.assignedRoute || '',
+        purchaseCost: vehicle.purchaseCost || 0,
+        purchaseDate: vehicle.purchaseDate ? new Date(vehicle.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        currentValue: vehicle.currentValue || 0
       });
     }
   }, [mode, vehicle]);
@@ -71,7 +77,19 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
     
     setLoading(true);
     try {
-      await onSubmit(formData);
+      // Clean up the data before submitting
+      const submitData = {
+        ...formData,
+        assignedDriver: formData.assignedDriver.trim() === '' ? null : formData.assignedDriver,
+        purchaseCost: parseFloat(formData.purchaseCost) || 0,
+        currentValue: parseFloat(formData.currentValue) || 0,
+        seatingCapacity: parseInt(formData.seatingCapacity) || 0,
+        year: parseInt(formData.year) || new Date().getFullYear(),
+        mileage: parseFloat(formData.mileage) || 0,
+        fuelConsumption: parseFloat(formData.fuelConsumption) || 0
+      };
+      
+      await onSubmit(submitData);
       onClose();
     } catch (error) {
       console.error('Error submitting vehicle:', error);
@@ -251,31 +269,72 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="assignedDriver">Assigned Driver</label>
-              <input
-                type="text"
-                id="assignedDriver"
-                name="assignedDriver"
-                value={formData.assignedDriver}
-                onChange={handleInputChange}
-                placeholder="Driver ID or name"
-              />
-            </div>
+                     <div className="form-row">
+             <div className="form-group">
+               <label htmlFor="purchaseCost">Purchase Cost (RWF)</label>
+               <input
+                 type="number"
+                 id="purchaseCost"
+                 name="purchaseCost"
+                 value={formData.purchaseCost}
+                 onChange={handleInputChange}
+                 min="0"
+                 step="1000"
+               />
+             </div>
 
-            <div className="form-group">
-              <label htmlFor="assignedRoute">Assigned Route</label>
-              <input
-                type="text"
-                id="assignedRoute"
-                name="assignedRoute"
-                value={formData.assignedRoute}
-                onChange={handleInputChange}
-                placeholder="Route name or ID"
-              />
-            </div>
-          </div>
+             <div className="form-group">
+               <label htmlFor="currentValue">Current Value (RWF)</label>
+               <input
+                 type="number"
+                 id="currentValue"
+                 name="currentValue"
+                 value={formData.currentValue}
+                 onChange={handleInputChange}
+                 min="0"
+                 step="1000"
+               />
+             </div>
+           </div>
+
+           <div className="form-row">
+             <div className="form-group">
+               <label htmlFor="purchaseDate">Purchase Date</label>
+               <input
+                 type="date"
+                 id="purchaseDate"
+                 name="purchaseDate"
+                 value={formData.purchaseDate}
+                 onChange={handleInputChange}
+               />
+             </div>
+
+             <div className="form-group">
+               <label htmlFor="assignedDriver">Assigned Driver</label>
+               <input
+                 type="text"
+                 id="assignedDriver"
+                 name="assignedDriver"
+                 value={formData.assignedDriver}
+                 onChange={handleInputChange}
+                 placeholder="Driver ID or name"
+               />
+             </div>
+           </div>
+
+           <div className="form-row">
+             <div className="form-group">
+               <label htmlFor="assignedRoute">Assigned Route</label>
+               <input
+                 type="text"
+                 id="assignedRoute"
+                 name="assignedRoute"
+                 value={formData.assignedRoute}
+                 onChange={handleInputChange}
+                 placeholder="Route name or ID"
+               />
+             </div>
+           </div>
 
           <div className="form-actions">
             <button type="button" className="cancel-button" onClick={onClose}>
