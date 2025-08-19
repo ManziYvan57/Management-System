@@ -6,14 +6,14 @@ const Equipment = require('../models/Equipment');
 // @desc    Get all equipment
 // @route   GET /api/equipment
 // @access  Private
-router.get('/', protect, async (req, res) => {
+router.get('/', protect, authorize('equipment', 'read'), async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, category, status, terminal } = req.query;
+    const { search, status, category, terminal } = req.query;
     
-    // Build query based on user role and terminal
-    let query = { isActive: true };
+    // Build query
+    const query = { isActive: true };
     
-    // Terminal-based filtering
+    // Terminal filtering
     if (req.user.role !== 'super_admin') {
       query.terminal = req.user.terminal;
     } else if (terminal) {
@@ -25,41 +25,28 @@ router.get('/', protect, async (req, res) => {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { serialNumber: { $regex: search, $options: 'i' } },
-        { model: { $regex: search, $options: 'i' } },
         { type: { $regex: search, $options: 'i' } }
       ];
     }
     
-    // Filter by category
-    if (category) {
-      query.category = category;
-    }
-    
-    // Filter by status
+    // Status filter
     if (status) {
       query.status = status;
+    }
+    
+    // Category filter
+    if (category) {
+      query.category = category;
     }
     
     const equipment = await Equipment.find(query)
       .populate('createdBy', 'username firstName lastName')
       .populate('assignedTo', 'username firstName lastName')
-      .populate('assignedVehicle', 'plateNumber make model')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
-    
-    const total = await Equipment.countDocuments(query);
+      .sort({ createdAt: -1 });
     
     res.status(200).json({
       success: true,
       count: equipment.length,
-      total,
-      pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrev: page > 1
-      },
       data: equipment
     });
   } catch (error) {
@@ -72,15 +59,84 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
+// @desc    Get equipment statistics
+// @route   GET /api/equipment/stats
+// @access  Private
+router.get('/stats', protect, authorize('equipment', 'read'), async (req, res) => {
+  try {
+    const query = { isActive: true };
+    
+    // Terminal filtering
+    if (req.user.role !== 'super_admin') {
+      query.terminal = req.user.terminal;
+    }
+    
+    const stats = await Equipment.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          totalValue: { $sum: '$currentValue' },
+          available: {
+            $sum: { $cond: [{ $eq: ['$status', 'available'] }, 1, 0] }
+          },
+          inUse: {
+            $sum: { $cond: [{ $eq: ['$status', 'in_use'] }, 1, 0] }
+          },
+          maintenance: {
+            $sum: { $cond: [{ $eq: ['$status', 'maintenance'] }, 1, 0] }
+          },
+          retired: {
+            $sum: { $cond: [{ $eq: ['$status', 'retired'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+    
+    const categoryStats = await Equipment.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        overview: stats[0] || {
+          total: 0,
+          totalValue: 0,
+          available: 0,
+          inUse: 0,
+          maintenance: 0,
+          retired: 0
+        },
+        categories: categoryStats
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching equipment stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching equipment statistics',
+      error: error.message
+    });
+  }
+});
+
 // @desc    Get single equipment
 // @route   GET /api/equipment/:id
 // @access  Private
-router.get('/:id', protect, async (req, res) => {
+router.get('/:id', protect, authorize('equipment', 'read'), async (req, res) => {
   try {
     const equipment = await Equipment.findById(req.params.id)
       .populate('createdBy', 'username firstName lastName')
-      .populate('assignedTo', 'username firstName lastName')
-      .populate('assignedVehicle', 'plateNumber make model');
+      .populate('assignedTo', 'username firstName lastName');
     
     if (!equipment) {
       return res.status(404).json({
@@ -142,8 +198,7 @@ router.post('/', protect, authorize('equipment', 'create'), async (req, res) => 
     
     const populatedEquipment = await Equipment.findById(equipment._id)
       .populate('createdBy', 'username firstName lastName')
-      .populate('assignedTo', 'username firstName lastName')
-      .populate('assignedVehicle', 'plateNumber make model');
+      .populate('assignedTo', 'username firstName lastName');
     
     res.status(201).json({
       success: true,
@@ -203,13 +258,15 @@ router.put('/:id', protect, authorize('equipment', 'edit'), async (req, res) => 
       delete req.body.terminal;
     }
     
+    // Remove createdBy from update data to prevent modification
+    delete req.body.createdBy;
+    
     equipment = await Equipment.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
     })
     .populate('createdBy', 'username firstName lastName')
-    .populate('assignedTo', 'username firstName lastName')
-    .populate('assignedVehicle', 'plateNumber make model');
+    .populate('assignedTo', 'username firstName lastName');
     
     res.status(200).json({
       success: true,
@@ -266,103 +323,23 @@ router.delete('/:id', protect, authorize('equipment', 'delete'), async (req, res
   }
 });
 
-// @desc    Get equipment statistics
-// @route   GET /api/equipment/stats/overview
-// @access  Private
-router.get('/stats/overview', protect, async (req, res) => {
-  try {
-    const { terminal } = req.query;
-    
-    // Build query based on user role and terminal
-    let query = { isActive: true };
-    
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
-    
-    const [
-      totalEquipment,
-      availableEquipment,
-      inUseEquipment,
-      maintenanceEquipment,
-      totalValue,
-      totalMaintenanceCost,
-      categoryStats,
-      conditionStats
-    ] = await Promise.all([
-      Equipment.countDocuments(query),
-      Equipment.countDocuments({ ...query, status: 'available' }),
-      Equipment.countDocuments({ ...query, status: 'in_use' }),
-      Equipment.countDocuments({ ...query, status: 'maintenance' }),
-      Equipment.aggregate([
-        { $match: query },
-        { $group: { _id: null, total: { $sum: '$currentValue' } } }
-      ]),
-      Equipment.aggregate([
-        { $match: query },
-        { $group: { _id: null, total: { $sum: '$maintenanceCost' } } }
-      ]),
-      Equipment.aggregate([
-        { $match: query },
-        { $group: { _id: '$category', count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
-      ]),
-      Equipment.aggregate([
-        { $match: query },
-        { $group: { _id: '$condition', count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
-      ])
-    ]);
-    
-    res.status(200).json({
-      success: true,
-      data: {
-        totalEquipment,
-        availableEquipment,
-        inUseEquipment,
-        maintenanceEquipment,
-        totalValue: totalValue[0]?.total || 0,
-        totalMaintenanceCost: totalMaintenanceCost[0]?.total || 0,
-        categoryStats,
-        conditionStats
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching equipment stats:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching equipment statistics',
-      error: error.message
-    });
-  }
-});
-
-// @desc    Get available equipment (not assigned to anyone)
+// @desc    Get available equipment
 // @route   GET /api/equipment/available
 // @access  Private
-router.get('/available', protect, async (req, res) => {
+router.get('/available', protect, authorize('equipment', 'read'), async (req, res) => {
   try {
-    const { terminal } = req.query;
-    
-    let query = { 
+    const query = { 
       isActive: true,
-      status: 'available',
-      $or: [
-        { assignedTo: { $exists: false } },
-        { assignedTo: null }
-      ]
+      status: 'available'
     };
     
+    // Terminal filtering
     if (req.user.role !== 'super_admin') {
       query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
     }
     
     const equipment = await Equipment.find(query)
-      .populate('createdBy', 'username firstName lastName')
+      .select('name category type serialNumber location terminal')
       .sort({ name: 1 });
     
     res.status(200).json({

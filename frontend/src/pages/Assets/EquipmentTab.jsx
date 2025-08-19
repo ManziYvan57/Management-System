@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaTools } from 'react-icons/fa';
 import { equipmentAPI } from '../../services/api';
+import EquipmentForm from './EquipmentForm';
 import './Assets.css';
 
 const EquipmentTab = () => {
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingEquipment, setEditingEquipment] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -38,6 +42,41 @@ const EquipmentTab = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     fetchEquipment();
+  };
+
+  const handleAddEquipment = async (equipmentData) => {
+    try {
+      await equipmentAPI.create(equipmentData);
+      setShowAddForm(false);
+      fetchEquipment();
+    } catch (err) {
+      console.error('Error adding equipment:', err);
+      throw err;
+    }
+  };
+
+  const handleEditEquipment = async (id, equipmentData) => {
+    try {
+      await equipmentAPI.update(id, equipmentData);
+      setShowEditForm(false);
+      setEditingEquipment(null);
+      fetchEquipment();
+    } catch (err) {
+      console.error('Error updating equipment:', err);
+      throw err;
+    }
+  };
+
+  const handleDeleteEquipment = async (id) => {
+    if (window.confirm('Are you sure you want to delete this equipment?')) {
+      try {
+        await equipmentAPI.delete(id);
+        fetchEquipment();
+      } catch (err) {
+        console.error('Error deleting equipment:', err);
+        alert('Failed to delete equipment');
+      }
+    }
   };
 
   const handleFilterChange = () => {
@@ -83,7 +122,10 @@ const EquipmentTab = () => {
         </div>
         
         <div className="header-right">
-          <button className="add-button">
+          <button 
+            className="add-button"
+            onClick={() => setShowAddForm(true)}
+          >
             <FaPlus />
             Add Equipment
           </button>
@@ -151,7 +193,10 @@ const EquipmentTab = () => {
             <FaTools className="empty-icon" />
             <h3>No equipment found</h3>
             <p>Add your first equipment item to get started</p>
-            <button className="add-button">
+            <button 
+              className="add-button"
+              onClick={() => setShowAddForm(true)}
+            >
               <FaPlus />
               Add Equipment
             </button>
@@ -196,18 +241,27 @@ const EquipmentTab = () => {
                       <button
                         className="action-btn view-btn"
                         title="View Details"
+                        onClick={() => {
+                          setEditingEquipment(item);
+                          setShowEditForm(true);
+                        }}
                       >
                         <FaEye />
                       </button>
                       <button
                         className="action-btn edit-btn"
                         title="Edit Equipment"
+                        onClick={() => {
+                          setEditingEquipment(item);
+                          setShowEditForm(true);
+                        }}
                       >
                         <FaEdit />
                       </button>
                       <button
                         className="action-btn delete-btn"
                         title="Delete Equipment"
+                        onClick={() => handleDeleteEquipment(item._id)}
                       >
                         <FaTrash />
                       </button>
@@ -219,6 +273,30 @@ const EquipmentTab = () => {
           </table>
         )}
       </div>
+
+      {/* Add Equipment Modal */}
+      {showAddForm && (
+        <EquipmentForm
+          isOpen={showAddForm}
+          onClose={() => setShowAddForm(false)}
+          onSubmit={handleAddEquipment}
+          mode="add"
+        />
+      )}
+
+      {/* Edit Equipment Modal */}
+      {showEditForm && editingEquipment && (
+        <EquipmentForm
+          isOpen={showEditForm}
+          onClose={() => {
+            setShowEditForm(false);
+            setEditingEquipment(null);
+          }}
+          onSubmit={(data) => handleEditEquipment(editingEquipment._id, data)}
+          mode="edit"
+          equipment={editingEquipment}
+        />
+      )}
     </div>
   );
 };

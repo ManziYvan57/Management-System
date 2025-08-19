@@ -5,129 +5,92 @@ const EquipmentSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Please provide equipment name'],
-    trim: true,
-    maxlength: [100, 'Name cannot be more than 100 characters']
+    trim: true
   },
-  
-  // Equipment classification
   category: {
     type: String,
     required: [true, 'Please provide equipment category'],
-    enum: ['Tool', 'Machinery', 'Diagnostic', 'Safety', 'Office', 'Other'],
-    default: 'Other'
+    enum: ['tools', 'electronics', 'safety', 'office', 'maintenance'],
+    trim: true
   },
-  
   type: {
     type: String,
-    required: [true, 'Please provide equipment type'],
     trim: true
   },
-  
-  model: {
-    type: String,
-    trim: true
-  },
-  
   serialNumber: {
     type: String,
     trim: true,
-    uppercase: true
+    unique: true,
+    sparse: true
   },
   
-  // Specifications
-  specifications: {
+  // Status and location
+  status: {
     type: String,
-    trim: true,
-    maxlength: [500, 'Specifications cannot be more than 500 characters']
+    required: [true, 'Please provide equipment status'],
+    enum: ['available', 'in_use', 'maintenance', 'retired'],
+    default: 'available'
+  },
+  location: {
+    type: String,
+    trim: true
+  },
+  terminal: {
+    type: String,
+    required: [true, 'Please specify terminal'],
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba']
   },
   
   // Financial information
   purchaseCost: {
     type: Number,
-    required: [true, 'Please provide purchase cost'],
+    default: 0,
     min: [0, 'Purchase cost cannot be negative']
   },
-  
   purchaseDate: {
     type: Date,
-    required: [true, 'Please provide purchase date']
+    default: Date.now
   },
-  
   currentValue: {
     type: Number,
-    required: [true, 'Please provide current value'],
+    default: 0,
     min: [0, 'Current value cannot be negative']
   },
   
-  // Operational status
-  status: {
+  // Description and specifications
+  description: {
     type: String,
-    required: [true, 'Please provide equipment status'],
-    enum: ['available', 'in_use', 'maintenance', 'out_of_service', 'retired'],
-    default: 'available'
-  },
-  
-  // Location and assignment
-  location: {
-    type: String,
-    required: [true, 'Please provide equipment location'],
-    trim: true
-  },
-  
-  assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  
-  assignedVehicle: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Vehicle'
-  },
-  
-  // Terminal information
-  terminal: {
-    type: String,
-    required: [true, 'Please specify terminal'],
-    enum: ['kigali', 'kampala', 'nairobi', 'juba']
+    trim: true,
+    maxlength: [1000, 'Description cannot be more than 1000 characters']
   },
   
   // Maintenance information
   lastMaintenance: {
     type: Date
   },
-  
   nextMaintenance: {
     type: Date
   },
+  maintenanceHistory: [{
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    description: String,
+    cost: {
+      type: Number,
+      default: 0
+    },
+    performedBy: String
+  }],
   
-  maintenanceCost: {
-    type: Number,
-    default: 0,
-    min: [0, 'Maintenance cost cannot be negative']
+  // Assignment information
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
-  
-  // Usage tracking
-  usageHours: {
-    type: Number,
-    default: 0,
-    min: [0, 'Usage hours cannot be negative']
-  },
-  
-  lastUsed: {
+  assignedDate: {
     type: Date
-  },
-  
-  // Condition and notes
-  condition: {
-    type: String,
-    enum: ['excellent', 'good', 'fair', 'poor', 'critical'],
-    default: 'good'
-  },
-  
-  notes: {
-    type: String,
-    trim: true,
-    maxlength: [1000, 'Notes cannot be more than 1000 characters']
   },
   
   // System fields
@@ -136,7 +99,6 @@ const EquipmentSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  
   isActive: {
     type: Boolean,
     default: true
@@ -146,20 +108,16 @@ const EquipmentSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-EquipmentSchema.index({ terminal: 1, status: 1 });
+EquipmentSchema.index({ name: 1 });
 EquipmentSchema.index({ category: 1 });
-EquipmentSchema.index({ assignedTo: 1 });
-EquipmentSchema.index({ assignedVehicle: 1 });
 EquipmentSchema.index({ status: 1 });
-EquipmentSchema.index({ nextMaintenance: 1 });
+EquipmentSchema.index({ terminal: 1 });
+EquipmentSchema.index({ serialNumber: 1 });
+EquipmentSchema.index({ assignedTo: 1 });
 
 // Virtual for equipment age calculation
 EquipmentSchema.virtual('age').get(function() {
-  if (!this.purchaseDate) return null;
-  const today = new Date();
-  const purchase = new Date(this.purchaseDate);
-  const diffTime = today - purchase;
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 365.25)); // Age in years
+  return Math.floor((new Date() - this.purchaseDate) / (1000 * 60 * 60 * 24 * 365));
 });
 
 // Virtual for depreciation calculation
@@ -180,6 +138,14 @@ EquipmentSchema.virtual('daysUntilNextMaintenance').get(function() {
   const maintenance = new Date(this.nextMaintenance);
   const diffTime = maintenance - today;
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+});
+
+// Pre-save middleware to update assignedDate when assignedTo changes
+EquipmentSchema.pre('save', function(next) {
+  if (this.isModified('assignedTo') && this.assignedTo) {
+    this.assignedDate = new Date();
+  }
+  next();
 });
 
 // Ensure virtual fields are serialized

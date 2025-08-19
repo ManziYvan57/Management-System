@@ -198,6 +198,9 @@ router.put('/:id', protect, authorize('vehicles', 'edit'), async (req, res) => {
       delete req.body.terminal;
     }
     
+    // Remove createdBy from update data to prevent modification
+    delete req.body.createdBy;
+    
     vehicle = await Vehicle.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
