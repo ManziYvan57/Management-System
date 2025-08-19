@@ -24,10 +24,9 @@ const Assets = () => {
   ];
 
   return (
-    <Layout>
+    <Layout title="Asset Management">
       <div className="assets-container">
         <div className="assets-header">
-          <h2>Asset Management</h2>
           <p>Manage your fleet vehicles and equipment inventory</p>
         </div>
 

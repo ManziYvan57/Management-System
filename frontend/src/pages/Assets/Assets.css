@@ -1,21 +1,14 @@
 /* Assets Container */
 .assets-container {
-  padding: 2rem;
+  padding: 0;
   font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
-  background-color: #f9fafb;
-  min-height: 100vh;
+  background-color: transparent;
+  width: 100%;
 }
 
 .assets-header {
   margin-bottom: 2rem;
   text-align: center;
-}
-
-.assets-header h2 {
-  font-size: 2rem;
-  color: #111827;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
 }
 
 .assets-header p {
@@ -30,8 +23,7 @@
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin: 0 auto;
-  max-width: 1200px;
+  width: 100%;
 }
 
 .tabs-header {
