@@ -182,6 +182,8 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
   const validateForm = () => {
     const newErrors = {};
 
+    console.log('Validating form with data:', formData);
+
     // Basic validation
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
@@ -210,14 +212,24 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
       }
     }
 
+    console.log('Validation errors:', newErrors);
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const isValid = Object.keys(newErrors).length === 0;
+    console.log('Form is valid:', isValid);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    console.log('Form submitted!');
+    console.log('Form data:', formData);
+    
+    if (!validateForm()) {
+      console.log('Form validation failed');
+      return;
+    }
 
+    console.log('Form validation passed, submitting...');
     setLoading(true);
     try {
       const submitData = {
@@ -226,7 +238,9 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
         performanceRating: parseInt(formData.performanceRating) || 3
       };
 
+      console.log('Submitting data:', submitData);
       await onSubmit(submitData);
+      console.log('Submit successful!');
       onClose();
     } catch (error) {
       console.error('Error submitting personnel:', error);
@@ -731,7 +745,12 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
             <button type="button" onClick={onClose} className="cancel-button">
               Cancel
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
+            <button 
+              type="submit" 
+              className="submit-button" 
+              disabled={loading}
+              onClick={() => console.log('Submit button clicked!')}
+            >
               {loading ? (
                 <>
                   <div className="spinner-small"></div>
