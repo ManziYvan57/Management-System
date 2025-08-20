@@ -257,17 +257,21 @@ personnelSchema.virtual('licenseStatus').get(function() {
   return 'valid';
 });
 
-// Pre-save middleware to validate driver-specific fields
+// Pre-save middleware to validate driver-specific fields (only if they are provided)
 personnelSchema.pre('save', function(next) {
   if (this.role === 'driver') {
-    if (!this.licenseNumber) {
-      return next(new Error('License number is required for drivers'));
+    // Only validate if license fields are provided (they are optional now)
+    if (this.licenseNumber && !this.licenseType) {
+      return next(new Error('License type is required when license number is provided'));
     }
-    if (!this.licenseType) {
-      return next(new Error('License type is required for drivers'));
+    if (this.licenseNumber && !this.licenseExpiryDate) {
+      return next(new Error('License expiry date is required when license number is provided'));
     }
-    if (!this.licenseExpiryDate) {
-      return next(new Error('License expiry date is required for drivers'));
+    if (this.licenseType && !this.licenseNumber) {
+      return next(new Error('License number is required when license type is provided'));
+    }
+    if (this.licenseExpiryDate && !this.licenseNumber) {
+      return next(new Error('License number is required when license expiry date is provided'));
     }
   }
   next();

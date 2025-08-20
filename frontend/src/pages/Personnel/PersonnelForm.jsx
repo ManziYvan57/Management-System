@@ -193,11 +193,21 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.terminal) newErrors.terminal = 'Terminal is required';
 
-    // Driver-specific validation
+    // Driver-specific validation (optional fields)
     if (formData.role === 'driver') {
-      if (!formData.licenseNumber.trim()) newErrors.licenseNumber = 'License number is required for drivers';
-      if (!formData.licenseType) newErrors.licenseType = 'License type is required for drivers';
-      if (!formData.licenseExpiryDate) newErrors.licenseExpiryDate = 'License expiry date is required for drivers';
+      // Only validate if license fields are provided (they are optional now)
+      if (formData.licenseNumber.trim() && !formData.licenseType) {
+        newErrors.licenseType = 'License type is required when license number is provided';
+      }
+      if (formData.licenseNumber.trim() && !formData.licenseExpiryDate) {
+        newErrors.licenseExpiryDate = 'License expiry date is required when license number is provided';
+      }
+      if (formData.licenseType && !formData.licenseNumber.trim()) {
+        newErrors.licenseNumber = 'License number is required when license type is provided';
+      }
+      if (formData.licenseExpiryDate && !formData.licenseNumber.trim()) {
+        newErrors.licenseNumber = 'License number is required when license expiry date is provided';
+      }
     }
 
     setErrors(newErrors);
@@ -439,7 +449,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
               
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="licenseNumber">License Number *</label>
+                  <label htmlFor="licenseNumber">License Number</label>
                   <input
                     type="text"
                     id="licenseNumber"
@@ -447,11 +457,12 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                     value={formData.licenseNumber}
                     onChange={handleInputChange}
                     className={errors.licenseNumber ? 'error' : ''}
+                    placeholder="Optional"
                   />
                   {errors.licenseNumber && <span className="error-message">{errors.licenseNumber}</span>}
                 </div>
                 <div className="form-group">
-                  <label htmlFor="licenseType">License Type *</label>
+                  <label htmlFor="licenseType">License Type</label>
                   <select
                     id="licenseType"
                     name="licenseType"
@@ -459,7 +470,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                     onChange={handleInputChange}
                     className={errors.licenseType ? 'error' : ''}
                   >
-                    <option value="">Select License Type</option>
+                    <option value="">Select License Type (Optional)</option>
                     {licenseTypes.map(license => (
                       <option key={license.value} value={license.value}>
                         {license.label}
@@ -472,7 +483,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="licenseExpiryDate">License Expiry Date *</label>
+                  <label htmlFor="licenseExpiryDate">License Expiry Date</label>
                   <input
                     type="date"
                     id="licenseExpiryDate"

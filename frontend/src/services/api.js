@@ -44,7 +44,8 @@ export const apiRequest = async (endpoint, options = {}) => {
         status: response.status,
         statusText: response.statusText,
         url: url,
-        data: data
+        data: data,
+        errors: data.errors || data.message
       });
       
       if (response.status === 401) {
