@@ -25,23 +25,22 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     },
 
     // Employment Information
-    employeeId: '',
     role: '',
     department: '',
     terminal: '',
-    employmentStatus: 'active',
+    employmentStatus: '',
     supervisor: '',
 
     // Driver-specific fields (only shown for drivers)
     licenseNumber: '',
     licenseType: '',
     licenseExpiryDate: '',
-    drivingPoints: 100,
+    drivingPoints: '',
     assignedVehicle: '',
     assignedRoute: '',
 
     // Performance and Training
-    performanceRating: 3,
+    performanceRating: '',
     lastEvaluationDate: '',
     trainingCompleted: [],
     certifications: [],
@@ -65,6 +64,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
   // Role options based on your requirements
   const roleOptions = [
+    { value: '', label: 'Select Role...' },
     { value: 'driver', label: 'Driver' },
     { value: 'team_leader', label: 'Team Leader' },
     { value: 'customer_care', label: 'Customer Care' },
@@ -79,6 +79,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
   // Department options
   const departmentOptions = [
+    { value: '', label: 'Select Department...' },
     { value: 'operations', label: 'Operations' },
     { value: 'maintenance', label: 'Maintenance' },
     { value: 'customer_service', label: 'Customer Service' },
@@ -90,6 +91,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
   // License types
   const licenseTypes = [
+    { value: '', label: 'Select License Type...' },
     { value: 'A', label: 'A - Motorcycle' },
     { value: 'B', label: 'B - Light Vehicle' },
     { value: 'C', label: 'C - Heavy Vehicle' },
@@ -234,8 +236,8 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     try {
       const submitData = {
         ...formData,
-        drivingPoints: parseInt(formData.drivingPoints) || 100,
-        performanceRating: parseInt(formData.performanceRating) || 3
+        drivingPoints: formData.drivingPoints ? parseInt(formData.drivingPoints) : null,
+        performanceRating: formData.performanceRating ? parseInt(formData.performanceRating) : null
       };
 
       console.log('Submitting data:', submitData);
@@ -365,21 +367,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
             
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="employeeId">Employee ID</label>
-                <input
-                  type="text"
-                  id="employeeId"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleInputChange}
-                  className={errors.employeeId ? 'error' : ''}
-                  readOnly
-                  placeholder="Auto-generated"
-                />
-                <small style={{ color: '#6b7280', fontSize: '0.75rem' }}>Employee ID will be auto-generated</small>
-                {errors.employeeId && <span className="error-message">{errors.employeeId}</span>}
-              </div>
-              <div className="form-group">
                 <label htmlFor="role">Role *</label>
                 <select
                   id="role"
@@ -388,7 +375,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   onChange={handleInputChange}
                   className={errors.role ? 'error' : ''}
                 >
-                  <option value="">Select Role</option>
                   {roleOptions.map(role => (
                     <option key={role.value} value={role.value}>
                       {role.label}

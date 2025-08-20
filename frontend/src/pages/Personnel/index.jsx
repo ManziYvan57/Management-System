@@ -435,42 +435,38 @@ const Personnel = () => {
                     <div className="action-buttons">
                       <button
                         className="action-btn view-btn"
-                        title="View Details"
                         onClick={() => {
                           setEditingPersonnel(person);
                           setShowEditForm(true);
                         }}
                       >
-                        <FaEye />
+                        View
                       </button>
                       <button
                         className="action-btn edit-btn"
-                        title="Edit Personnel"
                         onClick={() => {
                           setEditingPersonnel(person);
                           setShowEditForm(true);
                         }}
                       >
-                        <FaEdit />
+                        Edit
                       </button>
                       {person.role === 'driver' && (
                         <button
                           className="action-btn infraction-btn"
-                          title="Add Infraction"
                           onClick={() => {
                             setSelectedPersonnel(person);
                             setShowInfractionForm(true);
                           }}
                         >
-                          <FaExclamationTriangle />
+                          Infraction
                         </button>
                       )}
                       <button
                         className="action-btn delete-btn"
-                        title="Delete Personnel"
                         onClick={() => handleDeletePersonnel(person._id)}
                       >
-                        <FaTrash />
+                        Delete
                       </button>
                     </div>
                   </td>

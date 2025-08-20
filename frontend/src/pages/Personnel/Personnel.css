@@ -820,26 +820,20 @@ tr:hover {
 }
 
 .action-btn {
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.875rem;
-  width: 32px;
-  height: 32px;
-  display: flex;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   margin: 0 0.125rem;
   color: inherit;
-}
-
-.action-btn svg {
-  width: 14px !important;
-  height: 14px !important;
-  display: block !important;
-  color: inherit !important;
+  min-width: 60px;
+  white-space: nowrap;
 }
 
 .view-btn {

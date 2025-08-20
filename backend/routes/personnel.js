@@ -13,11 +13,7 @@ const validatePersonnel = [
   body('phoneNumber').matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid phone number'),
   body('dateOfBirth').isISO8601().withMessage('Please enter a valid date of birth'),
   body('gender').isIn(['male', 'female', 'other']).withMessage('Please select a valid gender'),
-  body('employeeId').optional().custom((value) => {
-    if (value && value.trim().length === 0) return true;
-    if (value && value.trim().length < 1) throw new Error('Employee ID is required');
-    return true;
-  }),
+
   body('role').isIn(['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff']).withMessage('Please select a valid role'),
   body('department').isIn(['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'other']).withMessage('Please select a valid department'),
   body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Please select a valid terminal'),
@@ -90,7 +86,7 @@ router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
-        { employeeId: { $regex: search, $options: 'i' } },
+
         { phoneNumber: { $regex: search, $options: 'i' } }
       ];
     }
@@ -109,7 +105,7 @@ router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
     
     const personnel = await Personnel.find(query)
       .populate('assignedVehicle', 'plateNumber make model')
-      .populate('supervisor', 'firstName lastName employeeId')
+      .populate('supervisor', 'firstName lastName')
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit));
@@ -139,7 +135,7 @@ router.get('/:id', protect, authorize('personnel', 'read'), async (req, res) => 
   try {
     const personnel = await Personnel.findById(req.params.id)
       .populate('assignedVehicle', 'plateNumber make model year')
-      .populate('supervisor', 'firstName lastName employeeId role')
+      .populate('supervisor', 'firstName lastName role')
       .populate('createdBy', 'firstName lastName')
       .populate('updatedBy', 'firstName lastName');
 
@@ -172,13 +168,7 @@ router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, a
       }
     }
 
-    // Check if employee ID already exists (only if provided, otherwise it will be auto-generated)
-    if (req.body.employeeId) {
-      const existingEmployeeId = await Personnel.findOne({ employeeId: req.body.employeeId });
-      if (existingEmployeeId) {
-        return res.status(400).json({ success: false, message: 'Employee ID already exists' });
-      }
-    }
+
 
     // Check if license number already exists (for drivers)
     if (req.body.role === 'driver' && req.body.licenseNumber) {
@@ -211,7 +201,6 @@ router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, a
     // Convert empty strings to null for other optional fields
     if (cleanData.licenseNumber === '') cleanData.licenseNumber = null;
     if (cleanData.assignedRoute === '') cleanData.assignedRoute = null;
-    if (cleanData.employeeId === '') cleanData.employeeId = null;
     
     const personnel = new Personnel({
       ...cleanData,
@@ -222,7 +211,7 @@ router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, a
 
     const populatedPersonnel = await Personnel.findById(personnel._id)
       .populate('assignedVehicle', 'plateNumber make model')
-      .populate('supervisor', 'firstName lastName employeeId');
+      .populate('supervisor', 'firstName lastName');
 
     res.status(201).json({ success: true, data: populatedPersonnel });
   } catch (error) {
@@ -257,13 +246,7 @@ router.put('/:id', protect, authorize('personnel', 'edit'), validatePersonnel, a
       }
     }
 
-    // Check if employee ID already exists (excluding current personnel)
-    if (req.body.employeeId && req.body.employeeId !== personnel.employeeId) {
-      const existingEmployeeId = await Personnel.findOne({ employeeId: req.body.employeeId });
-      if (existingEmployeeId) {
-        return res.status(400).json({ success: false, message: 'Employee ID already exists' });
-      }
-    }
+
 
     // Check if license number already exists (for drivers)
     if (req.body.role === 'driver' && req.body.licenseNumber && req.body.licenseNumber !== personnel.licenseNumber) {
@@ -296,7 +279,6 @@ router.put('/:id', protect, authorize('personnel', 'edit'), validatePersonnel, a
     // Convert empty strings to null for other optional fields
     if (cleanData.licenseNumber === '') cleanData.licenseNumber = null;
     if (cleanData.assignedRoute === '') cleanData.assignedRoute = null;
-    if (cleanData.employeeId === '') cleanData.employeeId = null;
     
     // Remove createdBy from update to prevent modification
     delete cleanData.createdBy;
@@ -455,8 +437,7 @@ router.get('/drivers', protect, authorize('personnel', 'read'), async (req, res)
       query.$or = [
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
-        { licenseNumber: { $regex: search, $options: 'i' } },
-        { employeeId: { $regex: search, $options: 'i' } }
+        { licenseNumber: { $regex: search, $options: 'i' } }
       ];
     }
     

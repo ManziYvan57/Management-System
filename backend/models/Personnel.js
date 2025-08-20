@@ -49,17 +49,7 @@ const personnelSchema = new mongoose.Schema({
     phoneNumber: String
   },
 
-  // Employment Information
-  employeeId: {
-    type: String,
-    required: false,
-    unique: true,
-    trim: true,
-    default: function() {
-      // Generate a simple employee ID: EMP + 4 random digits
-      return 'EMP' + Math.floor(1000 + Math.random() * 9000);
-    }
-  },
+
   role: {
     type: String,
     enum: ['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff'],
@@ -279,7 +269,7 @@ personnelSchema.pre('save', function(next) {
 
 // Indexes
 personnelSchema.index({ email: 1 });
-personnelSchema.index({ employeeId: 1 });
+
 personnelSchema.index({ role: 1 });
 personnelSchema.index({ terminal: 1 });
 personnelSchema.index({ employmentStatus: 1 });
