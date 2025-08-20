@@ -196,8 +196,25 @@ router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, a
       }
     }
 
+    // Clean up empty strings to prevent validation errors
+    const cleanData = { ...req.body };
+    
+    // Convert empty strings to null for ObjectId fields
+    if (cleanData.supervisor === '') cleanData.supervisor = null;
+    if (cleanData.assignedVehicle === '') cleanData.assignedVehicle = null;
+    
+    // Convert empty strings to null for enum fields
+    if (cleanData.licenseType === '') cleanData.licenseType = null;
+    if (cleanData.licenseExpiryDate === '') cleanData.licenseExpiryDate = null;
+    if (cleanData.lastEvaluationDate === '') cleanData.lastEvaluationDate = null;
+    
+    // Convert empty strings to null for other optional fields
+    if (cleanData.licenseNumber === '') cleanData.licenseNumber = null;
+    if (cleanData.assignedRoute === '') cleanData.assignedRoute = null;
+    if (cleanData.employeeId === '') cleanData.employeeId = null;
+    
     const personnel = new Personnel({
-      ...req.body,
+      ...cleanData,
       createdBy: req.user.id
     });
 
@@ -264,13 +281,30 @@ router.put('/:id', protect, authorize('personnel', 'edit'), validatePersonnel, a
       }
     }
 
+    // Clean up empty strings to prevent validation errors
+    const cleanData = { ...req.body };
+    
+    // Convert empty strings to null for ObjectId fields
+    if (cleanData.supervisor === '') cleanData.supervisor = null;
+    if (cleanData.assignedVehicle === '') cleanData.assignedVehicle = null;
+    
+    // Convert empty strings to null for enum fields
+    if (cleanData.licenseType === '') cleanData.licenseType = null;
+    if (cleanData.licenseExpiryDate === '') cleanData.licenseExpiryDate = null;
+    if (cleanData.lastEvaluationDate === '') cleanData.lastEvaluationDate = null;
+    
+    // Convert empty strings to null for other optional fields
+    if (cleanData.licenseNumber === '') cleanData.licenseNumber = null;
+    if (cleanData.assignedRoute === '') cleanData.assignedRoute = null;
+    if (cleanData.employeeId === '') cleanData.employeeId = null;
+    
     // Remove createdBy from update to prevent modification
-    delete req.body.createdBy;
+    delete cleanData.createdBy;
 
     const updatedPersonnel = await Personnel.findByIdAndUpdate(
       req.params.id,
       {
-        ...req.body,
+        ...cleanData,
         updatedBy: req.user.id
       },
       { new: true, runValidators: true }
