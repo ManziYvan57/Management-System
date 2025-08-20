@@ -213,7 +213,7 @@ const Personnel = () => {
             <FaSearch className="search-icon" />
             <input
               type="text"
-              placeholder="Search by name, email, employee ID..."
+                             placeholder="Search by name, email, phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -341,14 +341,9 @@ const Personnel = () => {
                       <div className="employee-avatar">
                         <FaUser />
                       </div>
-                      <div className="employee-details">
-                        <strong>{person.firstName} {person.lastName}</strong>
-                        <span className="employee-id">{person.employeeId}</span>
-                        <span className="hire-date">
-                          <FaCalendar />
-                          Hired: {new Date(person.hireDate).toLocaleDateString()}
-                        </span>
-                      </div>
+                                             <div className="employee-details">
+                         <strong>{person.firstName} {person.lastName}</strong>
+                       </div>
                     </div>
                   </td>
                   <td>
