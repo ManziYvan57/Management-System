@@ -13,19 +13,49 @@ const validatePersonnel = [
   body('phoneNumber').matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid phone number'),
   body('dateOfBirth').isISO8601().withMessage('Please enter a valid date of birth'),
   body('gender').isIn(['male', 'female', 'other']).withMessage('Please select a valid gender'),
-  body('employeeId').optional({ nullable: true, checkFalsy: true }).trim().isLength({ min: 1 }).withMessage('Employee ID is required'),
+  body('employeeId').optional().custom((value) => {
+    if (value && value.trim().length === 0) return true;
+    if (value && value.trim().length < 1) throw new Error('Employee ID is required');
+    return true;
+  }),
   body('role').isIn(['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff']).withMessage('Please select a valid role'),
   body('department').isIn(['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'other']).withMessage('Please select a valid department'),
   body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Please select a valid terminal'),
   body('employmentStatus').optional().isIn(['active', 'inactive', 'suspended', 'terminated', 'on_leave']).withMessage('Please select a valid employment status'),
   body('licenseNumber').optional().trim(),
-  body('licenseType').optional({ nullable: true, checkFalsy: true }).isIn(['A', 'B', 'C', 'D', 'E', 'F']).withMessage('Please select a valid license type'),
-  body('licenseExpiryDate').optional({ nullable: true, checkFalsy: true }).isISO8601().withMessage('Please enter a valid license expiry date'),
-  body('drivingPoints').optional({ nullable: true, checkFalsy: true }).isInt({ min: 0, max: 100 }).withMessage('Driving points must be between 0 and 100'),
-  body('assignedVehicle').optional({ nullable: true, checkFalsy: true }).isMongoId().withMessage('Please enter a valid vehicle ID'),
-  body('assignedRoute').optional({ nullable: true, checkFalsy: true }).trim(),
-  body('performanceRating').optional({ nullable: true, checkFalsy: true }).isFloat({ min: 1, max: 5 }).withMessage('Performance rating must be between 1 and 5'),
-  body('lastEvaluationDate').optional({ nullable: true, checkFalsy: true }).isISO8601().withMessage('Please enter a valid evaluation date'),
+  body('licenseType').optional().custom((value) => {
+    if (!value || value.trim().length === 0) return true;
+    if (!['A', 'B', 'C', 'D', 'E', 'F'].includes(value)) throw new Error('Please select a valid license type');
+    return true;
+  }),
+  body('licenseExpiryDate').optional().custom((value) => {
+    if (!value || value.trim().length === 0) return true;
+    if (!Date.parse(value)) throw new Error('Please enter a valid license expiry date');
+    return true;
+  }),
+  body('drivingPoints').optional().custom((value) => {
+    if (!value || value === '') return true;
+    const num = parseInt(value);
+    if (isNaN(num) || num < 0 || num > 100) throw new Error('Driving points must be between 0 and 100');
+    return true;
+  }),
+  body('assignedVehicle').optional().custom((value) => {
+    if (!value || value.trim().length === 0) return true;
+    if (!/^[0-9a-fA-F]{24}$/.test(value)) throw new Error('Please enter a valid vehicle ID');
+    return true;
+  }),
+  body('assignedRoute').optional().trim(),
+  body('performanceRating').optional().custom((value) => {
+    if (!value || value === '') return true;
+    const num = parseFloat(value);
+    if (isNaN(num) || num < 1 || num > 5) throw new Error('Performance rating must be between 1 and 5');
+    return true;
+  }),
+  body('lastEvaluationDate').optional().custom((value) => {
+    if (!value || value.trim().length === 0) return true;
+    if (!Date.parse(value)) throw new Error('Please enter a valid evaluation date');
+    return true;
+  }),
   body('workSchedule.shift').optional().isIn(['morning', 'afternoon', 'night', 'flexible']).withMessage('Please select a valid shift'),
   body('workSchedule.workingDays').optional().isArray().withMessage('Working days must be an array'),
   body('workSchedule.startTime').optional().trim(),
