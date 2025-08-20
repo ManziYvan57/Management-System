@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Layout from '../../components/Layout';
-import { FaCar, FaTools } from 'react-icons/fa';
+import { FaCar, FaTools, FaFileAlt } from 'react-icons/fa';
 import VehiclesTab from './VehiclesTab';
 import EquipmentTab from './EquipmentTab';
+import VehicleDocumentsTab from './VehicleDocumentsTab';
 import './Assets.css';
 
 const Assets = () => {
@@ -20,6 +21,12 @@ const Assets = () => {
       label: 'Equipment',
       icon: <FaTools />,
       component: <EquipmentTab />
+    },
+    {
+      id: 'documents',
+      label: 'Documents',
+      icon: <FaFileAlt />,
+      component: <VehicleDocumentsTab />
     }
   ];
 

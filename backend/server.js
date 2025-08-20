@@ -23,6 +23,7 @@ const equipmentRoutes = require('./routes/equipment');
 const personnelRoutes = require('./routes/personnel');
 const transportRoutes = require('./routes/transport');
 const dashboardRoutes = require('./routes/dashboard');
+const vehicleDocumentRoutes = require('./routes/vehicleDocuments');
 
 // Import middleware
 const { errorHandler } = require('./middleware/errorHandler');
@@ -124,6 +125,7 @@ app.use(`${apiPrefix}/equipment`, equipmentRoutes);
 app.use(`${apiPrefix}/personnel`, personnelRoutes);
 app.use(`${apiPrefix}/transport`, transportRoutes);
 app.use(`${apiPrefix}/dashboard`, dashboardRoutes);
+app.use(`${apiPrefix}/vehicle-documents`, vehicleDocumentRoutes);
 
 // Error handling middleware
 app.use(notFound);
