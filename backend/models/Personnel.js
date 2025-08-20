@@ -52,7 +52,7 @@ const personnelSchema = new mongoose.Schema({
   // Employment Information
   employeeId: {
     type: String,
-    required: [true, 'Employee ID is required'],
+    required: false,
     unique: true,
     trim: true,
     default: function() {
