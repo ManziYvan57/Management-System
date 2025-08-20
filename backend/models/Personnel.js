@@ -102,7 +102,7 @@ const personnelSchema = new mongoose.Schema({
   },
   licenseType: {
     type: String,
-    enum: ['A', 'B', 'C', 'D', 'E', 'F'],
+    enum: ['A', 'B', 'C', 'D', 'E', 'F', null],
     sparse: true
   },
   licenseExpiryDate: {
