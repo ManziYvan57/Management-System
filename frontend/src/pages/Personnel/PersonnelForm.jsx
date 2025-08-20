@@ -1,35 +1,100 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaSave, FaUser } from 'react-icons/fa';
+import { FaTimes, FaUser, FaSave } from 'react-icons/fa';
+import './Personnel.css';
 
-const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
+const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = null }) => {
   const [formData, setFormData] = useState({
+    // Basic Information
     firstName: '',
     lastName: '',
     email: '',
     phoneNumber: '',
     dateOfBirth: '',
     gender: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      country: '',
+      postalCode: ''
+    },
+    emergencyContact: {
+      name: '',
+      relationship: '',
+      phoneNumber: ''
+    },
+
+    // Employment Information
     employeeId: '',
-    role: 'driver',
-    department: 'operations',
-    terminal: 'Kigali',
+    role: '',
+    department: '',
+    terminal: '',
     hireDate: new Date().toISOString().split('T')[0],
     employmentStatus: 'active',
     salary: 0,
+    supervisor: '',
+
+    // Driver-specific fields (only shown for drivers)
     licenseNumber: '',
     licenseType: '',
     licenseExpiryDate: '',
     drivingPoints: 100,
     assignedVehicle: '',
     assignedRoute: '',
+
+    // Performance and Training
     performanceRating: 3,
-    notes: ''
+    lastEvaluationDate: '',
+    trainingCompleted: [],
+    certifications: [],
+
+    // Work Schedule
+    workSchedule: {
+      shift: 'morning',
+      workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+      startTime: '08:00',
+      endTime: '17:00'
+    },
+
+    // Additional Information
+    notes: '',
+    skills: [],
+    languages: []
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Initialize form data when editing
+  // Role options based on your requirements
+  const roleOptions = [
+    { value: 'admin', label: 'Admin' },
+    { value: 'staff', label: 'Staff' },
+    { value: 'driver', label: 'Driver' },
+    { value: 'garage_staff', label: 'Garage Staff' },
+    { value: 'fuel_station_staff', label: 'Fuel Station Staff' }
+  ];
+
+  // Department options
+  const departmentOptions = [
+    { value: 'operations', label: 'Operations' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'customer_service', label: 'Customer Service' },
+    { value: 'administration', label: 'Administration' },
+    { value: 'finance', label: 'Finance' },
+    { value: 'compliance', label: 'Compliance' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  // License types
+  const licenseTypes = [
+    { value: 'A', label: 'A - Motorcycle' },
+    { value: 'B', label: 'B - Light Vehicle' },
+    { value: 'C', label: 'C - Heavy Vehicle' },
+    { value: 'D', label: 'D - Passenger Vehicle' },
+    { value: 'E', label: 'E - Trailer' },
+    { value: 'F', label: 'F - Special Vehicle' }
+  ];
+
   useEffect(() => {
     if (mode === 'edit' && personnel) {
       setFormData({
@@ -39,38 +104,82 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
         phoneNumber: personnel.phoneNumber || '',
         dateOfBirth: personnel.dateOfBirth ? new Date(personnel.dateOfBirth).toISOString().split('T')[0] : '',
         gender: personnel.gender || '',
+        address: {
+          street: personnel.address?.street || '',
+          city: personnel.address?.city || '',
+          state: personnel.address?.state || '',
+          country: personnel.address?.country || '',
+          postalCode: personnel.address?.postalCode || ''
+        },
+        emergencyContact: {
+          name: personnel.emergencyContact?.name || '',
+          relationship: personnel.emergencyContact?.relationship || '',
+          phoneNumber: personnel.emergencyContact?.phoneNumber || ''
+        },
         employeeId: personnel.employeeId || '',
-        role: personnel.role || 'driver',
-        department: personnel.department || 'operations',
-        terminal: personnel.terminal || 'Kigali',
+        role: personnel.role || '',
+        department: personnel.department || '',
+        terminal: personnel.terminal || '',
         hireDate: personnel.hireDate ? new Date(personnel.hireDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         employmentStatus: personnel.employmentStatus || 'active',
         salary: personnel.salary || 0,
+        supervisor: personnel.supervisor || '',
         licenseNumber: personnel.licenseNumber || '',
         licenseType: personnel.licenseType || '',
         licenseExpiryDate: personnel.licenseExpiryDate ? new Date(personnel.licenseExpiryDate).toISOString().split('T')[0] : '',
         drivingPoints: personnel.drivingPoints || 100,
-        assignedVehicle: personnel.assignedVehicle?._id || personnel.assignedVehicle || '',
+        assignedVehicle: personnel.assignedVehicle || '',
         assignedRoute: personnel.assignedRoute || '',
         performanceRating: personnel.performanceRating || 3,
-        notes: personnel.notes || ''
+        lastEvaluationDate: personnel.lastEvaluationDate ? new Date(personnel.lastEvaluationDate).toISOString().split('T')[0] : '',
+        trainingCompleted: personnel.trainingCompleted || [],
+        certifications: personnel.certifications || [],
+        workSchedule: {
+          shift: personnel.workSchedule?.shift || 'morning',
+          workingDays: personnel.workSchedule?.workingDays || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+          startTime: personnel.workSchedule?.startTime || '08:00',
+          endTime: personnel.workSchedule?.endTime || '17:00'
+        },
+        notes: personnel.notes || '',
+        skills: personnel.skills || [],
+        languages: personnel.languages || []
       });
     }
   }, [mode, personnel]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
     
+    // Handle nested object updates
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+
     // Clear error for this field
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
 
+    // Basic validation
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
@@ -81,7 +190,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
     if (!formData.role) newErrors.role = 'Role is required';
     if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.terminal) newErrors.terminal = 'Terminal is required';
-    if (!formData.hireDate) newErrors.hireDate = 'Hire date is required';
 
     // Driver-specific validation
     if (formData.role === 'driver') {
@@ -96,10 +204,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
@@ -107,18 +212,20 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
         ...formData,
         salary: parseFloat(formData.salary) || 0,
         drivingPoints: parseInt(formData.drivingPoints) || 100,
-        performanceRating: parseFloat(formData.performanceRating) || 3,
-        assignedVehicle: formData.assignedVehicle || null
+        performanceRating: parseInt(formData.performanceRating) || 3
       };
 
       await onSubmit(submitData);
       onClose();
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error submitting personnel:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Check if current role is driver
+  const isDriver = formData.role === 'driver';
 
   if (!isOpen) return null;
 
@@ -128,7 +235,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
         <div className="modal-header">
           <h3>
             <FaUser />
-            {mode === 'edit' ? 'Edit Personnel' : 'Add New Personnel'}
+            {mode === 'add' ? 'Add New Personnel' : 'Edit Personnel'}
           </h3>
           <button onClick={onClose} className="close-button">
             <FaTimes />
@@ -136,9 +243,10 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="personnel-form">
-          {/* Basic Information */}
+          {/* Basic Information Section */}
           <div className="form-section">
             <h4>Basic Information</h4>
+            
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="firstName">First Name *</label>
@@ -225,9 +333,10 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
             </div>
           </div>
 
-          {/* Employment Information */}
+          {/* Employment Information Section */}
           <div className="form-section">
             <h4>Employment Information</h4>
+            
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="employeeId">Employee ID *</label>
@@ -250,14 +359,12 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                   onChange={handleInputChange}
                   className={errors.role ? 'error' : ''}
                 >
-                  <option value="driver">Driver</option>
-                  <option value="team_leader">Team Leader</option>
-                  <option value="customer_care">Customer Care</option>
-                  <option value="mechanic">Mechanic</option>
-                  <option value="supervisor">Supervisor</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
-                  <option value="other">Other</option>
+                  <option value="">Select Role</option>
+                  {roleOptions.map(role => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
                 </select>
                 {errors.role && <span className="error-message">{errors.role}</span>}
               </div>
@@ -273,12 +380,12 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                   onChange={handleInputChange}
                   className={errors.department ? 'error' : ''}
                 >
-                  <option value="operations">Operations</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="customer_service">Customer Service</option>
-                  <option value="administration">Administration</option>
-                  <option value="finance">Finance</option>
-                  <option value="other">Other</option>
+                  <option value="">Select Department</option>
+                  {departmentOptions.map(dept => (
+                    <option key={dept.value} value={dept.value}>
+                      {dept.label}
+                    </option>
+                  ))}
                 </select>
                 {errors.department && <span className="error-message">{errors.department}</span>}
               </div>
@@ -291,6 +398,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                   onChange={handleInputChange}
                   className={errors.terminal ? 'error' : ''}
                 >
+                  <option value="">Select Terminal</option>
                   <option value="Kigali">Kigali</option>
                   <option value="Kampala">Kampala</option>
                   <option value="Nairobi">Nairobi</option>
@@ -309,9 +417,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                   name="hireDate"
                   value={formData.hireDate}
                   onChange={handleInputChange}
-                  className={errors.hireDate ? 'error' : ''}
                 />
-                {errors.hireDate && <span className="error-message">{errors.hireDate}</span>}
               </div>
               <div className="form-group">
                 <label htmlFor="employmentStatus">Employment Status</label>
@@ -332,7 +438,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="salary">Salary</label>
+                <label htmlFor="salary">Salary (RWF)</label>
                 <input
                   type="number"
                   id="salary"
@@ -340,31 +446,17 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                   value={formData.salary}
                   onChange={handleInputChange}
                   min="0"
-                  step="0.01"
+                  step="1000"
                 />
-              </div>
-              <div className="form-group">
-                <label htmlFor="performanceRating">Performance Rating</label>
-                <select
-                  id="performanceRating"
-                  name="performanceRating"
-                  value={formData.performanceRating}
-                  onChange={handleInputChange}
-                >
-                  <option value="1">1 - Poor</option>
-                  <option value="2">2 - Below Average</option>
-                  <option value="3">3 - Average</option>
-                  <option value="4">4 - Above Average</option>
-                  <option value="5">5 - Excellent</option>
-                </select>
               </div>
             </div>
           </div>
 
-          {/* Driver-specific Information */}
-          {formData.role === 'driver' && (
+          {/* Driver-specific fields - only shown for drivers */}
+          {isDriver && (
             <div className="form-section">
               <h4>Driver Information</h4>
+              
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="licenseNumber">License Number *</label>
@@ -388,12 +480,11 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                     className={errors.licenseType ? 'error' : ''}
                   >
                     <option value="">Select License Type</option>
-                    <option value="A">A - Motorcycle</option>
-                    <option value="B">B - Light Vehicle</option>
-                    <option value="C">C - Medium Vehicle</option>
-                    <option value="D">D - Heavy Vehicle</option>
-                    <option value="E">E - Trailer</option>
-                    <option value="F">F - Special Purpose</option>
+                    {licenseTypes.map(license => (
+                      <option key={license.value} value={license.value}>
+                        {license.label}
+                      </option>
+                    ))}
                   </select>
                   {errors.licenseType && <span className="error-message">{errors.licenseType}</span>}
                 </div>
@@ -435,7 +526,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                     name="assignedVehicle"
                     value={formData.assignedVehicle}
                     onChange={handleInputChange}
-                    placeholder="Vehicle ID"
+                    placeholder="Vehicle ID or plate number"
                   />
                 </div>
                 <div className="form-group">
@@ -446,16 +537,191 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                     name="assignedRoute"
                     value={formData.assignedRoute}
                     onChange={handleInputChange}
-                    placeholder="e.g., Kigali-Kampala"
+                    placeholder="Route name or ID"
                   />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Notes */}
+          {/* Performance Information */}
+          <div className="form-section">
+            <h4>Performance & Work Schedule</h4>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="performanceRating">Performance Rating</label>
+                <select
+                  id="performanceRating"
+                  name="performanceRating"
+                  value={formData.performanceRating}
+                  onChange={handleInputChange}
+                >
+                  <option value="1">1 - Poor</option>
+                  <option value="2">2 - Below Average</option>
+                  <option value="3">3 - Average</option>
+                  <option value="4">4 - Above Average</option>
+                  <option value="5">5 - Excellent</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="lastEvaluationDate">Last Evaluation Date</label>
+                <input
+                  type="date"
+                  id="lastEvaluationDate"
+                  name="lastEvaluationDate"
+                  value={formData.lastEvaluationDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="workSchedule.shift">Work Shift</label>
+                <select
+                  id="workSchedule.shift"
+                  name="workSchedule.shift"
+                  value={formData.workSchedule.shift}
+                  onChange={handleInputChange}
+                >
+                  <option value="morning">Morning</option>
+                  <option value="afternoon">Afternoon</option>
+                  <option value="night">Night</option>
+                  <option value="flexible">Flexible</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="workSchedule.startTime">Start Time</label>
+                <input
+                  type="time"
+                  id="workSchedule.startTime"
+                  name="workSchedule.startTime"
+                  value={formData.workSchedule.startTime}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="workSchedule.endTime">End Time</label>
+                <input
+                  type="time"
+                  id="workSchedule.endTime"
+                  name="workSchedule.endTime"
+                  value={formData.workSchedule.endTime}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Address Information */}
+          <div className="form-section">
+            <h4>Address Information</h4>
+            
+            <div className="form-group">
+              <label htmlFor="address.street">Street Address</label>
+              <input
+                type="text"
+                id="address.street"
+                name="address.street"
+                value={formData.address.street}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="address.city">City</label>
+                <input
+                  type="text"
+                  id="address.city"
+                  name="address.city"
+                  value={formData.address.city}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="address.state">State/Province</label>
+                <input
+                  type="text"
+                  id="address.state"
+                  name="address.state"
+                  value={formData.address.state}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="address.country">Country</label>
+                <input
+                  type="text"
+                  id="address.country"
+                  name="address.country"
+                  value={formData.address.country}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="address.postalCode">Postal Code</label>
+                <input
+                  type="text"
+                  id="address.postalCode"
+                  name="address.postalCode"
+                  value={formData.address.postalCode}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Emergency Contact */}
+          <div className="form-section">
+            <h4>Emergency Contact</h4>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="emergencyContact.name">Contact Name</label>
+                <input
+                  type="text"
+                  id="emergencyContact.name"
+                  name="emergencyContact.name"
+                  value={formData.emergencyContact.name}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="emergencyContact.relationship">Relationship</label>
+                <input
+                  type="text"
+                  id="emergencyContact.relationship"
+                  name="emergencyContact.relationship"
+                  value={formData.emergencyContact.relationship}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="emergencyContact.phoneNumber">Contact Phone</label>
+              <input
+                type="tel"
+                id="emergencyContact.phoneNumber"
+                name="emergencyContact.phoneNumber"
+                value={formData.emergencyContact.phoneNumber}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+
+          {/* Additional Information */}
           <div className="form-section">
             <h4>Additional Information</h4>
+            
             <div className="form-group">
               <label htmlFor="notes">Notes</label>
               <textarea
@@ -464,7 +730,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
                 value={formData.notes}
                 onChange={handleInputChange}
                 rows="3"
-                placeholder="Additional notes about this personnel..."
+                placeholder="Any additional notes or comments..."
               />
             </div>
           </div>
@@ -478,12 +744,12 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode, personnel }) => {
               {loading ? (
                 <>
                   <div className="spinner-small"></div>
-                  Saving...
+                  {mode === 'add' ? 'Adding...' : 'Updating...'}
                 </>
               ) : (
                 <>
                   <FaSave />
-                  {mode === 'edit' ? 'Update Personnel' : 'Add Personnel'}
+                  {mode === 'add' ? 'Add Personnel' : 'Update Personnel'}
                 </>
               )}
             </button>

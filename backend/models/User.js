@@ -48,12 +48,12 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['super_admin', 'terminal_manager', 'route_manager', 'fleet_manager'],
-    default: 'route_manager'
+    enum: ['super_admin', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff', 'driver', 'customer_care'],
+    default: 'admin'
   },
   terminal: {
     type: String,
-    enum: ['kigali', 'kampala', 'nairobi', 'juba'],
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
     required: [true, 'Please specify terminal']
   },
   route: {
@@ -68,7 +68,7 @@ const UserSchema = new mongoose.Schema({
   },
   department: {
     type: String,
-    enum: ['management', 'garage', 'transport', 'inventory', 'drivers'],
+    enum: ['management', 'garage', 'transport', 'inventory', 'drivers', 'customer_care'],
     required: [true, 'Please specify department']
   },
   phone: {
@@ -241,49 +241,58 @@ UserSchema.methods.resetLoginAttempts = function() {
   });
 };
 
-// Set default permissions based on role
-UserSchema.methods.setDefaultPermissions = function() {
-  const rolePermissions = {
-    super_admin: {
-      garage: { view: true, create: true, edit: true, delete: true },
-      inventory: { view: true, create: true, edit: true, delete: true },
-      assets: { view: true, create: true, edit: true, delete: true },
-      personnel: { view: true, create: true, edit: true, delete: true },
-      transport: { view: true, create: true, edit: true, delete: true },
-      reports: { view: true, create: true, export: true },
-      users: { view: true, create: true, edit: true, delete: true }
-    },
-    terminal_manager: {
-      garage: { view: true, create: true, edit: true, delete: false },
-      inventory: { view: true, create: true, edit: true, delete: false },
-      assets: { view: true, create: true, edit: true, delete: false },
-      personnel: { view: true, create: true, edit: true, delete: false },
-      transport: { view: true, create: true, edit: true, delete: false },
-      reports: { view: true, create: true, export: true },
-      users: { view: true, create: false, edit: false, delete: false }
-    },
-    route_manager: {
-      garage: { view: true, create: false, edit: false, delete: false },
-      inventory: { view: true, create: false, edit: false, delete: false },
-      assets: { view: true, create: false, edit: true, delete: false },
-      personnel: { view: true, create: false, edit: true, delete: false },
-      transport: { view: true, create: true, edit: true, delete: false },
-      reports: { view: true, create: false, export: false },
-      users: { view: false, create: false, edit: false, delete: false }
-    },
-    fleet_manager: {
-      garage: { view: true, create: true, edit: true, delete: false },
-      inventory: { view: true, create: true, edit: true, delete: false },
-      assets: { view: true, create: true, edit: true, delete: false },
-      personnel: { view: true, create: false, edit: true, delete: false },
-      transport: { view: true, create: false, edit: false, delete: false },
-      reports: { view: true, create: true, export: true },
-      users: { view: false, create: false, edit: false, delete: false }
-    }
-  };
+  // Set default permissions based on role
+  UserSchema.methods.setDefaultPermissions = function() {
+    const rolePermissions = {
+      admin: {
+        garage: { view: true, create: true, edit: true, delete: true },
+        inventory: { view: true, create: true, edit: true, delete: true },
+        assets: { view: true, create: true, edit: true, delete: true },
+        personnel: { view: true, create: true, edit: true, delete: true },
+        transport: { view: true, create: true, edit: true, delete: true },
+        reports: { view: true, create: true, export: true },
+        users: { view: true, create: true, edit: true, delete: true }
+      },
+      staff: {
+        garage: { view: true, create: false, edit: false, delete: false },
+        inventory: { view: true, create: false, edit: false, delete: false },
+        assets: { view: true, create: false, edit: false, delete: false },
+        personnel: { view: true, create: false, edit: false, delete: false },
+        transport: { view: true, create: false, edit: false, delete: false },
+        reports: { view: true, create: false, export: false },
+        users: { view: false, create: false, edit: false, delete: false }
+      },
+      driver: {
+        garage: { view: false, create: false, edit: false, delete: false },
+        inventory: { view: false, create: false, edit: false, delete: false },
+        assets: { view: true, create: false, edit: false, delete: false },
+        personnel: { view: false, create: false, edit: false, delete: false },
+        transport: { view: true, create: true, edit: true, delete: false },
+        reports: { view: false, create: false, export: false },
+        users: { view: false, create: false, edit: false, delete: false }
+      },
+      garage_staff: {
+        garage: { view: true, create: true, edit: true, delete: false },
+        inventory: { view: true, create: true, edit: true, delete: false },
+        assets: { view: true, create: false, edit: true, delete: false },
+        personnel: { view: false, create: false, edit: false, delete: false },
+        transport: { view: false, create: false, edit: false, delete: false },
+        reports: { view: true, create: true, export: false },
+        users: { view: false, create: false, edit: false, delete: false }
+      },
+      fuel_station_staff: {
+        garage: { view: false, create: false, edit: false, delete: false },
+        inventory: { view: true, create: true, edit: true, delete: false },
+        assets: { view: true, create: false, edit: false, delete: false },
+        personnel: { view: false, create: false, edit: false, delete: false },
+        transport: { view: true, create: false, edit: false, delete: false },
+        reports: { view: true, create: true, export: false },
+        users: { view: false, create: false, edit: false, delete: false }
+      }
+    };
 
-  this.permissions = rolePermissions[this.role] || rolePermissions.route_manager;
-};
+    this.permissions = rolePermissions[this.role] || rolePermissions.staff;
+  };
 
 // Check if user has permission for a specific action
 UserSchema.methods.hasPermission = function(module, action) {

@@ -52,12 +52,12 @@ const authorize = (...permissions) => {
       });
     }
 
-    // If permissions are role-based (e.g., authorize('admin', 'manager'))
+    // If permissions are module-action based (e.g., authorize('assets', 'create'))
     if (permissions.length === 2 && typeof permissions[0] === 'string' && typeof permissions[1] === 'string') {
       const [module, action] = permissions;
       
-      // For now, allow all super_admin and terminal_manager roles to access all modules
-      if (req.user.role === 'super_admin' || req.user.role === 'terminal_manager') {
+      // For now, allow admin role to access all modules
+      if (req.user.role === 'admin') {
         return next();
       }
       

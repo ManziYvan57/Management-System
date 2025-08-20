@@ -57,12 +57,12 @@ const personnelSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'other'],
+    enum: ['admin', 'staff', 'driver', 'garage_staff', 'fuel_station_staff'],
     required: [true, 'Role is required']
   },
   department: {
     type: String,
-    enum: ['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'other'],
+    enum: ['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'compliance', 'other'],
     required: [true, 'Department is required']
   },
   terminal: {

@@ -93,24 +93,13 @@ const LoginPage = () => {
         </form>
 
         <div className="test-accounts">
-          <h3>🧪 Test Accounts</h3>
+          <h3>🧪 Test Account</h3>
           <div className="account-list">
             <div className="account-item">
-              <strong>Super Admin:</strong> superadmin / admin123
-            </div>
-            <div className="account-item">
-              <strong>Kigali Manager:</strong> kigali_manager / kigali123
-            </div>
-            <div className="account-item">
-              <strong>Kampala Manager:</strong> kampala_manager / kampala123
-            </div>
-            <div className="account-item">
-              <strong>Kampala-Kigali Route Manager:</strong> kampala_kigali_route / route123
-            </div>
-            <div className="account-item">
-              <strong>Active Fleet Manager:</strong> active_fleet_manager / fleet123
+              <strong>Super Admin:</strong> admin / Admin123!
             </div>
           </div>
+          <p className="test-note">Use this account to test all features of the system.</p>
         </div>
       </div>
     </div>
