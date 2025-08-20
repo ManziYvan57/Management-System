@@ -397,6 +397,60 @@ export const transportAPI = {
   }
 };
 
+// Vehicle Documents API functions
+export const vehicleDocumentsAPI = {
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/vehicle-documents${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getById: async (id) => {
+    return apiRequest(`/vehicle-documents/${id}`);
+  },
+  
+  getByVehicle: async (vehicleId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/vehicle-documents/vehicle/${vehicleId}${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  create: async (documentData) => {
+    return apiRequest('/vehicle-documents', {
+      method: 'POST',
+      body: JSON.stringify(documentData)
+    });
+  },
+  
+  update: async (id, documentData) => {
+    return apiRequest(`/vehicle-documents/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(documentData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/vehicle-documents/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  getExpiringAlerts: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/vehicle-documents/expiring-alerts${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getComplianceSummary: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/vehicle-documents/compliance-summary${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  bulkUpdateStatus: async (documentIds, status) => {
+    return apiRequest('/vehicle-documents/bulk-update-status', {
+      method: 'POST',
+      body: JSON.stringify({ documentIds, status })
+    });
+  }
+};
+
 export default {
   API_BASE_URL,
   API_PREFIX,
@@ -410,5 +464,6 @@ export default {
   inventoryAPI,
   assetsAPI,
   personnelAPI,
-  transportAPI
+  transportAPI,
+  vehicleDocumentsAPI
 };

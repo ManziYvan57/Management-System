@@ -40,7 +40,11 @@ const VehicleDocumentsTab = () => {
       setDocuments(response.data || []);
     } catch (err) {
       console.error('Error fetching documents:', err);
-      setError(err.message || 'Failed to fetch documents');
+      if (err.message.includes('500')) {
+        setError('Vehicle Documents service is currently unavailable. Please try again later or contact support.');
+      } else {
+        setError(err.message || 'Failed to fetch documents');
+      }
     } finally {
       setLoading(false);
     }
@@ -48,13 +52,11 @@ const VehicleDocumentsTab = () => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('/api/vehicles');
-      const data = await response.json();
-      if (data.success) {
-        setVehicles(data.data || []);
-      }
+      const response = await vehiclesAPI.getAll();
+      setVehicles(response.data || []);
     } catch (err) {
       console.error('Error fetching vehicles:', err);
+      // Don't set error state for vehicles as it's not critical for the main functionality
     }
   };
 
