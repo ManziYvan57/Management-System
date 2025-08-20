@@ -48,6 +48,14 @@ export const apiRequest = async (endpoint, options = {}) => {
         errors: data.errors || data.message
       });
       
+      // Log detailed validation errors if they exist
+      if (data.errors && Array.isArray(data.errors)) {
+        console.error('🔍 Validation Errors:');
+        data.errors.forEach((error, index) => {
+          console.error(`  ${index + 1}. ${error.msg} (Field: ${error.path})`);
+        });
+      }
+      
       if (response.status === 401) {
         console.error('🔒 Authentication failed - token may be invalid or expired');
         // Clear invalid token
