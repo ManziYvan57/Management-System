@@ -16,8 +16,9 @@ const personnelSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: false,
     unique: true,
+    sparse: true,
     lowercase: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
@@ -53,11 +54,15 @@ const personnelSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Employee ID is required'],
     unique: true,
-    trim: true
+    trim: true,
+    default: function() {
+      // Generate a simple employee ID: EMP + 4 random digits
+      return 'EMP' + Math.floor(1000 + Math.random() * 9000);
+    }
   },
   role: {
     type: String,
-    enum: ['admin', 'staff', 'driver', 'garage_staff', 'fuel_station_staff'],
+    enum: ['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff'],
     required: [true, 'Role is required']
   },
   department: {
@@ -72,7 +77,7 @@ const personnelSchema = new mongoose.Schema({
   },
   hireDate: {
     type: Date,
-    required: [true, 'Hire date is required'],
+    required: false,
     default: Date.now
   },
   employmentStatus: {
@@ -82,6 +87,7 @@ const personnelSchema = new mongoose.Schema({
   },
   salary: {
     type: Number,
+    required: false,
     min: [0, 'Salary cannot be negative']
   },
   supervisor: {

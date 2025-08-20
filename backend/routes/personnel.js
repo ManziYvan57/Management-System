@@ -9,17 +9,15 @@ const { body, validationResult } = require('express-validator');
 const validatePersonnel = [
   body('firstName').trim().isLength({ min: 1 }).withMessage('First name is required'),
   body('lastName').trim().isLength({ min: 1 }).withMessage('Last name is required'),
-  body('email').isEmail().withMessage('Please enter a valid email'),
+  body('email').optional().isEmail().withMessage('Please enter a valid email'),
   body('phoneNumber').matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid phone number'),
   body('dateOfBirth').isISO8601().withMessage('Please enter a valid date of birth'),
   body('gender').isIn(['male', 'female', 'other']).withMessage('Please select a valid gender'),
-  body('employeeId').trim().isLength({ min: 1 }).withMessage('Employee ID is required'),
-  body('role').isIn(['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'other']).withMessage('Please select a valid role'),
+  body('employeeId').optional().trim().isLength({ min: 1 }).withMessage('Employee ID is required'),
+  body('role').isIn(['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff']).withMessage('Please select a valid role'),
   body('department').isIn(['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'other']).withMessage('Please select a valid department'),
   body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Please select a valid terminal'),
-  body('hireDate').isISO8601().withMessage('Please enter a valid hire date'),
   body('employmentStatus').optional().isIn(['active', 'inactive', 'suspended', 'terminated', 'on_leave']).withMessage('Please select a valid employment status'),
-  body('salary').optional().isNumeric().withMessage('Salary must be a number'),
   body('licenseNumber').optional().trim(),
   body('licenseType').optional().isIn(['A', 'B', 'C', 'D', 'E', 'F']).withMessage('Please select a valid license type'),
   body('licenseExpiryDate').optional().isISO8601().withMessage('Please enter a valid license expiry date'),
@@ -136,16 +134,20 @@ router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, a
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    // Check if email already exists
-    const existingEmail = await Personnel.findOne({ email: req.body.email });
-    if (existingEmail) {
-      return res.status(400).json({ success: false, message: 'Email already exists' });
+    // Check if email already exists (only if email is provided)
+    if (req.body.email) {
+      const existingEmail = await Personnel.findOne({ email: req.body.email });
+      if (existingEmail) {
+        return res.status(400).json({ success: false, message: 'Email already exists' });
+      }
     }
 
-    // Check if employee ID already exists
-    const existingEmployeeId = await Personnel.findOne({ employeeId: req.body.employeeId });
-    if (existingEmployeeId) {
-      return res.status(400).json({ success: false, message: 'Employee ID already exists' });
+    // Check if employee ID already exists (only if provided, otherwise it will be auto-generated)
+    if (req.body.employeeId) {
+      const existingEmployeeId = await Personnel.findOne({ employeeId: req.body.employeeId });
+      if (existingEmployeeId) {
+        return res.status(400).json({ success: false, message: 'Employee ID already exists' });
+      }
     }
 
     // Check if license number already exists (for drivers)

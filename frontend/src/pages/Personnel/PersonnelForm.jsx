@@ -29,9 +29,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     role: '',
     department: '',
     terminal: '',
-    hireDate: new Date().toISOString().split('T')[0],
     employmentStatus: 'active',
-    salary: 0,
     supervisor: '',
 
     // Driver-specific fields (only shown for drivers)
@@ -187,11 +185,10 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     // Basic validation
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Please enter a valid email';
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     if (!formData.gender) newErrors.gender = 'Gender is required';
-    if (!formData.employeeId.trim()) newErrors.employeeId = 'Employee ID is required';
     if (!formData.role) newErrors.role = 'Role is required';
     if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.terminal) newErrors.terminal = 'Terminal is required';
@@ -215,7 +212,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     try {
       const submitData = {
         ...formData,
-        salary: parseFloat(formData.salary) || 0,
         drivingPoints: parseInt(formData.drivingPoints) || 100,
         performanceRating: parseInt(formData.performanceRating) || 3
       };
@@ -281,7 +277,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="email">Email *</label>
+                <label htmlFor="email">Email</label>
                 <input
                   type="email"
                   id="email"
@@ -289,6 +285,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   value={formData.email}
                   onChange={handleInputChange}
                   className={errors.email ? 'error' : ''}
+                  placeholder="Optional"
                 />
                 {errors.email && <span className="error-message">{errors.email}</span>}
               </div>
@@ -344,7 +341,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
             
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="employeeId">Employee ID *</label>
+                <label htmlFor="employeeId">Employee ID</label>
                 <input
                   type="text"
                   id="employeeId"
@@ -352,7 +349,10 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   value={formData.employeeId}
                   onChange={handleInputChange}
                   className={errors.employeeId ? 'error' : ''}
+                  readOnly
+                  placeholder="Auto-generated"
                 />
+                <small style={{ color: '#6b7280', fontSize: '0.75rem' }}>Employee ID will be auto-generated</small>
                 {errors.employeeId && <span className="error-message">{errors.employeeId}</span>}
               </div>
               <div className="form-group">
@@ -415,16 +415,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="hireDate">Hire Date *</label>
-                <input
-                  type="date"
-                  id="hireDate"
-                  name="hireDate"
-                  value={formData.hireDate}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="form-group">
                 <label htmlFor="employmentStatus">Employment Status</label>
                 <select
                   id="employmentStatus"
@@ -438,21 +428,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   <option value="terminated">Terminated</option>
                   <option value="on_leave">On Leave</option>
                 </select>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="salary">Salary (RWF)</label>
-                <input
-                  type="number"
-                  id="salary"
-                  name="salary"
-                  value={formData.salary}
-                  onChange={handleInputChange}
-                  min="0"
-                  step="1000"
-                />
               </div>
             </div>
           </div>
