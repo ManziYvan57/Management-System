@@ -413,18 +413,22 @@ const Personnel = () => {
                     )}
                   </td>
                   <td>
-                    <div className="performance-info">
-                      <div className="rating">
-                        <FaStar />
-                        <span>{person.performanceRating}/5</span>
-                      </div>
-                      {person.lastEvaluationDate && (
-                        <div className="evaluation-date">
-                          <FaCalendar />
-                          <span>{new Date(person.lastEvaluationDate).toLocaleDateString()}</span>
-                        </div>
-                      )}
-                    </div>
+                                         <div className="performance-info">
+                       {person.performanceRating ? (
+                         <div className="rating">
+                           <FaStar />
+                           <span>{person.performanceRating}/5</span>
+                         </div>
+                       ) : (
+                         <span className="not-rated">Not Rated</span>
+                       )}
+                       {person.lastEvaluationDate && (
+                         <div className="evaluation-date">
+                           <FaCalendar />
+                           <span>{new Date(person.lastEvaluationDate).toLocaleDateString()}</span>
+                         </div>
+                       )}
+                     </div>
                   </td>
                   <td>
                     <div className="action-buttons">

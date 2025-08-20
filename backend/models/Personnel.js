@@ -67,13 +67,11 @@ const personnelSchema = new mongoose.Schema({
   },
   hireDate: {
     type: Date,
-    required: false,
-    default: Date.now
+    required: false
   },
   employmentStatus: {
     type: String,
-    enum: ['active', 'inactive', 'suspended', 'terminated', 'on_leave'],
-    default: 'active'
+    enum: ['active', 'inactive', 'suspended', 'terminated', 'on_leave']
   },
   salary: {
     type: Number,
@@ -101,7 +99,6 @@ const personnelSchema = new mongoose.Schema({
   },
   drivingPoints: {
     type: Number,
-    default: 100,
     min: [0, 'Driving points cannot be negative'],
     max: [100, 'Driving points cannot exceed 100']
   },
@@ -119,8 +116,7 @@ const personnelSchema = new mongoose.Schema({
   performanceRating: {
     type: Number,
     min: [1, 'Performance rating must be at least 1'],
-    max: [5, 'Performance rating cannot exceed 5'],
-    default: 3
+    max: [5, 'Performance rating cannot exceed 5']
   },
   lastEvaluationDate: {
     type: Date
@@ -172,8 +168,7 @@ const personnelSchema = new mongoose.Schema({
   workSchedule: {
     shift: {
       type: String,
-      enum: ['morning', 'afternoon', 'night', 'flexible'],
-      default: 'morning'
+      enum: ['morning', 'afternoon', 'night', 'flexible']
     },
     workingDays: [{
       type: String,

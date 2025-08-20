@@ -125,25 +125,25 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
         role: personnel.role || '',
         department: personnel.department || '',
         terminal: personnel.terminal || '',
-        hireDate: personnel.hireDate ? new Date(personnel.hireDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        employmentStatus: personnel.employmentStatus || 'active',
-        salary: personnel.salary || 0,
+        hireDate: personnel.hireDate ? new Date(personnel.hireDate).toISOString().split('T')[0] : '',
+        employmentStatus: personnel.employmentStatus || '',
+        salary: personnel.salary || '',
         supervisor: personnel.supervisor || '',
         licenseNumber: personnel.licenseNumber || '',
         licenseType: personnel.licenseType || '',
         licenseExpiryDate: personnel.licenseExpiryDate ? new Date(personnel.licenseExpiryDate).toISOString().split('T')[0] : '',
-        drivingPoints: personnel.drivingPoints || 100,
+        drivingPoints: personnel.drivingPoints || '',
         assignedVehicle: personnel.assignedVehicle || '',
         assignedRoute: personnel.assignedRoute || '',
-        performanceRating: personnel.performanceRating || 3,
+        performanceRating: personnel.performanceRating || '',
         lastEvaluationDate: personnel.lastEvaluationDate ? new Date(personnel.lastEvaluationDate).toISOString().split('T')[0] : '',
         trainingCompleted: personnel.trainingCompleted || [],
         certifications: personnel.certifications || [],
         workSchedule: {
-          shift: personnel.workSchedule?.shift || 'morning',
-          workingDays: personnel.workSchedule?.workingDays || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-          startTime: personnel.workSchedule?.startTime || '08:00',
-          endTime: personnel.workSchedule?.endTime || '17:00'
+          shift: personnel.workSchedule?.shift || '',
+          workingDays: personnel.workSchedule?.workingDays || [],
+          startTime: personnel.workSchedule?.startTime || '',
+          endTime: personnel.workSchedule?.endTime || ''
         },
         notes: personnel.notes || '',
         skills: personnel.skills || [],
@@ -548,6 +548,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   value={formData.performanceRating}
                   onChange={handleInputChange}
                 >
+                  <option value="">Select Performance Rating...</option>
                   <option value="1">1 - Poor</option>
                   <option value="2">2 - Below Average</option>
                   <option value="3">3 - Average</option>
@@ -576,6 +577,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   value={formData.workSchedule.shift}
                   onChange={handleInputChange}
                 >
+                  <option value="">Select Work Shift...</option>
                   <option value="morning">Morning</option>
                   <option value="afternoon">Afternoon</option>
                   <option value="night">Night</option>

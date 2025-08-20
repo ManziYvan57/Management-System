@@ -789,6 +789,12 @@ tr:hover {
   font-style: italic;
 }
 
+.not-rated {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
 /* Performance Info */
 .performance-info {
   display: flex;
@@ -838,7 +844,7 @@ tr:hover {
 
 .view-btn {
   background: #e0f2fe;
-  color: #0369a1 !important;
+  color: white !important;
   border: 1px solid #bae6fd;
 }
 
@@ -851,7 +857,7 @@ tr:hover {
 
 .edit-btn {
   background: #fef3c7;
-  color: #92400e !important;
+  color: white !important;
   border: 1px solid #fde68a;
 }
 
@@ -877,7 +883,7 @@ tr:hover {
 
 .delete-btn {
   background: #fee2e2;
-  color: #991b1b !important;
+  color: white !important;
   border: 1px solid #fecaca;
 }
 
