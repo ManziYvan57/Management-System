@@ -51,6 +51,29 @@
   margin: 0;
 }
 
+/* Personnel Overview */
+.personnel-overview {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 2px solid #d1d5db;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.personnel-overview h3 {
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.personnel-overview p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
 /* Quick Actions */
 .quick-actions {
   display: flex;
@@ -515,40 +538,7 @@ tr:hover {
   transform: translateY(-1px);
 }
 
-/* Tabs */
-.tabs-container {
-  margin-bottom: 2rem;
-}
-
-.tabs-header {
-  display: flex;
-  gap: 0.5rem;
-  border-bottom: 2px solid #e5e7eb;
-  overflow-x: auto;
-}
-
-.tab-button {
-  background: none;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  cursor: pointer;
-  font-weight: 500;
-  color: #6b7280;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.tab-button:hover {
-  color: #374151;
-  background: #f9fafb;
-}
-
-.tab-button.active {
-  color: #3b82f6;
-  border-bottom-color: #3b82f6;
-  background: #eff6ff;
-}
+/* Tabs - Removed in favor of dropdown filters */
 
 /* Search and Filter */
 .search-filter-container {

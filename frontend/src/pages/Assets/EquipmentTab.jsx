@@ -246,7 +246,7 @@ const EquipmentTab = () => {
                             setShowEditForm(true);
                           }}
                         >
-                          <FaEye />
+                          <h4>View</h4>
                         </button>
                         <button
                           className="action-btn edit-btn"
@@ -256,14 +256,14 @@ const EquipmentTab = () => {
                             setShowEditForm(true);
                           }}
                         >
-                          <FaEdit />
+                          <h4>Update</h4>
                         </button>
                         <button
                           className="action-btn delete-btn"
                           title="Delete Equipment"
                           onClick={() => handleDeleteEquipment(item._id)}
                         >
-                          <FaTrash />
+                          <h4>Delete</h4>
                         </button>
                      </div>
                   </td>

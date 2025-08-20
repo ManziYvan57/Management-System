@@ -67,11 +67,16 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
   // Role options based on your requirements
   const roleOptions = [
-    { value: 'admin', label: 'Admin' },
-    { value: 'staff', label: 'Staff' },
     { value: 'driver', label: 'Driver' },
+    { value: 'team_leader', label: 'Team Leader' },
+    { value: 'customer_care', label: 'Customer Care' },
+    { value: 'mechanic', label: 'Mechanic' },
+    { value: 'supervisor', label: 'Supervisor' },
+    { value: 'manager', label: 'Manager' },
+    { value: 'admin', label: 'Admin' },
     { value: 'garage_staff', label: 'Garage Staff' },
-    { value: 'fuel_station_staff', label: 'Fuel Station Staff' }
+    { value: 'transport_staff', label: 'Transport Staff' },
+    { value: 'inventory_staff', label: 'Inventory Staff' }
   ];
 
   // Department options

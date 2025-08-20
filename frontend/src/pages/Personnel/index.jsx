@@ -105,13 +105,8 @@ const Personnel = () => {
   };
 
   const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    if (tab === 'all') {
-      setRoleFilter('');
-    } else {
-      setRoleFilter(tab);
-    }
-    fetchPersonnel();
+    // This function is no longer needed since we removed tabs
+    // Keeping it for backward compatibility but it's not used
   };
 
   const getStatusBadgeClass = (status) => {
@@ -164,10 +159,7 @@ const Personnel = () => {
     }
   };
 
-  const filteredPersonnel = personnel.filter(person => {
-    if (activeTab === 'all') return true;
-    return person.role === activeTab;
-  });
+  const filteredPersonnel = personnel; // All filtering is now handled by the API with query parameters
 
   if (loading) {
     return (
@@ -208,52 +200,10 @@ const Personnel = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="tabs-container">
-        <div className="tabs-header">
-          <button 
-            className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => handleTabChange('all')}
-          >
-            All Personnel
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'driver' ? 'active' : ''}`}
-            onClick={() => handleTabChange('driver')}
-          >
-            Drivers
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'team_leader' ? 'active' : ''}`}
-            onClick={() => handleTabChange('team_leader')}
-          >
-            Team Leaders
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'customer_care' ? 'active' : ''}`}
-            onClick={() => handleTabChange('customer_care')}
-          >
-            Customer Care
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'mechanic' ? 'active' : ''}`}
-            onClick={() => handleTabChange('mechanic')}
-          >
-            Mechanics
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'supervisor' ? 'active' : ''}`}
-            onClick={() => handleTabChange('supervisor')}
-          >
-            Supervisors
-          </button>
-          <button 
-            className={`tab-button ${activeTab === 'manager' ? 'active' : ''}`}
-            onClick={() => handleTabChange('manager')}
-          >
-            Managers
-          </button>
-        </div>
+      {/* Personnel Overview */}
+      <div className="personnel-overview">
+        <h3>All Personnel</h3>
+        <p>Manage and view all personnel across different roles and departments</p>
       </div>
 
       {/* Search and Filter Controls */}
@@ -274,6 +224,29 @@ const Personnel = () => {
         </form>
 
         <div className="filter-controls">
+          <div className="filter-group">
+            <label>Role:</label>
+            <select 
+              value={roleFilter} 
+              onChange={(e) => {
+                setRoleFilter(e.target.value);
+                handleFilterChange();
+              }}
+            >
+              <option value="">All Roles</option>
+              <option value="driver">Driver</option>
+              <option value="team_leader">Team Leader</option>
+              <option value="customer_care">Customer Care</option>
+              <option value="mechanic">Mechanic</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+              <option value="garage_staff">Garage Staff</option>
+              <option value="transport_staff">Transport Staff</option>
+              <option value="inventory_staff">Inventory Staff</option>
+            </select>
+          </div>
+
           <div className="filter-group">
             <label>Department:</label>
             <select 
