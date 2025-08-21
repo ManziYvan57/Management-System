@@ -98,7 +98,8 @@ app.get('/', (req, res) => {
       equipment: '/api/equipment',
       personnel: '/api/personnel',
       transport: '/api/transport',
-      dashboard: '/api/dashboard'
+      dashboard: '/api/dashboard',
+      vehicleDocuments: '/api/vehicle-documents'
     }
   });
 });
