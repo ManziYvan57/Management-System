@@ -1,6 +1,8 @@
 const express = require('express');
+const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const Inventory = require('../models/Inventory');
 
 // @desc    Get all inventory items
 // @route   GET /api/inventory
@@ -38,66 +40,22 @@ router.get('/', protect, async (req, res) => {
       query.status = status;
     }
     
-    // Mock inventory data for now
-    const mockInventory = [
-      {
-        _id: '1',
-        name: 'Engine Oil 5W-30',
-        sku: 'OIL-001',
-        category: 'Lubricants',
-        description: 'High-quality engine oil for diesel engines',
-        quantity: 50,
-        unit: 'liters',
-        unitCost: 2500,
-        totalValue: 125000,
-        reorderPoint: 10,
-        supplier: 'OilCo Ltd',
-        location: 'Warehouse A',
-        status: 'in-stock',
-        terminal: req.user.terminal || 'kigali',
-        createdBy: req.user.id
-      },
-      {
-        _id: '2',
-        name: 'Brake Pads Set',
-        sku: 'BRAKE-001',
-        category: 'Brake Parts',
-        description: 'Front brake pads for Toyota Coaster',
-        quantity: 15,
-        unit: 'sets',
-        unitCost: 15000,
-        totalValue: 225000,
-        reorderPoint: 5,
-        supplier: 'BrakeParts Inc',
-        location: 'Warehouse B',
-        status: 'low-stock',
-        terminal: req.user.terminal || 'kigali',
-        createdBy: req.user.id
-      },
-      {
-        _id: '3',
-        name: 'Air Filter',
-        sku: 'FILTER-001',
-        category: 'Filters',
-        description: 'Engine air filter for Isuzu NPR',
-        quantity: 25,
-        unit: 'pieces',
-        unitCost: 8000,
-        totalValue: 200000,
-        reorderPoint: 8,
-        supplier: 'FilterPro',
-        location: 'Warehouse A',
-        status: 'in-stock',
-        terminal: req.user.terminal || 'kigali',
-        createdBy: req.user.id
-      }
-    ];
+    // Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    const total = mockInventory.length;
+    // Execute query
+    const inventory = await Inventory.find(query)
+      .populate('createdBy', 'firstName lastName')
+      .populate('updatedBy', 'firstName lastName')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await Inventory.countDocuments(query);
     
     res.status(200).json({
       success: true,
-      count: mockInventory.length,
+      count: inventory.length,
       total,
       pagination: {
         currentPage: parseInt(page),
@@ -105,7 +63,7 @@ router.get('/', protect, async (req, res) => {
         hasNext: page * limit < total,
         hasPrev: page > 1
       },
-      data: mockInventory
+      data: inventory
     });
   } catch (error) {
     console.error('Error fetching inventory:', error);
@@ -120,27 +78,55 @@ router.get('/', protect, async (req, res) => {
 // @desc    Create new inventory item
 // @route   POST /api/inventory
 // @access  Private
-router.post('/', protect, authorize('inventory', 'create'), async (req, res) => {
+router.post('/', protect, authorize('inventory', 'create'), [
+  body('name').notEmpty().withMessage('Item name is required'),
+  body('sku').notEmpty().withMessage('SKU is required'),
+  body('category').isIn([
+    'Lubricants', 'Brake System', 'Filters', 'Electrical', 'Tires', 
+    'Tools', 'Safety Equipment', 'Consumables', 'Spare Parts', 'Other'
+  ]).withMessage('Invalid category'),
+  body('quantity').isNumeric().withMessage('Quantity must be a number'),
+  body('unit').isIn(['pieces', 'liters', 'sets', 'pairs', 'boxes', 'meters', 'kg', 'other']).withMessage('Invalid unit'),
+  body('minQuantity').isNumeric().withMessage('Minimum quantity must be a number'),
+  body('unitCost').isNumeric().withMessage('Unit cost must be a number'),
+  body('supplier.name').notEmpty().withMessage('Supplier name is required')
+], async (req, res) => {
   try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed', 
+        errors: errors.array() 
+      });
+    }
+
+    // Check if SKU already exists
+    const existingItem = await Inventory.findOne({ sku: req.body.sku.toUpperCase() });
+    if (existingItem) {
+      return res.status(400).json({
+        success: false,
+        message: 'SKU already exists'
+      });
+    }
+
     const inventoryData = {
       ...req.body,
+      sku: req.body.sku.toUpperCase(),
       terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
-      createdBy: req.user.id,
-      totalValue: req.body.quantity * req.body.unitCost
+      createdBy: req.user.id
     };
     
-    // Mock response for now
-    const mockItem = {
-      _id: Date.now().toString(),
-      ...inventoryData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    const inventory = new Inventory(inventoryData);
+    await inventory.save();
+    
+    await inventory.populate('createdBy', 'firstName lastName');
     
     res.status(201).json({
       success: true,
       message: 'Inventory item created successfully',
-      data: mockItem
+      data: inventory
     });
   } catch (error) {
     console.error('Error creating inventory item:', error);
@@ -168,23 +154,66 @@ router.get('/stats', protect, async (req, res) => {
       query.terminal = terminal;
     }
     
-    // Mock statistics
+    // Get real statistics from database
+    const totalItems = await Inventory.countDocuments(query);
+    const totalValue = await Inventory.aggregate([
+      { $match: query },
+      { $group: { _id: null, total: { $sum: '$totalValue' } } }
+    ]);
+    
+    const lowStockItems = await Inventory.countDocuments({
+      ...query,
+      quantity: { $lte: '$minQuantity' },
+      quantity: { $gt: 0 }
+    });
+    
+    const outOfStockItems = await Inventory.countDocuments({
+      ...query,
+      quantity: 0
+    });
+    
+    // Category statistics
+    const categories = await Inventory.aggregate([
+      { $match: query },
+      { 
+        $group: { 
+          _id: '$category', 
+          count: { $sum: 1 },
+          value: { $sum: '$totalValue' }
+        } 
+      },
+      { $sort: { value: -1 } }
+    ]);
+    
+    // Supplier statistics
+    const suppliers = await Inventory.aggregate([
+      { $match: query },
+      { 
+        $group: { 
+          _id: '$supplier.name', 
+          items: { $sum: 1 },
+          value: { $sum: '$totalValue' }
+        } 
+      },
+      { $sort: { value: -1 } },
+      { $limit: 5 }
+    ]);
+    
     const stats = {
-      totalItems: 45,
-      totalValue: 2500000,
-      lowStockItems: 8,
-      outOfStockItems: 2,
-      categories: [
-        { name: 'Lubricants', count: 12, value: 800000 },
-        { name: 'Brake Parts', count: 8, value: 600000 },
-        { name: 'Filters', count: 15, value: 400000 },
-        { name: 'Electrical', count: 10, value: 700000 }
-      ],
-      topSuppliers: [
-        { name: 'OilCo Ltd', items: 15, value: 900000 },
-        { name: 'BrakeParts Inc', items: 8, value: 600000 },
-        { name: 'FilterPro', items: 12, value: 400000 }
-      ]
+      totalItems,
+      totalValue: totalValue[0]?.total || 0,
+      lowStockItems,
+      outOfStockItems,
+      categories: categories.map(cat => ({
+        name: cat._id,
+        count: cat.count,
+        value: cat.value
+      })),
+      topSuppliers: suppliers.map(sup => ({
+        name: sup._id,
+        items: sup.items,
+        value: sup.value
+      }))
     };
     
     res.status(200).json({
@@ -196,6 +225,177 @@ router.get('/stats', protect, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching inventory statistics',
+      error: error.message
+    });
+  }
+});
+
+// @desc    Get single inventory item
+// @route   GET /api/inventory/:id
+// @access  Private
+router.get('/:id', protect, async (req, res) => {
+  try {
+    const inventory = await Inventory.findById(req.params.id)
+      .populate('createdBy', 'firstName lastName')
+      .populate('updatedBy', 'firstName lastName');
+    
+    if (!inventory) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: inventory
+    });
+  } catch (error) {
+    console.error('Error fetching inventory item:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching inventory item',
+      error: error.message
+    });
+  }
+});
+
+// @desc    Update inventory item
+// @route   PUT /api/inventory/:id
+// @access  Private
+router.put('/:id', protect, authorize('inventory', 'edit'), [
+  body('name').optional().notEmpty().withMessage('Item name cannot be empty'),
+  body('category').optional().isIn([
+    'Lubricants', 'Brake System', 'Filters', 'Electrical', 'Tires', 
+    'Tools', 'Safety Equipment', 'Consumables', 'Spare Parts', 'Other'
+  ]).withMessage('Invalid category'),
+  body('quantity').optional().isNumeric().withMessage('Quantity must be a number'),
+  body('unit').optional().isIn(['pieces', 'liters', 'sets', 'pairs', 'boxes', 'meters', 'kg', 'other']).withMessage('Invalid unit'),
+  body('minQuantity').optional().isNumeric().withMessage('Minimum quantity must be a number'),
+  body('unitCost').optional().isNumeric().withMessage('Unit cost must be a number')
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed', 
+        errors: errors.array() 
+      });
+    }
+
+    const inventory = await Inventory.findById(req.params.id);
+    
+    if (!inventory) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+    
+    // Update fields
+    Object.assign(inventory, req.body, {
+      updatedBy: req.user.id
+    });
+    
+    await inventory.save();
+    await inventory.populate('createdBy', 'firstName lastName');
+    await inventory.populate('updatedBy', 'firstName lastName');
+    
+    res.status(200).json({
+      success: true,
+      message: 'Inventory item updated successfully',
+      data: inventory
+    });
+  } catch (error) {
+    console.error('Error updating inventory item:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Error updating inventory item',
+      error: error.message
+    });
+  }
+});
+
+// @desc    Delete inventory item (soft delete)
+// @route   DELETE /api/inventory/:id
+// @access  Private
+router.delete('/:id', protect, authorize('inventory', 'delete'), async (req, res) => {
+  try {
+    const inventory = await Inventory.findById(req.params.id);
+    
+    if (!inventory) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+    
+    // Soft delete
+    inventory.isActive = false;
+    inventory.updatedBy = req.user.id;
+    await inventory.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Inventory item deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting inventory item:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting inventory item',
+      error: error.message
+    });
+  }
+});
+
+// @desc    Update stock quantity
+// @route   PATCH /api/inventory/:id/stock
+// @access  Private
+router.patch('/:id/stock', protect, authorize('inventory', 'edit'), [
+  body('quantity').isNumeric().withMessage('Quantity must be a number'),
+  body('reason').notEmpty().withMessage('Reason for stock change is required')
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed', 
+        errors: errors.array() 
+      });
+    }
+
+    const inventory = await Inventory.findById(req.params.id);
+    
+    if (!inventory) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+    
+    // Update quantity
+    inventory.quantity = parseInt(req.body.quantity);
+    inventory.updatedBy = req.user.id;
+    
+    await inventory.save();
+    await inventory.populate('createdBy', 'firstName lastName');
+    await inventory.populate('updatedBy', 'firstName lastName');
+    
+    res.status(200).json({
+      success: true,
+      message: 'Stock quantity updated successfully',
+      data: inventory
+    });
+  } catch (error) {
+    console.error('Error updating stock quantity:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Error updating stock quantity',
       error: error.message
     });
   }
