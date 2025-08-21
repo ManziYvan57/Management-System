@@ -241,23 +241,46 @@ tr:hover {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 100px;
 }
 
 .edit-btn {
   background-color: #3b82f6;
   color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
   font-weight: 500;
-  border: 1px solid #2563eb;
+  border: 2px solid #2563eb;
   cursor: pointer;
-  transition: background-color 0.2s;
-  font-size: 0.75rem;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
   width: 100%;
+  margin-bottom: 0.5rem;
 }
 
 .edit-btn:hover {
   background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  border: 2px solid #dc2626;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  width: 100%;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }
 
 /* Restock Controls */

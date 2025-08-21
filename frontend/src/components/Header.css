@@ -25,9 +25,8 @@
 /* Logo */
 .logo-container {
   height: 50px;
-  display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin: 0;
 }
 
 .logo-img {
