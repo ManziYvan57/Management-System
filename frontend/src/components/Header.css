@@ -25,18 +25,15 @@
 /* Logo */
 .logo-container {
   height: 50px;
-  width: 50px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-right: 15px;
+  margin-top: 10px;
 }
 
 .logo-img {
   height: 100%;
-  width: 100%;
+  width: auto;
   object-fit: contain;
-  border-radius: 8px;
 }
 
 /* System Title */
