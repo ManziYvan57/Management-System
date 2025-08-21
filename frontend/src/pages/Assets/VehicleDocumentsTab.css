@@ -213,6 +213,29 @@
   color: #92400e;
 }
 
+/* Document info spacing */
+.document-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.document-title {
+  font-weight: 600;
+  color: #111827;
+}
+
+.document-authority {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.document-description {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
 .expiry-info {
   display: flex;
   flex-direction: column;

@@ -329,10 +329,16 @@ const VehicleDocumentsTab = () => {
                   </td>
                   <td>
                     <div className="document-info">
-                      <strong>{doc.title}</strong>
-                      <span className="issuing-authority">{doc.issuingAuthority}</span>
+                      <div className="document-title">
+                        <strong>{doc.title}</strong>
+                      </div>
+                      <div className="document-authority">
+                        <span className="issuing-authority">{doc.issuingAuthority}</span>
+                      </div>
                       {doc.description && (
-                        <span className="description">{doc.description}</span>
+                        <div className="document-description">
+                          <span className="description">{doc.description}</span>
+                        </div>
                       )}
                     </div>
                   </td>
