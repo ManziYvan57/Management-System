@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
-import { inventoryAPI, suppliersAPI } from '../../services/api';
+import { inventoryAPI, suppliersAPI, purchaseOrdersAPI } from '../../services/api';
 import './Inventory.css';
 
 const Inventory = () => {
@@ -74,15 +74,17 @@ const Inventory = () => {
         setLoading(true);
         setError(null);
         
-        const [inventoryResponse, statsResponse, suppliersResponse] = await Promise.all([
+        const [inventoryResponse, statsResponse, suppliersResponse, purchaseOrdersResponse] = await Promise.all([
           inventoryAPI.getAll(),
           inventoryAPI.getStats(),
-          suppliersAPI.getAll()
+          suppliersAPI.getAll(),
+          purchaseOrdersAPI.getAll()
         ]);
         
         setInventory(inventoryResponse.data || []);
         setStats(statsResponse.data || {});
         setSuppliers(suppliersResponse.data || []);
+        setPurchaseOrders(purchaseOrdersResponse.data || []);
       } catch (err) {
         console.error('Error fetching inventory data:', err);
         setError(err.message || 'Failed to fetch inventory data');
@@ -93,6 +95,16 @@ const Inventory = () => {
 
     fetchData();
   }, []);
+
+  // Refresh purchase orders
+  const refreshPurchaseOrders = async () => {
+    try {
+      const response = await purchaseOrdersAPI.getAll();
+      setPurchaseOrders(response.data || []);
+    } catch (err) {
+      console.error('Error refreshing purchase orders:', err);
+    }
+  };
 
   // Refresh data after adding/editing
   const refreshData = async () => {
@@ -117,13 +129,13 @@ const Inventory = () => {
   const pendingOrders = purchaseOrders.filter(order => order.status === 'pending').length;
   
   // Financial Statistics
-  const totalSpentOnPurchases = purchaseOrders.reduce((sum, order) => sum + order.totalCost, 0);
+  const totalSpentOnPurchases = purchaseOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   const totalSpentOnReceivedOrders = purchaseOrders
     .filter(order => order.status === 'received')
-    .reduce((sum, order) => sum + order.totalCost, 0);
+    .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   const pendingOrdersValue = purchaseOrders
     .filter(order => order.status === 'pending')
-    .reduce((sum, order) => sum + order.totalCost, 0);
+    .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   
   // Monthly spending (current month)
   const currentMonth = new Date().getMonth();
@@ -133,7 +145,7 @@ const Inventory = () => {
       const orderDate = new Date(order.orderDate);
       return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
     })
-    .reduce((sum, order) => sum + order.totalCost, 0);
+    .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
 
   const handleInputChange = (e, formType) => {
     const { name, value } = e.target;
@@ -265,32 +277,46 @@ const Inventory = () => {
     }
   };
 
-  const handleSubmitPurchaseOrder = (e) => {
+  const handleSubmitPurchaseOrder = async (e) => {
     e.preventDefault();
-    const totalCost = parseInt(newPurchaseOrder.quantity) * parseInt(newPurchaseOrder.unitCost);
-    const newOrder = {
-      id: Date.now(),
-      supplier: newPurchaseOrder.supplier,
-      items: [{ 
-        name: newPurchaseOrder.itemName, 
-        quantity: parseInt(newPurchaseOrder.quantity), 
-        unitCost: parseInt(newPurchaseOrder.unitCost) 
-      }],
-      totalCost: totalCost,
-      status: 'pending',
-      orderDate: new Date().toISOString().split('T')[0],
-      expectedDelivery: newPurchaseOrder.expectedDelivery
-    };
-    setPurchaseOrders([...purchaseOrders, newOrder]);
-    setNewPurchaseOrder({
-      supplier: '',
-      itemName: '',
-      quantity: '',
-      unitCost: '',
-      expectedDelivery: '',
-      isNewItem: false
-    });
-    setShowPurchaseOrderForm(false);
+    try {
+      // Find the selected item to get its ID
+      const selectedItem = inventory.find(item => item.name === newPurchaseOrder.itemName);
+      
+      if (!selectedItem) {
+        alert('Please select a valid item');
+        return;
+      }
+
+      const purchaseOrderData = {
+        supplier: newPurchaseOrder.supplier,
+        items: [{
+          itemId: selectedItem._id,
+          quantity: parseInt(newPurchaseOrder.quantity),
+          unitCost: parseFloat(newPurchaseOrder.unitCost)
+        }],
+        expectedDelivery: newPurchaseOrder.expectedDelivery
+      };
+
+      // Create purchase order using API
+      await purchaseOrdersAPI.create(purchaseOrderData);
+      
+      // Refresh purchase orders list
+      await refreshPurchaseOrders();
+      
+      setNewPurchaseOrder({
+        supplier: '',
+        itemName: '',
+        quantity: '',
+        unitCost: '',
+        expectedDelivery: '',
+        isNewItem: false
+      });
+      setShowPurchaseOrderForm(false);
+    } catch (err) {
+      console.error('Error creating purchase order:', err);
+      alert(err.message || 'Failed to create purchase order');
+    }
   };
 
   const handleSubmitSupplier = async (e) => {
@@ -354,10 +380,22 @@ const Inventory = () => {
     }
   };
 
-  const handleMarkOrderReceived = (orderId) => {
-    setPurchaseOrders(purchaseOrders.map(order =>
-      order.id === orderId ? { ...order, status: 'received' } : order
-    ));
+  const handleMarkOrderReceived = async (orderId) => {
+    try {
+      // Update purchase order status to received
+      await purchaseOrdersAPI.update(orderId, { status: 'received' });
+      
+      // Refresh both purchase orders and inventory
+      await Promise.all([
+        refreshPurchaseOrders(),
+        refreshData()
+      ]);
+      
+      alert('Purchase order marked as received and inventory updated!');
+    } catch (err) {
+      console.error('Error marking order as received:', err);
+      alert(err.message || 'Failed to mark order as received');
+    }
   };
 
   const handleItemSelection = (itemName) => {
@@ -386,7 +424,7 @@ const Inventory = () => {
     const categorySpending = {};
     purchaseOrders.forEach(order => {
       order.items.forEach(item => {
-        const category = inventory.find(inv => inv.name === item.name)?.category || 'Other';
+        const category = inventory.find(inv => inv._id === item.itemId)?.category || 'Other';
         categorySpending[category] = (categorySpending[category] || 0) + (item.quantity * item.unitCost);
       });
     });
@@ -400,7 +438,7 @@ const Inventory = () => {
   const getTopSupplier = () => {
     const supplierSpending = {};
     purchaseOrders.forEach(order => {
-      supplierSpending[order.supplier] = (supplierSpending[order.supplier] || 0) + order.totalCost;
+      supplierSpending[order.supplier] = (supplierSpending[order.supplier] || 0) + (order.totalAmount || 0);
     });
     
     const topSupplier = Object.entries(supplierSpending)
@@ -411,14 +449,14 @@ const Inventory = () => {
 
   const getAverageOrderValue = () => {
     if (purchaseOrders.length === 0) return 0;
-    const totalValue = purchaseOrders.reduce((sum, order) => sum + order.totalCost, 0);
+    const totalValue = purchaseOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
     return Math.round(totalValue / purchaseOrders.length);
   };
 
   // Filtered Purchase Orders
   const filteredPurchaseOrders = purchaseOrders.filter(order => {
     const matchesSearch = searchTerm === '' || 
-      order.items.some(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      order.items.some(item => item.itemId?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
       order.supplier.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
@@ -618,9 +656,9 @@ const Inventory = () => {
                 className="filter-select"
               >
                 <option value="all">All Suppliers</option>
-                {suppliers.map(supplier => (
-                  <option key={supplier.id} value={supplier.name}>{supplier.name}</option>
-                ))}
+                                 {suppliers.map(supplier => (
+                   <option key={supplier._id} value={supplier.name}>{supplier.name}</option>
+                 ))}
               </select>
               
               <select 
@@ -695,15 +733,15 @@ const Inventory = () => {
             </thead>
             <tbody>
               {filteredPurchaseOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>#{order.id}</td>
+                <tr key={order._id}>
+                  <td>{order.orderNumber}</td>
                   <td>{order.supplier}</td>
                   <td>
-                    {order.items.map(item => `${item.name} (${item.quantity})`).join(', ')}
+                    {order.items.map(item => `${item.itemId?.name || 'Unknown Item'} (${item.quantity})`).join(', ')}
                   </td>
-                  <td>RWF {order.totalCost.toLocaleString()}</td>
-                  <td>{order.orderDate}</td>
-                  <td>{order.expectedDelivery}</td>
+                  <td>RWF {order.totalAmount?.toLocaleString() || '0'}</td>
+                  <td>{new Date(order.orderDate).toLocaleDateString()}</td>
+                  <td>{order.expectedDelivery ? new Date(order.expectedDelivery).toLocaleDateString() : 'N/A'}</td>
                   <td>
                     <span className={`status ${order.status}`}>
                       {order.status}
@@ -712,7 +750,7 @@ const Inventory = () => {
                   <td>
                     {order.status === 'pending' && (
                       <button 
-                        onClick={() => handleMarkOrderReceived(order.id)} 
+                        onClick={() => handleMarkOrderReceived(order._id)} 
                         className="status-btn"
                       >
                         Mark Received
@@ -1187,12 +1225,12 @@ const Inventory = () => {
                   onChange={(e) => handleInputChange(e, 'stockMovement')}
                   required
                 >
-                  <option value="">Select Item</option>
-                  {inventory.map(item => (
-                    <option key={item.id} value={item.name}>
-                      {item.name} (Current: {item.quantity})
-                    </option>
-                  ))}
+                                     <option value="">Select Item</option>
+                   {inventory.map(item => (
+                     <option key={item._id} value={item.name}>
+                       {item.name} (Current: {item.quantity})
+                     </option>
+                   ))}
                 </select>
               </div>
 
@@ -1274,13 +1312,13 @@ const Inventory = () => {
                      onChange={(e) => handleItemSelection(e.target.value)}
                      required
                    >
-                     <option value="">Select Item</option>
-                     {inventory.map(item => (
-                       <option key={item.id} value={item.name}>
-                         {item.name} (Current: {item.quantity})
-                       </option>
-                     ))}
-                     <option value="new">+ Add New Item</option>
+                                           <option value="">Select Item</option>
+                      {inventory.map(item => (
+                        <option key={item._id} value={item.name}>
+                          {item.name} (Current: {item.quantity})
+                        </option>
+                      ))}
+                      <option value="new">+ Add New Item</option>
                    </select>
                  </div>
               </div>
