@@ -178,13 +178,16 @@ const Inventory = () => {
     e.preventDefault();
     
     try {
-      const inventoryData = {
-        ...newItem,
-        quantity: parseInt(newItem.quantity) || 0,
-        minQuantity: parseInt(newItem.minQuantity) || 0,
-        unitCost: parseFloat(newItem.unitCost) || 0,
-        lastUpdated: new Date().toISOString().split('T')[0]
-      };
+             const inventoryData = {
+         ...newItem,
+         quantity: parseInt(newItem.quantity) || 0,
+         minQuantity: parseInt(newItem.minQuantity) || 0,
+         unitCost: parseFloat(newItem.unitCost) || 0,
+         supplier: {
+           name: newItem.supplier
+         },
+         lastUpdated: new Date().toISOString().split('T')[0]
+       };
       
       await inventoryAPI.create(inventoryData);
       
@@ -228,14 +231,17 @@ const Inventory = () => {
   const handleUpdateItem = async (e) => {
     e.preventDefault();
     try {
-      const updatedItem = {
-        ...editingItem,
-        ...newItem,
-        quantity: parseInt(newItem.quantity) || 0,
-        minQuantity: parseInt(newItem.minQuantity) || 0,
-        unitCost: parseFloat(newItem.unitCost) || 0,
-        lastUpdated: new Date().toISOString().split('T')[0]
-      };
+             const updatedItem = {
+         ...editingItem,
+         ...newItem,
+         quantity: parseInt(newItem.quantity) || 0,
+         minQuantity: parseInt(newItem.minQuantity) || 0,
+         unitCost: parseFloat(newItem.unitCost) || 0,
+         supplier: {
+           name: newItem.supplier
+         },
+         lastUpdated: new Date().toISOString().split('T')[0]
+       };
       
       // Call the backend API to update the item
       await inventoryAPI.update(editingItem._id, updatedItem);
@@ -897,57 +903,61 @@ const Inventory = () => {
                <div className="form-row">
                  <div className="form-group">
                    <label htmlFor="quantity">Initial Quantity *</label>
-                   <input
-                     type="number"
-                     id="quantity"
-                     name="quantity"
-                     value={newItem.quantity}
-                     onChange={(e) => handleInputChange(e, 'item')}
-                     min="0"
-                     required
-                     placeholder="0"
-                   />
+                                        <input
+                       type="number"
+                       id="quantity"
+                       name="quantity"
+                       value={newItem.quantity}
+                       onChange={(e) => handleInputChange(e, 'item')}
+                       min="0"
+                       step="any"
+                       required
+                       placeholder="0"
+                     />
                  </div>
                  <div className="form-group">
                    <label htmlFor="minQuantity">Minimum Quantity *</label>
-                   <input
-                     type="number"
-                     id="minQuantity"
-                     name="minQuantity"
-                     value={newItem.minQuantity}
-                     onChange={(e) => handleInputChange(e, 'item')}
-                     min="0"
-                     required
-                     placeholder="0"
-                   />
+                                        <input
+                       type="number"
+                       id="minQuantity"
+                       name="minQuantity"
+                       value={newItem.minQuantity}
+                       onChange={(e) => handleInputChange(e, 'item')}
+                       min="0"
+                       step="any"
+                       required
+                       placeholder="0"
+                     />
                  </div>
                </div>
 
                <div className="form-row">
                  <div className="form-group">
                    <label htmlFor="reorderPoint">Reorder Point</label>
-                   <input
-                     type="number"
-                     id="reorderPoint"
-                     name="reorderPoint"
-                     value={newItem.reorderPoint}
-                     onChange={(e) => handleInputChange(e, 'item')}
-                     min="0"
-                     placeholder="0"
-                   />
+                                        <input
+                       type="number"
+                       id="reorderPoint"
+                       name="reorderPoint"
+                       value={newItem.reorderPoint}
+                       onChange={(e) => handleInputChange(e, 'item')}
+                       min="0"
+                       step="any"
+                       placeholder="0"
+                     />
                  </div>
                  <div className="form-group">
                    <label htmlFor="unitCost">Unit Cost (RWF) *</label>
-                   <input
-                     type="number"
-                     id="unitCost"
-                     name="unitCost"
-                     value={newItem.unitCost}
-                     onChange={(e) => handleInputChange(e, 'item')}
-                     min="0"
-                     required
-                     placeholder="0"
-                   />
+                                        <input
+                       type="number"
+                       id="unitCost"
+                       name="unitCost"
+                       value={newItem.unitCost}
+                       onChange={(e) => handleInputChange(e, 'item')}
+                       min="0"
+                       step="any"
+                       required
+                       placeholder="0"
+                     />
                  </div>
                </div>
 
@@ -1031,41 +1041,44 @@ const Inventory = () => {
                <div className="form-row">
                  <div className="form-group">
                    <label htmlFor="editQuantity">Current Quantity:</label>
-                   <input
-                     type="number"
-                     id="editQuantity"
-                     name="quantity"
-                     value={newItem.quantity}
-                     onChange={(e) => handleInputChange(e, 'item')}
-                     min="0"
-                     required
-                   />
+                                        <input
+                       type="number"
+                       id="editQuantity"
+                       name="quantity"
+                       value={newItem.quantity}
+                       onChange={(e) => handleInputChange(e, 'item')}
+                       min="0"
+                       step="any"
+                       required
+                     />
                  </div>
                  <div className="form-group">
                    <label htmlFor="editMinQuantity">Minimum Quantity:</label>
-                   <input
-                     type="number"
-                     id="editMinQuantity"
-                     name="minQuantity"
-                     value={newItem.minQuantity}
-                     onChange={(e) => handleInputChange(e, 'item')}
-                     min="0"
-                     required
-                   />
+                                        <input
+                       type="number"
+                       id="editMinQuantity"
+                       name="minQuantity"
+                       value={newItem.minQuantity}
+                       onChange={(e) => handleInputChange(e, 'item')}
+                       min="0"
+                       step="any"
+                       required
+                     />
                  </div>
                </div>
 
                <div className="form-group">
                  <label htmlFor="editUnitCost">Unit Cost (RWF):</label>
-                 <input
-                   type="number"
-                   id="editUnitCost"
-                   name="unitCost"
-                   value={newItem.unitCost}
-                   onChange={(e) => handleInputChange(e, 'item')}
-                   min="0"
-                   required
-                 />
+                                      <input
+                       type="number"
+                       id="editUnitCost"
+                       name="unitCost"
+                       value={newItem.unitCost}
+                       onChange={(e) => handleInputChange(e, 'item')}
+                       min="0"
+                       step="any"
+                       required
+                     />
                </div>
                
                <div className="form-actions">

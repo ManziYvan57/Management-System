@@ -13,7 +13,7 @@ require('dotenv').config();
 // Trinity Management System Backend - CORS and Rate Limiting Fixed
 // VEHICLE DOCUMENTS ROUTES INCLUDED - DEPLOYMENT TEST
 // LATEST VERSION - COMMIT f53f07f - AUTH MIDDLEWARE FIXED
-// SUPPLIERS, PURCHASE ORDERS, STOCK MOVEMENTS ROUTES INCLUDED - FORCE REDEPLOY
+// INVENTORY UPDATE FIXES - FORCE REDEPLOY - COMMIT f1d2651
 
 // Import routes
 const authRoutes = require('./routes/auth');
