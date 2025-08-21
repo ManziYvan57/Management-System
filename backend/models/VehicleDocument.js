@@ -233,6 +233,16 @@ VehicleDocumentSchema.virtual('renewalUrgency').get(function() {
 
 // Pre-save middleware to update status based on expiry date
 VehicleDocumentSchema.pre('save', function(next) {
+  // Only auto-update status if it's not being manually set in this save operation
+  // Check if this is a new document or if status is being modified
+  const isNewDocument = this.isNew;
+  const isStatusModified = this.isModified('status');
+  
+  // If status is being manually modified, don't override it
+  if (isStatusModified) {
+    return next();
+  }
+  
   const daysUntilExpiry = this.daysUntilExpiry;
   
   if (daysUntilExpiry < 0) {
