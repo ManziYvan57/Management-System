@@ -34,6 +34,7 @@ const Inventory = () => {
   const [isMarkingOrderReceived, setIsMarkingOrderReceived] = useState(false);
   const [isSubmittingStockMovement, setIsSubmittingStockMovement] = useState(false);
   const [isEditingSupplier, setIsEditingSupplier] = useState(false);
+  const [isDeletingSupplier, setIsDeletingSupplier] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
   
   // Search and Filter State
@@ -468,6 +469,23 @@ const Inventory = () => {
         alert(err.message || 'Failed to delete inventory item');
       } finally {
         setIsDeletingItem(false);
+      }
+    }
+  };
+
+  const handleDeleteSupplier = async (supplierId) => {
+    if (window.confirm('Are you sure you want to delete this supplier?')) {
+      setIsDeletingSupplier(true);
+      try {
+        await suppliersAPI.delete(supplierId);
+        // Refresh suppliers list
+        const suppliersResponse = await suppliersAPI.getAll();
+        setSuppliers(suppliersResponse.data || []);
+      } catch (err) {
+        console.error('Error deleting supplier:', err);
+        alert(err.message || 'Failed to delete supplier');
+      } finally {
+        setIsDeletingSupplier(false);
       }
     }
   };
@@ -917,18 +935,26 @@ const Inventory = () => {
                    <td>{supplier.phone || 'N/A'}</td>
                    <td>{supplier.email || 'N/A'}</td>
                    <td>{supplier.supplies || 'N/A'}</td>
-                   <td>
-                     <div className="action-controls">
-                       <button 
-                         onClick={() => handleEditSupplier(supplier)}
-                         className="edit-btn"
-                         title="Edit Supplier"
-                         disabled={isEditingSupplier}
-                       >
-                         {isEditingSupplier ? 'Editing...' : 'Edit'}
-                       </button>
-                     </div>
-                   </td>
+                                       <td>
+                      <div className="action-controls">
+                        <button 
+                          onClick={() => handleEditSupplier(supplier)}
+                          className="edit-btn"
+                          title="Edit Supplier"
+                          disabled={isEditingSupplier || isDeletingSupplier}
+                        >
+                          {isEditingSupplier ? 'Editing...' : 'Edit'}
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteSupplier(supplier._id)}
+                          className="delete-btn"
+                          title="Delete Supplier"
+                          disabled={isEditingSupplier || isDeletingSupplier}
+                        >
+                          {isDeletingSupplier ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    </td>
                  </tr>
                ))}
              </tbody>
