@@ -5,11 +5,6 @@ const Vehicle = require('../models/Vehicle');
 const { protect } = require('../middleware/auth');
 const router = express.Router();
 
-// Test route to verify router is working
-router.get('/test', (req, res) => {
-  res.json({ success: true, message: 'Vehicle documents router is working' });
-});
-
 // Get all vehicle documents with filtering and pagination
 router.get('/', protect, async (req, res) => {
   try {
