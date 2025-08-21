@@ -41,9 +41,7 @@ const Inventory = () => {
     minQuantity: '',
     reorderPoint: '',
     unitCost: '',
-    supplier: {
-      name: ''
-    }
+    supplier: ''
   });
 
   const [newPurchaseOrder, setNewPurchaseOrder] = useState({
@@ -204,13 +202,7 @@ const Inventory = () => {
         minQuantity: '',
         reorderPoint: '',
         unitCost: '',
-        supplier: {
-          name: '',
-          contactPerson: '',
-          phone: '',
-          email: '',
-          address: ''
-        }
+        supplier: ''
       });
       
       setShowAddItemForm(false);
@@ -228,34 +220,43 @@ const Inventory = () => {
       quantity: item.quantity.toString(),
       minQuantity: item.minQuantity.toString(),
       unitCost: item.unitCost.toString(),
-      supplier: item.supplier
+      supplier: item.supplier?.name || item.supplier || ''
     });
     setShowEditItemForm(true);
   };
 
-  const handleUpdateItem = (e) => {
+  const handleUpdateItem = async (e) => {
     e.preventDefault();
-    const updatedItem = {
-      ...editingItem,
-      ...newItem,
-      quantity: parseInt(newItem.quantity) || 0,
-      minQuantity: parseInt(newItem.minQuantity) || 0,
-      unitCost: parseFloat(newItem.unitCost) || 0,
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    setInventory(inventory.map(item => 
-      item.id === editingItem.id ? updatedItem : item
-    ));
-    setNewItem({
-      name: '',
-      category: '',
-      quantity: '',
-      minQuantity: '',
-      unitCost: '',
-      supplier: ''
-    });
-    setEditingItem(null);
-    setShowEditItemForm(false);
+    try {
+      const updatedItem = {
+        ...editingItem,
+        ...newItem,
+        quantity: parseInt(newItem.quantity) || 0,
+        minQuantity: parseInt(newItem.minQuantity) || 0,
+        unitCost: parseFloat(newItem.unitCost) || 0,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      };
+      
+      // Call the backend API to update the item
+      await inventoryAPI.update(editingItem._id, updatedItem);
+      
+      // Refresh the data to get the updated item from backend
+      await refreshData();
+      
+      setNewItem({
+        name: '',
+        category: '',
+        quantity: '',
+        minQuantity: '',
+        unitCost: '',
+        supplier: ''
+      });
+      setEditingItem(null);
+      setShowEditItemForm(false);
+    } catch (err) {
+      console.error('Error updating inventory item:', err);
+      alert(err.message || 'Failed to update inventory item');
+    }
   };
 
   const handleSubmitPurchaseOrder = (e) => {
@@ -875,6 +876,24 @@ const Inventory = () => {
                  />
                </div>
 
+               <div className="form-group">
+                 <label htmlFor="supplier">Supplier *</label>
+                 <select
+                   id="supplier"
+                   name="supplier"
+                   value={newItem.supplier}
+                   onChange={(e) => handleInputChange(e, 'item')}
+                   required
+                 >
+                   <option value="">Select Supplier</option>
+                   {suppliers.map(supplier => (
+                     <option key={supplier._id} value={supplier.name}>
+                       {supplier.name}
+                     </option>
+                   ))}
+                 </select>
+               </div>
+
                <div className="form-row">
                  <div className="form-group">
                    <label htmlFor="quantity">Initial Quantity *</label>
@@ -1002,7 +1021,7 @@ const Inventory = () => {
                  >
                    <option value="">Select Supplier</option>
                    {suppliers.map(supplier => (
-                     <option key={supplier.id} value={supplier.name}>
+                     <option key={supplier._id} value={supplier.name}>
                        {supplier.name}
                      </option>
                    ))}
