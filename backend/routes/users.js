@@ -24,8 +24,8 @@ router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => 
       ];
     }
     
-    if (role) query.role = role;
-    if (department) query.department = department;
+    if (role && role !== 'all') query.role = role;
+    if (department && department !== 'all') query.department = department;
     if (isActive !== undefined) query.isActive = isActive === 'true';
 
     // Execute query with pagination

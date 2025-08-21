@@ -24,10 +24,10 @@ router.get('/', protect, async (req, res) => {
     // Build query
     const query = { isActive: true };
     
-    if (vehicle) query.vehicle = vehicle;
-    if (documentType) query.documentType = documentType;
-    if (status) query.status = status;
-    if (complianceStatus) query.complianceStatus = complianceStatus;
+    if (vehicle && vehicle !== 'all') query.vehicle = vehicle;
+    if (documentType && documentType !== 'all') query.documentType = documentType;
+    if (status && status !== 'all') query.status = status;
+    if (complianceStatus && complianceStatus !== 'all') query.complianceStatus = complianceStatus;
     
     // Search functionality
     if (search) {
@@ -103,8 +103,8 @@ router.get('/vehicle/:vehicleId', protect, async (req, res) => {
     const { documentType, status } = req.query;
 
     const query = { vehicle: vehicleId, isActive: true };
-    if (documentType) query.documentType = documentType;
-    if (status) query.status = status;
+    if (documentType && documentType !== 'all') query.documentType = documentType;
+    if (status && status !== 'all') query.status = status;
 
     const documents = await VehicleDocument.find(query)
       .populate('vehicle', 'plateNumber make model year')
@@ -310,7 +310,7 @@ router.get('/compliance/summary', protect, async (req, res) => {
   try {
     const { vehicle } = req.query;
     const query = { isActive: true };
-    if (vehicle) query.vehicle = vehicle;
+    if (vehicle && vehicle !== 'all') query.vehicle = vehicle;
 
     const summary = await VehicleDocument.aggregate([
       { $match: query },

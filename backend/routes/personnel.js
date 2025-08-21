@@ -91,10 +91,10 @@ router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
       ];
     }
     
-    if (role) query.role = role;
-    if (department) query.department = department;
-    if (terminal) query.terminal = terminal;
-    if (employmentStatus) query.employmentStatus = employmentStatus;
+    if (role && role !== 'all') query.role = role;
+    if (department && department !== 'all') query.department = department;
+    if (terminal && terminal !== 'all') query.terminal = terminal;
+    if (employmentStatus && employmentStatus !== 'all') query.employmentStatus = employmentStatus;
 
     // Build sort object
     const sort = {};
@@ -441,8 +441,8 @@ router.get('/drivers', protect, authorize('personnel', 'read'), async (req, res)
       ];
     }
     
-    if (terminal) query.terminal = terminal;
-    if (employmentStatus) query.employmentStatus = employmentStatus;
+    if (terminal && terminal !== 'all') query.terminal = terminal;
+    if (employmentStatus && employmentStatus !== 'all') query.employmentStatus = employmentStatus;
 
     // Filter by license status
     if (licenseStatus) {

@@ -31,12 +31,12 @@ router.get('/', protect, async (req, res) => {
     }
     
     // Filter by category
-    if (category) {
+    if (category && category !== 'all') {
       query.category = category;
     }
     
     // Filter by status
-    if (status) {
+    if (status && status !== 'all') {
       query.status = status;
     }
     
