@@ -11,6 +11,7 @@ const path = require('path');
 require('dotenv').config();
 
 // Trinity Management System Backend - CORS and Rate Limiting Fixed
+// VEHICLE DOCUMENTS ROUTES INCLUDED - DEPLOYMENT TEST
 
 // Import routes
 const authRoutes = require('./routes/auth');
