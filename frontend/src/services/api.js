@@ -475,6 +475,43 @@ export const vehicleDocumentsAPI = {
   }
 };
 
+// Suppliers API functions
+export const suppliersAPI = {
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/suppliers${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getById: async (id) => {
+    return apiRequest(`/suppliers/${id}`);
+  },
+  
+  create: async (supplierData) => {
+    return apiRequest('/suppliers', {
+      method: 'POST',
+      body: JSON.stringify(supplierData)
+    });
+  },
+  
+  update: async (id, supplierData) => {
+    return apiRequest(`/suppliers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(supplierData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/suppliers/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/suppliers/stats/overview${queryString ? `?${queryString}` : ''}`);
+  }
+};
+
 export default {
   API_BASE_URL,
   API_PREFIX,
@@ -489,5 +526,6 @@ export default {
   assetsAPI,
   personnelAPI,
   transportAPI,
-  vehicleDocumentsAPI
+  vehicleDocumentsAPI,
+  suppliersAPI
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
-import { inventoryAPI } from '../../services/api';
+import { inventoryAPI, suppliersAPI } from '../../services/api';
 import './Inventory.css';
 
 const Inventory = () => {
@@ -42,11 +42,7 @@ const Inventory = () => {
     reorderPoint: '',
     unitCost: '',
     supplier: {
-      name: '',
-      contactPerson: '',
-      phone: '',
-      email: '',
-      address: ''
+      name: ''
     }
   });
 
@@ -80,13 +76,15 @@ const Inventory = () => {
         setLoading(true);
         setError(null);
         
-        const [inventoryResponse, statsResponse] = await Promise.all([
+        const [inventoryResponse, statsResponse, suppliersResponse] = await Promise.all([
           inventoryAPI.getAll(),
-          inventoryAPI.getStats()
+          inventoryAPI.getStats(),
+          suppliersAPI.getAll()
         ]);
         
         setInventory(inventoryResponse.data || []);
         setStats(statsResponse.data || {});
+        setSuppliers(suppliersResponse.data || []);
       } catch (err) {
         console.error('Error fetching inventory data:', err);
         setError(err.message || 'Failed to fetch inventory data');
@@ -288,20 +286,24 @@ const Inventory = () => {
     setShowPurchaseOrderForm(false);
   };
 
-  const handleSubmitSupplier = (e) => {
+  const handleSubmitSupplier = async (e) => {
     e.preventDefault();
-    const newSupplierItem = {
-      id: Date.now(),
-      ...newSupplier
-    };
-    setSuppliers([...suppliers, newSupplierItem]);
-    setNewSupplier({
-      name: '',
-      contact: '',
-      phone: '',
-      email: ''
-    });
-    setShowSupplierForm(false);
+    try {
+      await suppliersAPI.create(newSupplier);
+      setNewSupplier({
+        name: '',
+        contact: '',
+        phone: '',
+        email: ''
+      });
+      setShowSupplierForm(false);
+      // Refresh suppliers list
+      const suppliersResponse = await suppliersAPI.getAll();
+      setSuppliers(suppliersResponse.data || []);
+    } catch (err) {
+      console.error('Error creating supplier:', err);
+      alert(err.message || 'Failed to create supplier');
+    }
   };
 
   const handleSubmitStockMovement = (e) => {
@@ -766,9 +768,9 @@ const Inventory = () => {
             </thead>
             <tbody>
               {suppliers.map((supplier) => (
-                <tr key={supplier.id}>
+                <tr key={supplier._id}>
                   <td>{supplier.name}</td>
-                  <td>{supplier.contact}</td>
+                  <td>{supplier.contactPerson}</td>
                   <td>{supplier.phone}</td>
                   <td>{supplier.email}</td>
                 </tr>
@@ -930,71 +932,7 @@ const Inventory = () => {
                  </div>
                </div>
 
-               <div className="form-section">
-                 <h4>Supplier Information</h4>
-                 <div className="form-row">
-                   <div className="form-group">
-                     <label htmlFor="supplierName">Supplier Name *</label>
-                     <input
-                       type="text"
-                       id="supplierName"
-                       name="supplier.name"
-                       value={newItem.supplier.name}
-                       onChange={(e) => handleNestedInputChange(e, 'supplier')}
-                       required
-                       placeholder="Enter supplier name"
-                     />
-                   </div>
-                   <div className="form-group">
-                     <label htmlFor="supplierContact">Contact Person</label>
-                     <input
-                       type="text"
-                       id="supplierContact"
-                       name="supplier.contactPerson"
-                       value={newItem.supplier.contactPerson}
-                       onChange={(e) => handleNestedInputChange(e, 'supplier')}
-                       placeholder="Enter contact person"
-                     />
-                   </div>
-                 </div>
 
-                 <div className="form-row">
-                   <div className="form-group">
-                     <label htmlFor="supplierPhone">Phone</label>
-                     <input
-                       type="tel"
-                       id="supplierPhone"
-                       name="supplier.phone"
-                       value={newItem.supplier.phone}
-                       onChange={(e) => handleNestedInputChange(e, 'supplier')}
-                       placeholder="Enter phone number"
-                     />
-                   </div>
-                   <div className="form-group">
-                     <label htmlFor="supplierEmail">Email</label>
-                     <input
-                       type="email"
-                       id="supplierEmail"
-                       name="supplier.email"
-                       value={newItem.supplier.email}
-                       onChange={(e) => handleNestedInputChange(e, 'supplier')}
-                       placeholder="Enter email address"
-                     />
-                   </div>
-                 </div>
-
-                 <div className="form-group">
-                   <label htmlFor="supplierAddress">Address</label>
-                   <textarea
-                     id="supplierAddress"
-                     name="supplier.address"
-                     value={newItem.supplier.address}
-                     onChange={(e) => handleNestedInputChange(e, 'supplier')}
-                     placeholder="Enter supplier address"
-                     rows="2"
-                   />
-                 </div>
-               </div>
                
                <div className="form-actions">
                  <button type="button" onClick={() => setShowAddItemForm(false)} className="cancel-btn">
@@ -1289,7 +1227,7 @@ const Inventory = () => {
                   >
                     <option value="">Select Supplier</option>
                     {suppliers.map(supplier => (
-                      <option key={supplier.id} value={supplier.name}>
+                      <option key={supplier._id} value={supplier.name}>
                         {supplier.name}
                       </option>
                     ))}

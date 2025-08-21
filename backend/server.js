@@ -26,6 +26,7 @@ const personnelRoutes = require('./routes/personnel');
 const transportRoutes = require('./routes/transport');
 const dashboardRoutes = require('./routes/dashboard');
 const vehicleDocumentRoutes = require('./routes/vehicleDocuments');
+const supplierRoutes = require('./routes/suppliers');
 
 // Import middleware
 const { errorHandler } = require('./middleware/errorHandler');
@@ -101,7 +102,8 @@ app.get('/', (req, res) => {
       personnel: '/api/personnel',
       transport: '/api/transport',
       dashboard: '/api/dashboard',
-      vehicleDocuments: '/api/vehicle-documents'
+      vehicleDocuments: '/api/vehicle-documents',
+      suppliers: '/api/suppliers'
     }
   });
 });
@@ -129,6 +131,7 @@ app.use(`${apiPrefix}/personnel`, personnelRoutes);
 app.use(`${apiPrefix}/transport`, transportRoutes);
 app.use(`${apiPrefix}/dashboard`, dashboardRoutes);
 app.use(`${apiPrefix}/vehicle-documents`, vehicleDocumentRoutes);
+app.use(`${apiPrefix}/suppliers`, supplierRoutes);
 
 // Error handling middleware
 app.use(notFound);
