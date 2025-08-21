@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaFileAlt, FaCalendar, FaExclamationTriangle, FaCheckCircle, FaClock, FaDownload, FaUpload } from 'react-icons/fa';
 import { vehicleDocumentsAPI, vehiclesAPI } from '../../services/api';
 import VehicleDocumentForm from './VehicleDocumentForm';
-import './Assets.css';
+import './VehicleDocumentsTab.css';
 
 const VehicleDocumentsTab = () => {
   const [documents, setDocuments] = useState([]);
