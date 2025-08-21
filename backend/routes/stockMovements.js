@@ -30,12 +30,12 @@ router.get('/', protect, async (req, res) => {
 
     // Type filter
     if (type && type !== 'all') {
-      query.type = type;
+      query.movementType = type;
     }
 
     // Item filter
     if (itemId && itemId !== 'all') {
-      query.itemId = itemId;
+      query.inventoryItem = itemId;
     }
 
     // Date filter
@@ -62,10 +62,10 @@ router.get('/', protect, async (req, res) => {
     const skip = (page - 1) * limit;
     
     const stockMovements = await StockMovement.find(query)
-      .sort({ date: -1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('itemId', 'name sku category');
+      .populate('inventoryItem', 'name sku category');
 
     const total = await StockMovement.countDocuments(query);
 
@@ -97,15 +97,15 @@ router.get('/stats', protect, async (req, res) => {
           _id: null,
           totalMovements: { $sum: 1 },
           totalInQuantity: {
-            $sum: { $cond: [{ $eq: ['$type', 'in'] }, '$quantity', 0] }
+            $sum: { $cond: [{ $eq: ['$movementType', 'in'] }, '$quantity', 0] }
           },
           totalOutQuantity: {
-            $sum: { $cond: [{ $eq: ['$type', 'out'] }, '$quantity', 0] }
+            $sum: { $cond: [{ $eq: ['$movementType', 'out'] }, '$quantity', 0] }
           },
           netQuantity: {
             $sum: { 
               $cond: [
-                { $eq: ['$type', 'in'] }, 
+                { $eq: ['$movementType', 'in'] }, 
                 '$quantity', 
                 { $multiply: ['$quantity', -1] }
               ] 
@@ -118,7 +118,7 @@ router.get('/stats', protect, async (req, res) => {
     const typeStats = await StockMovement.aggregate([
       {
         $group: {
-          _id: '$type',
+          _id: '$movementType',
           count: { $sum: 1 },
           totalQuantity: { $sum: '$quantity' }
         }
@@ -129,9 +129,9 @@ router.get('/stats', protect, async (req, res) => {
       {
         $group: {
           _id: {
-            year: { $year: '$date' },
-            month: { $month: '$date' },
-            type: '$type'
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+            type: '$movementType'
           },
           count: { $sum: 1 },
           totalQuantity: { $sum: '$quantity' }
@@ -168,7 +168,7 @@ router.get('/stats', protect, async (req, res) => {
 router.get('/:id', protect, async (req, res) => {
   try {
     const stockMovement = await StockMovement.findById(req.params.id)
-      .populate('itemId', 'name sku category');
+      .populate('inventoryItem', 'name sku category');
 
     if (!stockMovement) {
       return res.status(404).json({ 
@@ -190,12 +190,12 @@ router.get('/:id', protect, async (req, res) => {
 
 // Create new stock movement
 router.post('/', protect, [
-  body('itemId').notEmpty().withMessage('Item ID is required'),
-  body('type').isIn(['in', 'out']).withMessage('Type must be either "in" or "out"'),
+  body('inventoryItem').notEmpty().withMessage('Item ID is required'),
+  body('movementType').isIn(['in', 'out']).withMessage('Type must be either "in" or "out"'),
   body('quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
   body('reason').notEmpty().withMessage('Reason is required'),
   body('reference').optional().isString().withMessage('Reference must be a string'),
-  body('location').optional().isString().withMessage('Location must be a string')
+  body('referenceType').optional().isIn(['purchase_order', 'work_order', 'maintenance', 'manual', 'system', 'other']).withMessage('Invalid reference type')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -207,10 +207,10 @@ router.post('/', protect, [
       });
     }
 
-    const { itemId, type, quantity, reason, reference, location } = req.body;
+    const { inventoryItem, movementType, quantity, reason, reference, referenceType } = req.body;
 
     // Check if item exists
-    const item = await Inventory.findById(itemId);
+    const item = await Inventory.findById(inventoryItem);
     if (!item) {
       return res.status(404).json({ 
         success: false, 
@@ -219,7 +219,7 @@ router.post('/', protect, [
     }
 
     // For out movements, check if enough stock is available
-    if (type === 'out' && item.quantity < quantity) {
+    if (movementType === 'out' && item.quantity < quantity) {
       return res.status(400).json({ 
         success: false, 
         message: 'Insufficient stock available' 
@@ -227,22 +227,26 @@ router.post('/', protect, [
     }
 
     const stockMovement = new StockMovement({
-      itemId,
-      type,
+      inventoryItem,
+      itemName: item.name,
+      movementType,
       quantity,
+      previousQuantity: item.quantity,
+      newQuantity: movementType === 'in' ? item.quantity + quantity : item.quantity - quantity,
+      unitCost: item.unitCost,
       reason,
       reference,
-      location,
-      date: new Date(),
-      userId: req.user.id
+      referenceType: referenceType || 'manual',
+      terminal: 'Kigali', // Default terminal
+      createdBy: req.user._id
     });
 
     await stockMovement.save();
 
     // Update inventory quantity
-    const quantityChange = type === 'in' ? quantity : -quantity;
+    const quantityChange = movementType === 'in' ? quantity : -quantity;
     await Inventory.findByIdAndUpdate(
-      itemId,
+      inventoryItem,
       { $inc: { quantity: quantityChange } }
     );
 
@@ -329,7 +333,7 @@ router.delete('/:id', protect, async (req, res) => {
 
     // Only allow deletion of movements from the last 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    if (stockMovement.date < oneDayAgo) {
+    if (stockMovement.createdAt < oneDayAgo) {
       return res.status(400).json({ 
         success: false, 
         message: 'Only recent stock movements (within 24 hours) can be deleted' 
@@ -337,9 +341,9 @@ router.delete('/:id', protect, async (req, res) => {
     }
 
     // Reverse the inventory change
-    const quantityChange = stockMovement.type === 'in' ? -stockMovement.quantity : stockMovement.quantity;
+    const quantityChange = stockMovement.movementType === 'in' ? -stockMovement.quantity : stockMovement.quantity;
     await Inventory.findByIdAndUpdate(
-      stockMovement.itemId,
+      stockMovement.inventoryItem,
       { $inc: { quantity: quantityChange } }
     );
 

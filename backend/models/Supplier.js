@@ -12,6 +12,11 @@ const SupplierSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Contact person name cannot exceed 100 characters']
   },
+  supplies: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Supplies description cannot exceed 200 characters']
+  },
   phone: {
     type: String,
     trim: true,
