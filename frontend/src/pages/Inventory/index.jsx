@@ -33,11 +33,21 @@ const Inventory = () => {
 
   const [newItem, setNewItem] = useState({
     name: '',
+    sku: '',
     category: '',
+    description: '',
     quantity: '',
+    unit: 'pieces',
     minQuantity: '',
+    reorderPoint: '',
     unitCost: '',
-    supplier: ''
+    supplier: {
+      name: '',
+      contactPerson: '',
+      phone: '',
+      email: '',
+      address: ''
+    }
   });
 
   const [newPurchaseOrder, setNewPurchaseOrder] = useState({
@@ -149,6 +159,25 @@ const Inventory = () => {
     }
   };
 
+  const handleNestedInputChange = (e, formType) => {
+    const { name, value } = e.target;
+    const [parent, child] = name.split('.');
+    
+    switch(formType) {
+      case 'supplier':
+        setNewItem({
+          ...newItem,
+          supplier: {
+            ...newItem.supplier,
+            [child]: value
+          }
+        });
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleSubmitItem = async (e) => {
     e.preventDefault();
     
@@ -169,11 +198,21 @@ const Inventory = () => {
       // Reset form
       setNewItem({
         name: '',
+        sku: '',
         category: '',
+        description: '',
         quantity: '',
+        unit: 'pieces',
         minQuantity: '',
+        reorderPoint: '',
         unitCost: '',
-        supplier: ''
+        supplier: {
+          name: '',
+          contactPerson: '',
+          phone: '',
+          email: '',
+          address: ''
+        }
       });
       
       setShowAddItemForm(false);
@@ -294,12 +333,16 @@ const Inventory = () => {
     setShowStockMovementForm(false);
   };
 
-  const handleUpdateQuantity = (itemId, newQuantity) => {
-    setInventory(inventory.map(item =>
-      item.id === itemId 
-        ? { ...item, quantity: parseInt(newQuantity) || 0, lastUpdated: new Date().toISOString().split('T')[0] }
-        : item
-    ));
+  const handleDeleteItem = async (itemId) => {
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      try {
+        await inventoryAPI.delete(itemId);
+        await refreshData();
+      } catch (err) {
+        console.error('Error deleting inventory item:', err);
+        alert(err.message || 'Failed to delete inventory item');
+      }
+    }
   };
 
   const handleMarkOrderReceived = (orderId) => {
@@ -475,10 +518,11 @@ const Inventory = () => {
               <table>
                 <thead>
                   <tr>
+                    <th>SKU</th>
                     <th>Name</th>
                     <th>Category</th>
                     <th>Quantity</th>
-                    <th>Min Qty</th>
+                    <th>Unit</th>
                     <th>Unit Cost</th>
                     <th>Total Value</th>
                     <th>Supplier</th>
@@ -488,14 +532,15 @@ const Inventory = () => {
                 </thead>
                 <tbody>
                               {inventory.map((item) => (
-                  <tr key={item.id} className={`stock-${getStockStatus(item)}`}>
-                                         <td>{item.name}</td>
-                     <td>{item.category}</td>
-                     <td>{item.quantity}</td>
-                     <td>{item.minQuantity}</td>
-                     <td>RWF {item.unitCost.toLocaleString()}</td>
-                     <td>RWF {(item.quantity * item.unitCost).toLocaleString()}</td>
-                     <td>{item.supplier}</td>
+                  <tr key={item._id} className={`stock-${getStockStatus(item)}`}>
+                    <td>{item.sku}</td>
+                    <td>{item.name}</td>
+                    <td>{item.category}</td>
+                    <td>{item.quantity}</td>
+                    <td>{item.unit}</td>
+                    <td>RWF {item.unitCost?.toLocaleString() || '0'}</td>
+                    <td>RWF {item.totalValue?.toLocaleString() || '0'}</td>
+                    <td>{item.supplier?.name || 'N/A'}</td>
                    <td>
                      <span className={`status ${getStockStatus(item)}`}>
                        {getStockStatus(item) === 'out-of-stock' && 'Out of Stock'}
@@ -512,22 +557,13 @@ const Inventory = () => {
                        >
                          Edit
                        </button>
-                       <div className="restock-controls">
-                         <input
-                           type="number"
-                           value={item.quantity}
-                           onChange={(e) => handleUpdateQuantity(item.id, e.target.value)}
-                           min="0"
-                           className="restock-input"
-                         />
-                         <button 
-                           onClick={() => handleUpdateQuantity(item.id, item.quantity + 10)}
-                           className="restock-btn"
-                           title="Quick add 10"
-                         >
-                           +10
-                         </button>
-                       </div>
+                       <button 
+                         onClick={() => handleDeleteItem(item._id)}
+                         className="delete-btn"
+                         title="Delete Item"
+                       >
+                         Delete
+                       </button>
                      </div>
                    </td>
                 </tr>
@@ -755,7 +791,7 @@ const Inventory = () => {
              <form onSubmit={handleSubmitItem} className="modal-form">
                <div className="form-row">
                  <div className="form-group">
-                   <label htmlFor="itemName">Item Name:</label>
+                   <label htmlFor="itemName">Item Name *</label>
                    <input
                      type="text"
                      id="itemName"
@@ -763,10 +799,27 @@ const Inventory = () => {
                      value={newItem.name}
                      onChange={(e) => handleInputChange(e, 'item')}
                      required
+                     placeholder="Enter item name"
                    />
                  </div>
                  <div className="form-group">
-                   <label htmlFor="category">Category:</label>
+                   <label htmlFor="sku">SKU *</label>
+                   <input
+                     type="text"
+                     id="sku"
+                     name="sku"
+                     value={newItem.sku}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     required
+                     placeholder="Enter SKU code"
+                     style={{ textTransform: 'uppercase' }}
+                   />
+                 </div>
+               </div>
+
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="category">Category *</label>
                    <select
                      id="category"
                      name="category"
@@ -781,32 +834,48 @@ const Inventory = () => {
                      <option value="Electrical">Electrical</option>
                      <option value="Tires">Tires</option>
                      <option value="Tools">Tools</option>
+                     <option value="Safety Equipment">Safety Equipment</option>
+                     <option value="Consumables">Consumables</option>
+                     <option value="Spare Parts">Spare Parts</option>
                      <option value="Other">Other</option>
+                   </select>
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="unit">Unit *</label>
+                   <select
+                     id="unit"
+                     name="unit"
+                     value={newItem.unit}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     required
+                   >
+                     <option value="pieces">Pieces</option>
+                     <option value="liters">Liters</option>
+                     <option value="sets">Sets</option>
+                     <option value="pairs">Pairs</option>
+                     <option value="boxes">Boxes</option>
+                     <option value="meters">Meters</option>
+                     <option value="kg">Kilograms</option>
+                     <option value="other">Other</option>
                    </select>
                  </div>
                </div>
 
                <div className="form-group">
-                 <label htmlFor="supplier">Supplier:</label>
-                 <select
-                   id="supplier"
-                   name="supplier"
-                   value={newItem.supplier}
+                 <label htmlFor="description">Description</label>
+                 <textarea
+                   id="description"
+                   name="description"
+                   value={newItem.description}
                    onChange={(e) => handleInputChange(e, 'item')}
-                   required
-                 >
-                   <option value="">Select Supplier</option>
-                   {suppliers.map(supplier => (
-                     <option key={supplier.id} value={supplier.name}>
-                       {supplier.name}
-                     </option>
-                   ))}
-                 </select>
+                   placeholder="Enter item description"
+                   rows="3"
+                 />
                </div>
 
                <div className="form-row">
                  <div className="form-group">
-                   <label htmlFor="quantity">Initial Quantity:</label>
+                   <label htmlFor="quantity">Initial Quantity *</label>
                    <input
                      type="number"
                      id="quantity"
@@ -815,10 +884,11 @@ const Inventory = () => {
                      onChange={(e) => handleInputChange(e, 'item')}
                      min="0"
                      required
+                     placeholder="0"
                    />
                  </div>
                  <div className="form-group">
-                   <label htmlFor="minQuantity">Minimum Quantity:</label>
+                   <label htmlFor="minQuantity">Minimum Quantity *</label>
                    <input
                      type="number"
                      id="minQuantity"
@@ -827,21 +897,103 @@ const Inventory = () => {
                      onChange={(e) => handleInputChange(e, 'item')}
                      min="0"
                      required
+                     placeholder="0"
                    />
                  </div>
                </div>
 
-               <div className="form-group">
-                 <label htmlFor="unitCost">Unit Cost (RWF):</label>
-                 <input
-                   type="number"
-                   id="unitCost"
-                   name="unitCost"
-                   value={newItem.unitCost}
-                   onChange={(e) => handleInputChange(e, 'item')}
-                   min="0"
-                   required
-                 />
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="reorderPoint">Reorder Point</label>
+                   <input
+                     type="number"
+                     id="reorderPoint"
+                     name="reorderPoint"
+                     value={newItem.reorderPoint}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     min="0"
+                     placeholder="0"
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="unitCost">Unit Cost (RWF) *</label>
+                   <input
+                     type="number"
+                     id="unitCost"
+                     name="unitCost"
+                     value={newItem.unitCost}
+                     onChange={(e) => handleInputChange(e, 'item')}
+                     min="0"
+                     required
+                     placeholder="0"
+                   />
+                 </div>
+               </div>
+
+               <div className="form-section">
+                 <h4>Supplier Information</h4>
+                 <div className="form-row">
+                   <div className="form-group">
+                     <label htmlFor="supplierName">Supplier Name *</label>
+                     <input
+                       type="text"
+                       id="supplierName"
+                       name="supplier.name"
+                       value={newItem.supplier.name}
+                       onChange={(e) => handleNestedInputChange(e, 'supplier')}
+                       required
+                       placeholder="Enter supplier name"
+                     />
+                   </div>
+                   <div className="form-group">
+                     <label htmlFor="supplierContact">Contact Person</label>
+                     <input
+                       type="text"
+                       id="supplierContact"
+                       name="supplier.contactPerson"
+                       value={newItem.supplier.contactPerson}
+                       onChange={(e) => handleNestedInputChange(e, 'supplier')}
+                       placeholder="Enter contact person"
+                     />
+                   </div>
+                 </div>
+
+                 <div className="form-row">
+                   <div className="form-group">
+                     <label htmlFor="supplierPhone">Phone</label>
+                     <input
+                       type="tel"
+                       id="supplierPhone"
+                       name="supplier.phone"
+                       value={newItem.supplier.phone}
+                       onChange={(e) => handleNestedInputChange(e, 'supplier')}
+                       placeholder="Enter phone number"
+                     />
+                   </div>
+                   <div className="form-group">
+                     <label htmlFor="supplierEmail">Email</label>
+                     <input
+                       type="email"
+                       id="supplierEmail"
+                       name="supplier.email"
+                       value={newItem.supplier.email}
+                       onChange={(e) => handleNestedInputChange(e, 'supplier')}
+                       placeholder="Enter email address"
+                     />
+                   </div>
+                 </div>
+
+                 <div className="form-group">
+                   <label htmlFor="supplierAddress">Address</label>
+                   <textarea
+                     id="supplierAddress"
+                     name="supplier.address"
+                     value={newItem.supplier.address}
+                     onChange={(e) => handleNestedInputChange(e, 'supplier')}
+                     placeholder="Enter supplier address"
+                     rows="2"
+                   />
+                 </div>
                </div>
                
                <div className="form-actions">
@@ -1234,3 +1386,4 @@ const Inventory = () => {
 };
 
 export default Inventory;
+

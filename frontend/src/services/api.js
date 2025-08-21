@@ -187,10 +187,34 @@ export const inventoryAPI = {
     return apiRequest(`/inventory${queryString ? `?${queryString}` : ''}`);
   },
   
+  getById: async (id) => {
+    return apiRequest(`/inventory/${id}`);
+  },
+  
   create: async (inventoryData) => {
     return apiRequest('/inventory', {
       method: 'POST',
       body: JSON.stringify(inventoryData)
+    });
+  },
+  
+  update: async (id, inventoryData) => {
+    return apiRequest(`/inventory/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(inventoryData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/inventory/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  updateStock: async (id, stockData) => {
+    return apiRequest(`/inventory/${id}/stock`, {
+      method: 'PATCH',
+      body: JSON.stringify(stockData)
     });
   },
   
