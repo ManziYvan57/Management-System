@@ -66,7 +66,7 @@ router.get('/', protect, async (req, res) => {
       .sort({ orderDate: -1 })
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('items.itemId', 'name sku');
+      .populate('items.inventoryItem', 'name sku');
 
     const total = await PurchaseOrder.countDocuments(query);
 
@@ -151,7 +151,7 @@ router.get('/stats', protect, async (req, res) => {
 router.get('/:id', protect, async (req, res) => {
   try {
     const purchaseOrder = await PurchaseOrder.findById(req.params.id)
-      .populate('items.itemId', 'name sku category');
+      .populate('items.inventoryItem', 'name sku category');
 
     if (!purchaseOrder) {
       return res.status(404).json({ 
@@ -193,9 +193,18 @@ router.post('/', protect, [
 
     const { supplier, items, expectedDelivery, paymentTerms } = req.body;
 
+    // Transform items to match model structure
+    const transformedItems = items.map(item => ({
+      inventoryItem: item.itemId,
+      itemName: item.itemName || 'Unknown Item',
+      quantity: item.quantity,
+      unitCost: item.unitCost,
+      totalCost: item.quantity * item.unitCost
+    }));
+
     // Calculate total amount
-    const totalAmount = items.reduce((sum, item) => {
-      return sum + (item.quantity * item.unitCost);
+    const totalAmount = transformedItems.reduce((sum, item) => {
+      return sum + item.totalCost;
     }, 0);
 
     // Generate order number
@@ -205,12 +214,15 @@ router.post('/', protect, [
     const purchaseOrder = new PurchaseOrder({
       orderNumber,
       supplier,
-      items,
+      items: transformedItems,
       totalAmount,
+      grandTotal: totalAmount, // Set grand total same as total amount for now
       expectedDelivery,
-      paymentTerms,
+      paymentTerms: paymentTerms || 'net_30',
       status: 'pending',
-      orderDate: new Date()
+      orderDate: new Date(),
+      terminal: 'Kigali', // Default terminal
+      createdBy: req.user._id // Set from authenticated user
     });
 
     await purchaseOrder.save();
@@ -258,7 +270,7 @@ router.put('/:id', protect, [
     if (req.body.status === 'received' && purchaseOrder.status !== 'received') {
       for (const item of purchaseOrder.items) {
         await Inventory.findByIdAndUpdate(
-          item.itemId,
+          item.inventoryItem,
           { $inc: { quantity: item.quantity } }
         );
       }

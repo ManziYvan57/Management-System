@@ -292,6 +292,7 @@ const Inventory = () => {
         supplier: newPurchaseOrder.supplier,
         items: [{
           itemId: selectedItem._id,
+          itemName: selectedItem.name,
           quantity: parseInt(newPurchaseOrder.quantity),
           unitCost: parseFloat(newPurchaseOrder.unitCost)
         }],
@@ -424,7 +425,7 @@ const Inventory = () => {
     const categorySpending = {};
     purchaseOrders.forEach(order => {
       order.items.forEach(item => {
-        const category = inventory.find(inv => inv._id === item.itemId)?.category || 'Other';
+        const category = inventory.find(inv => inv._id === item.inventoryItem)?.category || 'Other';
         categorySpending[category] = (categorySpending[category] || 0) + (item.quantity * item.unitCost);
       });
     });
@@ -456,7 +457,7 @@ const Inventory = () => {
   // Filtered Purchase Orders
   const filteredPurchaseOrders = purchaseOrders.filter(order => {
     const matchesSearch = searchTerm === '' || 
-      order.items.some(item => item.itemId?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      order.items.some(item => (item.itemName || item.inventoryItem?.name)?.toLowerCase().includes(searchTerm.toLowerCase())) ||
       order.supplier.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
@@ -736,9 +737,9 @@ const Inventory = () => {
                 <tr key={order._id}>
                   <td>{order.orderNumber}</td>
                   <td>{order.supplier}</td>
-                  <td>
-                    {order.items.map(item => `${item.itemId?.name || 'Unknown Item'} (${item.quantity})`).join(', ')}
-                  </td>
+                                     <td>
+                     {order.items.map(item => `${item.itemName || item.inventoryItem?.name || 'Unknown Item'} (${item.quantity})`).join(', ')}
+                   </td>
                   <td>RWF {order.totalAmount?.toLocaleString() || '0'}</td>
                   <td>{new Date(order.orderDate).toLocaleDateString()}</td>
                   <td>{order.expectedDelivery ? new Date(order.expectedDelivery).toLocaleDateString() : 'N/A'}</td>
