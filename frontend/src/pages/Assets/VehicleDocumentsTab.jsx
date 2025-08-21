@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaFileAlt, FaCalendar, FaExclamationTriangle, FaCheckCircle, FaClock, FaDownload, FaUpload } from 'react-icons/fa';
-import { vehicleDocumentsAPI } from '../../services/api';
+import { vehicleDocumentsAPI, vehiclesAPI } from '../../services/api';
 import VehicleDocumentForm from './VehicleDocumentForm';
 import './Assets.css';
 
@@ -281,7 +281,7 @@ const VehicleDocumentsTab = () => {
               <option value="expired">Expired</option>
               <option value="expiring_soon">Expiring Soon (≤30 days)</option>
               <option value="expiring_later">Expiring Later (31-90 days)</option>
-              <option value="valid">Valid (>90 days)</option>
+              <option value="valid">Valid (&gt;90 days)</option>
             </select>
           </div>
         </div>
