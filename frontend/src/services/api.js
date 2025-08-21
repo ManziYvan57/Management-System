@@ -512,6 +512,80 @@ export const suppliersAPI = {
   }
 };
 
+// Purchase Orders API functions
+export const purchaseOrdersAPI = {
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/purchase-orders${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getById: async (id) => {
+    return apiRequest(`/purchase-orders/${id}`);
+  },
+  
+  create: async (orderData) => {
+    return apiRequest('/purchase-orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    });
+  },
+  
+  update: async (id, orderData) => {
+    return apiRequest(`/purchase-orders/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(orderData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/purchase-orders/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/purchase-orders/stats${queryString ? `?${queryString}` : ''}`);
+  }
+};
+
+// Stock Movements API functions
+export const stockMovementsAPI = {
+  getAll: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/stock-movements${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getById: async (id) => {
+    return apiRequest(`/stock-movements/${id}`);
+  },
+  
+  create: async (movementData) => {
+    return apiRequest('/stock-movements', {
+      method: 'POST',
+      body: JSON.stringify(movementData)
+    });
+  },
+  
+  update: async (id, movementData) => {
+    return apiRequest(`/stock-movements/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(movementData)
+    });
+  },
+  
+  delete: async (id) => {
+    return apiRequest(`/stock-movements/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/stock-movements/stats${queryString ? `?${queryString}` : ''}`);
+  }
+};
+
 export default {
   API_BASE_URL,
   API_PREFIX,
@@ -527,5 +601,7 @@ export default {
   personnelAPI,
   transportAPI,
   vehicleDocumentsAPI,
-  suppliersAPI
+  suppliersAPI,
+  purchaseOrdersAPI,
+  stockMovementsAPI
 };

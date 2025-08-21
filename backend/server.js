@@ -13,7 +13,7 @@ require('dotenv').config();
 // Trinity Management System Backend - CORS and Rate Limiting Fixed
 // VEHICLE DOCUMENTS ROUTES INCLUDED - DEPLOYMENT TEST
 // LATEST VERSION - COMMIT f53f07f - AUTH MIDDLEWARE FIXED
-// SUPPLIERS ROUTES INCLUDED - FORCE REDEPLOY
+// SUPPLIERS, PURCHASE ORDERS, STOCK MOVEMENTS ROUTES INCLUDED - FORCE REDEPLOY
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -28,6 +28,8 @@ const transportRoutes = require('./routes/transport');
 const dashboardRoutes = require('./routes/dashboard');
 const vehicleDocumentRoutes = require('./routes/vehicleDocuments');
 const supplierRoutes = require('./routes/suppliers');
+const purchaseOrderRoutes = require('./routes/purchaseOrders');
+const stockMovementRoutes = require('./routes/stockMovements');
 
 // Import middleware
 const { errorHandler } = require('./middleware/errorHandler');
@@ -104,7 +106,9 @@ app.get('/', (req, res) => {
       transport: '/api/transport',
       dashboard: '/api/dashboard',
       vehicleDocuments: '/api/vehicle-documents',
-      suppliers: '/api/suppliers'
+      suppliers: '/api/suppliers',
+      purchaseOrders: '/api/purchase-orders',
+      stockMovements: '/api/stock-movements'
     }
   });
 });
@@ -133,6 +137,8 @@ app.use(`${apiPrefix}/transport`, transportRoutes);
 app.use(`${apiPrefix}/dashboard`, dashboardRoutes);
 app.use(`${apiPrefix}/vehicle-documents`, vehicleDocumentRoutes);
 app.use(`${apiPrefix}/suppliers`, supplierRoutes);
+app.use(`${apiPrefix}/purchase-orders`, purchaseOrderRoutes);
+app.use(`${apiPrefix}/stock-movements`, stockMovementRoutes);
 
 // Error handling middleware
 app.use(notFound);
