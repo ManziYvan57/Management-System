@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
-import { inventoryAPI, suppliersAPI, purchaseOrdersAPI } from '../../services/api';
+import { inventoryAPI, suppliersAPI, purchaseOrdersAPI, stockMovementsAPI } from '../../services/api';
 import './Inventory.css';
 
 const Inventory = () => {
@@ -24,6 +24,17 @@ const Inventory = () => {
   const [showSupplierForm, setShowSupplierForm] = useState(false);
   const [showStockMovementForm, setShowStockMovementForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  
+  // Loading states
+  const [isSubmittingItem, setIsSubmittingItem] = useState(false);
+  const [isUpdatingItem, setIsUpdatingItem] = useState(false);
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
+  const [isSubmittingPurchaseOrder, setIsSubmittingPurchaseOrder] = useState(false);
+  const [isSubmittingSupplier, setIsSubmittingSupplier] = useState(false);
+  const [isMarkingOrderReceived, setIsMarkingOrderReceived] = useState(false);
+  const [isSubmittingStockMovement, setIsSubmittingStockMovement] = useState(false);
+  const [isEditingSupplier, setIsEditingSupplier] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState(null);
   
   // Search and Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,16 +66,17 @@ const Inventory = () => {
 
   const [newSupplier, setNewSupplier] = useState({
     name: '',
-    contact: '',
     phone: '',
-    email: ''
+    email: '',
+    supplies: ''
   });
 
   const [newStockMovement, setNewStockMovement] = useState({
-    itemName: '',
-    type: 'out', // Only 'out' - items being used/consumed
+    inventoryItem: '',
+    movementType: 'out', // Only 'out' - items being used/consumed
     quantity: '',
-    reason: ''
+    reason: '',
+    reference: ''
   });
 
   // Fetch data from API
@@ -74,17 +86,19 @@ const Inventory = () => {
         setLoading(true);
         setError(null);
         
-        const [inventoryResponse, statsResponse, suppliersResponse, purchaseOrdersResponse] = await Promise.all([
-          inventoryAPI.getAll(),
-          inventoryAPI.getStats(),
-          suppliersAPI.getAll(),
-          purchaseOrdersAPI.getAll()
-        ]);
+                 const [inventoryResponse, statsResponse, suppliersResponse, purchaseOrdersResponse, stockMovementsResponse] = await Promise.all([
+           inventoryAPI.getAll(),
+           inventoryAPI.getStats(),
+           suppliersAPI.getAll(),
+           purchaseOrdersAPI.getAll(),
+           stockMovementsAPI.getAll()
+         ]);
         
-        setInventory(inventoryResponse.data || []);
-        setStats(statsResponse.data || {});
-        setSuppliers(suppliersResponse.data || []);
-        setPurchaseOrders(purchaseOrdersResponse.data || []);
+                 setInventory(inventoryResponse.data || []);
+         setStats(statsResponse.data || {});
+         setSuppliers(suppliersResponse.data || []);
+         setPurchaseOrders(purchaseOrdersResponse.data || []);
+         setStockMovements(stockMovementsResponse.data || []);
       } catch (err) {
         console.error('Error fetching inventory data:', err);
         setError(err.message || 'Failed to fetch inventory data');
@@ -103,6 +117,16 @@ const Inventory = () => {
       setPurchaseOrders(response.data || []);
     } catch (err) {
       console.error('Error refreshing purchase orders:', err);
+    }
+  };
+
+  // Refresh stock movements
+  const refreshStockMovements = async () => {
+    try {
+      const response = await stockMovementsAPI.getAll();
+      setStockMovements(response.data || []);
+    } catch (err) {
+      console.error('Error refreshing stock movements:', err);
     }
   };
 
@@ -189,6 +213,7 @@ const Inventory = () => {
   const handleSubmitItem = async (e) => {
     e.preventDefault();
     
+    setIsSubmittingItem(true);
     try {
              const inventoryData = {
          ...newItem,
@@ -224,6 +249,8 @@ const Inventory = () => {
     } catch (err) {
       console.error('Error creating inventory item:', err);
       alert(err.message || 'Failed to create inventory item');
+    } finally {
+      setIsSubmittingItem(false);
     }
   };
 
@@ -242,6 +269,7 @@ const Inventory = () => {
 
   const handleUpdateItem = async (e) => {
     e.preventDefault();
+    setIsUpdatingItem(true);
     try {
              const updatedItem = {
          ...editingItem,
@@ -274,11 +302,14 @@ const Inventory = () => {
     } catch (err) {
       console.error('Error updating inventory item:', err);
       alert(err.message || 'Failed to update inventory item');
+    } finally {
+      setIsUpdatingItem(false);
     }
   };
 
   const handleSubmitPurchaseOrder = async (e) => {
     e.preventDefault();
+    setIsSubmittingPurchaseOrder(true);
     try {
       // Find the selected item to get its ID
       const selectedItem = inventory.find(item => item.name === newPurchaseOrder.itemName);
@@ -317,18 +348,21 @@ const Inventory = () => {
     } catch (err) {
       console.error('Error creating purchase order:', err);
       alert(err.message || 'Failed to create purchase order');
+    } finally {
+      setIsSubmittingPurchaseOrder(false);
     }
   };
 
   const handleSubmitSupplier = async (e) => {
     e.preventDefault();
+    setIsSubmittingSupplier(true);
     try {
       await suppliersAPI.create(newSupplier);
       setNewSupplier({
         name: '',
-        contact: '',
         phone: '',
-        email: ''
+        email: '',
+        supplies: ''
       });
       setShowSupplierForm(false);
       // Refresh suppliers list
@@ -337,51 +371,109 @@ const Inventory = () => {
     } catch (err) {
       console.error('Error creating supplier:', err);
       alert(err.message || 'Failed to create supplier');
+    } finally {
+      setIsSubmittingSupplier(false);
     }
   };
 
-  const handleSubmitStockMovement = (e) => {
-    e.preventDefault();
-    const newMovement = {
-      id: Date.now(),
-      ...newStockMovement,
-      quantity: parseInt(newStockMovement.quantity) || 0,
-      date: new Date().toISOString().split('T')[0],
-      user: 'Admin' // In real app, this would be the logged-in user
-    };
-
-    // Update inventory quantity (only reducing for usage)
-    setInventory(inventory.map(item => {
-      if (item.name === newStockMovement.itemName) {
-        const newQuantity = Math.max(0, item.quantity - newMovement.quantity);
-        return { ...item, quantity: newQuantity, lastUpdated: new Date().toISOString().split('T')[0] };
-      }
-      return item;
-    }));
-
-    setStockMovements([...stockMovements, newMovement]);
-    setNewStockMovement({
-      itemName: '',
-      type: 'out', // Only 'out' - items being used/consumed
-      quantity: '',
-      reason: ''
+  const handleEditSupplier = (supplier) => {
+    setEditingSupplier(supplier);
+    setNewSupplier({
+      name: supplier.name,
+      phone: supplier.phone || '',
+      email: supplier.email || '',
+      supplies: supplier.supplies || ''
     });
-    setShowStockMovementForm(false);
+    setShowSupplierForm(true);
+  };
+
+  const handleUpdateSupplier = async (e) => {
+    e.preventDefault();
+    setIsEditingSupplier(true);
+    try {
+      await suppliersAPI.update(editingSupplier._id, newSupplier);
+      setNewSupplier({
+        name: '',
+        phone: '',
+        email: '',
+        supplies: ''
+      });
+      setEditingSupplier(null);
+      setShowSupplierForm(false);
+      // Refresh suppliers list
+      const suppliersResponse = await suppliersAPI.getAll();
+      setSuppliers(suppliersResponse.data || []);
+    } catch (err) {
+      console.error('Error updating supplier:', err);
+      alert(err.message || 'Failed to update supplier');
+    } finally {
+      setIsEditingSupplier(false);
+    }
+  };
+
+  const handleSubmitStockMovement = async (e) => {
+    e.preventDefault();
+    setIsSubmittingStockMovement(true);
+    
+    try {
+      // Find the selected item to get its ID
+      const selectedItem = inventory.find(item => item.name === newStockMovement.inventoryItem);
+      
+      if (!selectedItem) {
+        alert('Please select a valid item');
+        return;
+      }
+
+      const stockMovementData = {
+        inventoryItem: selectedItem._id,
+        movementType: newStockMovement.movementType,
+        quantity: parseInt(newStockMovement.quantity),
+        reason: newStockMovement.reason,
+        reference: newStockMovement.reference || 'Manual Usage'
+      };
+
+      // Create stock movement using API
+      await stockMovementsAPI.create(stockMovementData);
+      
+      // Refresh both stock movements and inventory
+      await Promise.all([
+        refreshStockMovements(),
+        refreshData()
+      ]);
+      
+      setNewStockMovement({
+        inventoryItem: '',
+        movementType: 'out',
+        quantity: '',
+        reason: '',
+        reference: ''
+      });
+      setShowStockMovementForm(false);
+    } catch (err) {
+      console.error('Error creating stock movement:', err);
+      alert(err.message || 'Failed to create stock movement');
+    } finally {
+      setIsSubmittingStockMovement(false);
+    }
   };
 
   const handleDeleteItem = async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
+      setIsDeletingItem(true);
       try {
         await inventoryAPI.delete(itemId);
         await refreshData();
       } catch (err) {
         console.error('Error deleting inventory item:', err);
         alert(err.message || 'Failed to delete inventory item');
+      } finally {
+        setIsDeletingItem(false);
       }
     }
   };
 
   const handleMarkOrderReceived = async (orderId) => {
+    setIsMarkingOrderReceived(true);
     try {
       // Update purchase order status to received
       await purchaseOrdersAPI.update(orderId, { status: 'received' });
@@ -396,6 +488,8 @@ const Inventory = () => {
     } catch (err) {
       console.error('Error marking order as received:', err);
       alert(err.message || 'Failed to mark order as received');
+    } finally {
+      setIsMarkingOrderReceived(false);
     }
   };
 
@@ -598,20 +692,22 @@ const Inventory = () => {
                    </td>
                    <td>
                      <div className="action-controls">
-                       <button 
-                         onClick={() => handleEditItem(item)}
-                         className="edit-btn"
-                         title="Edit Item"
-                       >
-                         Edit
-                       </button>
-                       <button 
-                         onClick={() => handleDeleteItem(item._id)}
-                         className="delete-btn"
-                         title="Delete Item"
-                       >
-                         Delete
-                       </button>
+                                               <button 
+                          onClick={() => handleEditItem(item)}
+                          className="edit-btn"
+                          title="Edit Item"
+                          disabled={isUpdatingItem || isDeletingItem}
+                        >
+                          {isUpdatingItem ? 'Editing...' : 'Edit'}
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteItem(item._id)}
+                          className="delete-btn"
+                          title="Delete Item"
+                          disabled={isUpdatingItem || isDeletingItem}
+                        >
+                          {isDeletingItem ? 'Deleting...' : 'Delete'}
+                        </button>
                      </div>
                    </td>
                 </tr>
@@ -750,12 +846,13 @@ const Inventory = () => {
                   </td>
                   <td>
                     {order.status === 'pending' && (
-                      <button 
-                        onClick={() => handleMarkOrderReceived(order._id)} 
-                        className="status-btn"
-                      >
-                        Mark Received
-                      </button>
+                                             <button 
+                         onClick={() => handleMarkOrderReceived(order._id)} 
+                         className="status-btn"
+                         disabled={isMarkingOrderReceived}
+                       >
+                         {isMarkingOrderReceived ? 'Updating...' : 'Mark Received'}
+                       </button>
                     )}
                   </td>
                 </tr>
@@ -775,26 +872,26 @@ const Inventory = () => {
         <h3>Stock Usage</h3>
         <div className="table-container">
           <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Item</th>
-                <th>Quantity Used</th>
-                <th>Reason</th>
-                <th>User</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stockMovements.map((movement) => (
-                <tr key={movement.id}>
-                  <td>{movement.date}</td>
-                  <td>{movement.itemName}</td>
-                  <td>{movement.quantity}</td>
-                  <td>{movement.reason}</td>
-                  <td>{movement.user}</td>
-                </tr>
-              ))}
-            </tbody>
+                         <thead>
+               <tr>
+                 <th>Date</th>
+                 <th>Item</th>
+                 <th>Quantity</th>
+                 <th>Reason</th>
+                 <th>Reference</th>
+               </tr>
+             </thead>
+                         <tbody>
+               {stockMovements.map((movement) => (
+                 <tr key={movement._id}>
+                   <td>{new Date(movement.createdAt).toLocaleDateString()}</td>
+                   <td>{movement.itemName || movement.inventoryItem?.name}</td>
+                   <td>{movement.quantity}</td>
+                   <td>{movement.reason}</td>
+                   <td>{movement.reference || 'N/A'}</td>
+                 </tr>
+               ))}
+             </tbody>
           </table>
         </div>
       </div>
@@ -804,24 +901,37 @@ const Inventory = () => {
         <h3>Suppliers</h3>
         <div className="table-container">
           <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Contact Person</th>
-                <th>Phone</th>
-                <th>Email</th>
-              </tr>
-            </thead>
-            <tbody>
-              {suppliers.map((supplier) => (
-                <tr key={supplier._id}>
-                  <td>{supplier.name}</td>
-                  <td>{supplier.contactPerson}</td>
-                  <td>{supplier.phone}</td>
-                  <td>{supplier.email}</td>
-                </tr>
-              ))}
-            </tbody>
+                         <thead>
+               <tr>
+                 <th>Name</th>
+                 <th>Phone</th>
+                 <th>Email</th>
+                 <th>What They Supply</th>
+                 <th>Actions</th>
+               </tr>
+             </thead>
+             <tbody>
+               {suppliers.map((supplier) => (
+                 <tr key={supplier._id}>
+                   <td>{supplier.name}</td>
+                   <td>{supplier.phone || 'N/A'}</td>
+                   <td>{supplier.email || 'N/A'}</td>
+                   <td>{supplier.supplies || 'N/A'}</td>
+                   <td>
+                     <div className="action-controls">
+                       <button 
+                         onClick={() => handleEditSupplier(supplier)}
+                         className="edit-btn"
+                         title="Edit Supplier"
+                         disabled={isEditingSupplier}
+                       >
+                         {isEditingSupplier ? 'Editing...' : 'Edit'}
+                       </button>
+                     </div>
+                   </td>
+                 </tr>
+               ))}
+             </tbody>
           </table>
         </div>
       </div>
@@ -1006,9 +1116,9 @@ const Inventory = () => {
                  <button type="button" onClick={() => setShowAddItemForm(false)} className="cancel-btn">
                    Cancel
                  </button>
-                 <button type="submit" className="submit-btn">
-                   Add Item
-                 </button>
+                                   <button type="submit" className="submit-btn" disabled={isSubmittingItem}>
+                    {isSubmittingItem ? 'Adding...' : 'Add Item'}
+                  </button>
                </div>
              </form>
            </div>
@@ -1124,9 +1234,9 @@ const Inventory = () => {
                  <button type="button" onClick={() => setShowEditItemForm(false)} className="cancel-btn">
                    Cancel
                  </button>
-                 <button type="submit" className="submit-btn">
-                   Update Item
-                 </button>
+                                   <button type="submit" className="submit-btn" disabled={isUpdatingItem}>
+                    {isUpdatingItem ? 'Updating...' : 'Update Item'}
+                  </button>
                </div>
              </form>
            </div>
@@ -1137,69 +1247,72 @@ const Inventory = () => {
       {showSupplierForm && (
         <div className="modal-overlay">
           <div className="modal">
-            <div className="modal-header">
-              <h3>Add Supplier</h3>
-              <button onClick={() => setShowSupplierForm(false)} className="close-btn">
-                &times;
-              </button>
-            </div>
-            <form onSubmit={handleSubmitSupplier} className="modal-form">
-              <div className="form-group">
-                <label htmlFor="supplierName">Supplier Name:</label>
-                <input
-                  type="text"
-                  id="supplierName"
-                  name="name"
-                  value={newSupplier.name}
-                  onChange={(e) => handleInputChange(e, 'supplier')}
-                  required
-                />
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="contact">Contact Person:</label>
-                  <input
-                    type="text"
-                    id="contact"
-                    name="contact"
-                    value={newSupplier.contact}
-                    onChange={(e) => handleInputChange(e, 'supplier')}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="phone">Phone:</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={newSupplier.phone}
-                    onChange={(e) => handleInputChange(e, 'supplier')}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="email">Email:</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={newSupplier.email}
-                  onChange={(e) => handleInputChange(e, 'supplier')}
-                  required
-                />
-              </div>
+                           <div className="modal-header">
+                 <h3>{editingSupplier ? 'Edit Supplier' : 'Add Supplier'}</h3>
+                 <button onClick={() => {
+                   setShowSupplierForm(false);
+                   setEditingSupplier(null);
+                 }} className="close-btn">
+                   &times;
+                 </button>
+               </div>
+                         <form onSubmit={editingSupplier ? handleUpdateSupplier : handleSubmitSupplier} className="modal-form">
+                             <div className="form-group">
+                 <label htmlFor="supplierName">Supplier Name:</label>
+                 <input
+                   type="text"
+                   id="supplierName"
+                   name="name"
+                   value={newSupplier.name}
+                   onChange={(e) => handleInputChange(e, 'supplier')}
+                   required
+                 />
+               </div>
+               
+               <div className="form-row">
+                 <div className="form-group">
+                   <label htmlFor="phone">Phone:</label>
+                   <input
+                     type="tel"
+                     id="phone"
+                     name="phone"
+                     value={newSupplier.phone}
+                     onChange={(e) => handleInputChange(e, 'supplier')}
+                     required
+                   />
+                 </div>
+                 <div className="form-group">
+                   <label htmlFor="email">Email:</label>
+                   <input
+                     type="email"
+                     id="email"
+                     name="email"
+                     value={newSupplier.email}
+                     onChange={(e) => handleInputChange(e, 'supplier')}
+                     required
+                   />
+                 </div>
+               </div>
+               
+               <div className="form-group">
+                 <label htmlFor="supplies">What They Supply:</label>
+                 <textarea
+                   id="supplies"
+                   name="supplies"
+                   value={newSupplier.supplies}
+                   onChange={(e) => handleInputChange(e, 'supplier')}
+                   placeholder="e.g., Lubricants, Brake parts, Electrical components, etc."
+                   rows="3"
+                 />
+               </div>
               
               <div className="form-actions">
                 <button type="button" onClick={() => setShowSupplierForm(false)} className="cancel-btn">
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  Add Supplier
-                </button>
+                                                   <button type="submit" className="submit-btn" disabled={isSubmittingSupplier || isEditingSupplier}>
+                   {isSubmittingSupplier ? 'Adding...' : isEditingSupplier ? 'Updating...' : editingSupplier ? 'Update Supplier' : 'Add Supplier'}
+                 </button>
               </div>
             </form>
           </div>
@@ -1217,23 +1330,23 @@ const Inventory = () => {
               </button>
             </div>
             <form onSubmit={handleSubmitStockMovement} className="modal-form">
-              <div className="form-group">
-                <label htmlFor="movementItem">Item:</label>
-                <select
-                  id="movementItem"
-                  name="itemName"
-                  value={newStockMovement.itemName}
-                  onChange={(e) => handleInputChange(e, 'stockMovement')}
-                  required
-                >
-                                     <option value="">Select Item</option>
-                   {inventory.map(item => (
-                     <option key={item._id} value={item.name}>
-                       {item.name} (Current: {item.quantity})
-                     </option>
-                   ))}
-                </select>
-              </div>
+                             <div className="form-group">
+                 <label htmlFor="movementItem">Item:</label>
+                 <select
+                   id="movementItem"
+                   name="inventoryItem"
+                   value={newStockMovement.inventoryItem}
+                   onChange={(e) => handleInputChange(e, 'stockMovement')}
+                   required
+                 >
+                                      <option value="">Select Item</option>
+                    {inventory.map(item => (
+                      <option key={item._id} value={item.name}>
+                        {item.name} (Current: {item.quantity})
+                      </option>
+                    ))}
+                 </select>
+               </div>
 
               <div className="form-row">
                 <div className="form-group">
@@ -1248,27 +1361,39 @@ const Inventory = () => {
                     required
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="movementReason">Reason:</label>
-                  <input
-                    type="text"
-                    id="movementReason"
-                    name="reason"
-                    value={newStockMovement.reason}
-                    onChange={(e) => handleInputChange(e, 'stockMovement')}
-                    placeholder="e.g., Work Order, Manual Usage, Loss, etc."
-                    required
-                  />
-                </div>
-              </div>
+                                 <div className="form-group">
+                   <label htmlFor="movementReason">Reason:</label>
+                   <input
+                     type="text"
+                     id="movementReason"
+                     name="reason"
+                     value={newStockMovement.reason}
+                     onChange={(e) => handleInputChange(e, 'stockMovement')}
+                     placeholder="e.g., Work Order, Manual Usage, Loss, etc."
+                     required
+                   />
+                 </div>
+               </div>
+
+               <div className="form-group">
+                 <label htmlFor="movementReference">Reference:</label>
+                 <input
+                   type="text"
+                   id="movementReference"
+                   name="reference"
+                   value={newStockMovement.reference}
+                   onChange={(e) => handleInputChange(e, 'stockMovement')}
+                   placeholder="e.g., WO-001, Manual Entry, etc."
+                 />
+               </div>
               
               <div className="form-actions">
                 <button type="button" onClick={() => setShowStockMovementForm(false)} className="cancel-btn">
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  Record Usage
-                </button>
+                                 <button type="submit" className="submit-btn" disabled={isSubmittingStockMovement}>
+                   {isSubmittingStockMovement ? 'Recording...' : 'Record Usage'}
+                 </button>
               </div>
             </form>
           </div>
@@ -1382,9 +1507,9 @@ const Inventory = () => {
                 <button type="button" onClick={() => setShowPurchaseOrderForm(false)} className="cancel-btn">
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  Create Purchase Order
-                </button>
+                                 <button type="submit" className="submit-btn" disabled={isSubmittingPurchaseOrder}>
+                   {isSubmittingPurchaseOrder ? 'Creating...' : 'Create Purchase Order'}
+                 </button>
               </div>
             </form>
           </div>
