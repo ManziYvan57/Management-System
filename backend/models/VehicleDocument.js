@@ -72,12 +72,11 @@ const VehicleDocumentSchema = new mongoose.Schema({
     default: 'active'
   },
 
-  // Document-specific fields
+  // Document-specific fields (optional for now)
   insurance: {
     policyType: {
       type: String,
-      enum: ['comprehensive', 'third_party', 'third_party_fire_theft', 'other'],
-      required: function() { return this.documentType === 'insurance'; }
+      enum: ['comprehensive', 'third_party', 'third_party_fire_theft', 'other']
     },
     coverageAmount: {
       type: Number,
@@ -96,8 +95,7 @@ const VehicleDocumentSchema = new mongoose.Schema({
   technicalControl: {
     inspectionType: {
       type: String,
-      enum: ['annual', 'bi_annual', 'quarterly', 'monthly', 'other'],
-      required: function() { return this.documentType === 'technical_control'; }
+      enum: ['annual', 'bi_annual', 'quarterly', 'monthly', 'other']
     },
     inspectionResult: {
       type: String,
