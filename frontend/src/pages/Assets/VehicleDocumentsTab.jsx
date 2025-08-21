@@ -177,7 +177,7 @@ const VehicleDocumentsTab = () => {
   return (
     <div className="vehicle-documents-container">
       {/* Header */}
-      <div className="documents-header">
+      <div className="vehicle-documents-header">
         <div className="header-left">
           <h2>Vehicle Document Management</h2>
           <span className="documents-count">{documents.length} documents</span>

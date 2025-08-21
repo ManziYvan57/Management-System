@@ -7,6 +7,18 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
 }
 
 .vehicle-documents-title {
