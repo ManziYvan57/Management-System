@@ -213,7 +213,7 @@ router.post('/', protect, [
 
     const purchaseOrder = new PurchaseOrder({
       orderNumber,
-      supplier,
+      supplier: supplier, // Keep as string for now, we'll handle this differently
       items: transformedItems,
       totalAmount,
       grandTotal: totalAmount, // Set grand total same as total amount for now

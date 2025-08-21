@@ -47,9 +47,9 @@ const PurchaseOrderSchema = new mongoose.Schema({
     uppercase: true
   },
   supplier: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Supplier',
-    required: [true, 'Supplier is required']
+    type: String,
+    required: [true, 'Supplier is required'],
+    trim: true
   },
   items: [PurchaseOrderItemSchema],
   totalAmount: {
