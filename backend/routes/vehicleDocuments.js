@@ -2,11 +2,16 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const VehicleDocument = require('../models/VehicleDocument');
 const Vehicle = require('../models/Vehicle');
-const auth = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 const router = express.Router();
 
+// Test route to verify router is working
+router.get('/test', (req, res) => {
+  res.json({ success: true, message: 'Vehicle documents router is working' });
+});
+
 // Get all vehicle documents with filtering and pagination
-router.get('/', auth, async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
     const {
       vehicle,
@@ -97,7 +102,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Get documents by vehicle ID
-router.get('/vehicle/:vehicleId', auth, async (req, res) => {
+router.get('/vehicle/:vehicleId', protect, async (req, res) => {
   try {
     const { vehicleId } = req.params;
     const { documentType, status } = req.query;
@@ -122,7 +127,7 @@ router.get('/vehicle/:vehicleId', auth, async (req, res) => {
 });
 
 // Get document by ID
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', protect, async (req, res) => {
   try {
     const document = await VehicleDocument.findById(req.params.id)
       .populate('vehicle', 'plateNumber make model year')
@@ -144,7 +149,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Create new vehicle document
-router.post('/', auth, [
+router.post('/', protect, [
   body('vehicle').isMongoId().withMessage('Valid vehicle ID is required'),
   body('documentType').isIn([
     'insurance',
@@ -202,7 +207,7 @@ router.post('/', auth, [
 });
 
 // Update vehicle document
-router.put('/:id', auth, [
+router.put('/:id', protect, [
   body('documentType').optional().isIn([
     'insurance',
     'technical_control',
@@ -259,7 +264,7 @@ router.put('/:id', auth, [
 });
 
 // Delete vehicle document (soft delete)
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', protect, async (req, res) => {
   try {
     const document = await VehicleDocument.findById(req.params.id);
     if (!document) {
@@ -281,7 +286,7 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 // Get documents expiring soon (dashboard alerts)
-router.get('/alerts/expiring', auth, async (req, res) => {
+router.get('/alerts/expiring', protect, async (req, res) => {
   try {
     const { days = 30 } = req.query;
     const today = new Date();
@@ -306,7 +311,7 @@ router.get('/alerts/expiring', auth, async (req, res) => {
 });
 
 // Get compliance summary
-router.get('/compliance/summary', auth, async (req, res) => {
+router.get('/compliance/summary', protect, async (req, res) => {
   try {
     const { vehicle } = req.query;
     const query = { isActive: true };
@@ -343,7 +348,7 @@ router.get('/compliance/summary', auth, async (req, res) => {
 });
 
 // Bulk update document statuses (for automated processes)
-router.post('/bulk-update-status', auth, async (req, res) => {
+router.post('/bulk-update-status', protect, async (req, res) => {
   try {
     const { documentIds, status, complianceStatus } = req.body;
 
