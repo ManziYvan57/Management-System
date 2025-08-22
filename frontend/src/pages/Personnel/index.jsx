@@ -163,8 +163,8 @@ const Personnel = () => {
 
   if (loading) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner"></div>
+      <div className="loading-state">
+        <div className="loading-spinner"></div>
         <p>Loading personnel...</p>
       </div>
     );
@@ -172,10 +172,9 @@ const Personnel = () => {
 
   if (error) {
     return (
-      <div className="error-message">
-        <h3>Error Loading Personnel</h3>
-        <p>{error}</p>
-        <button onClick={fetchPersonnel}>Retry</button>
+      <div className="error-state">
+        <p>Error: {error}</p>
+        <button onClick={fetchPersonnel} className="retry-btn">Retry</button>
       </div>
     );
   }

@@ -107,8 +107,8 @@ const VehiclesTab = () => {
 
   if (loading) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner"></div>
+      <div className="loading-state">
+        <div className="loading-spinner"></div>
         <p>Loading vehicles...</p>
       </div>
     );
@@ -116,10 +116,9 @@ const VehiclesTab = () => {
 
   if (error) {
     return (
-      <div className="error-message">
-        <h3>Error Loading Vehicles</h3>
-        <p>{error}</p>
-        <button onClick={fetchVehicles}>Retry</button>
+      <div className="error-state">
+        <p>Error: {error}</p>
+        <button onClick={fetchVehicles} className="retry-btn">Retry</button>
       </div>
     );
   }

@@ -95,8 +95,8 @@ const EquipmentTab = () => {
 
   if (loading) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner"></div>
+      <div className="loading-state">
+        <div className="loading-spinner"></div>
         <p>Loading equipment...</p>
       </div>
     );
@@ -104,10 +104,9 @@ const EquipmentTab = () => {
 
   if (error) {
     return (
-      <div className="error-message">
-        <h3>Error Loading Equipment</h3>
-        <p>{error}</p>
-        <button onClick={fetchEquipment}>Retry</button>
+      <div className="error-state">
+        <p>Error: {error}</p>
+        <button onClick={fetchEquipment} className="retry-btn">Retry</button>
       </div>
     );
   }

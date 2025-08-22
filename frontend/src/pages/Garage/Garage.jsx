@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { garageAPI, assetsAPI } from '../../services/api';
+import { garageAPI, assetsAPI, inventoryAPI, stockMovementsAPI } from '../../services/api';
 import './Garage.css';
 
 const Garage = () => {
   const [workOrders, setWorkOrders] = useState([]);
   const [maintenanceSchedules, setMaintenanceSchedules] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
@@ -29,7 +30,8 @@ const Garage = () => {
     priority: 'medium',
     title: '',
     description: '',
-    scheduledDate: ''
+    scheduledDate: '',
+    partsUsed: []
   });
 
   const [newMaintenance, setNewMaintenance] = useState({
@@ -40,7 +42,16 @@ const Garage = () => {
     interval: 1,
     nextDue: '',
     priority: 'medium',
-    terminal: ''
+    terminal: '',
+    requiredParts: []
+  });
+
+  // Parts selection state
+  const [selectedParts, setSelectedParts] = useState([]);
+  const [newPart, setNewPart] = useState({
+    inventoryItem: '',
+    quantity: 1,
+    unitCost: 0
   });
 
   // Fetch data from API
@@ -54,17 +65,27 @@ const Garage = () => {
           workOrdersResponse,
           maintenanceResponse,
           assetsResponse,
+          inventoryResponse,
           statsResponse
         ] = await Promise.all([
           garageAPI.getWorkOrders(),
           garageAPI.getMaintenanceSchedules(),
-          assetsAPI.getAll({ category: 'Bus', status: 'active' }),
+          assetsAPI.getAll(),
+          inventoryAPI.getAll(),
           garageAPI.getStats()
         ]);
         
+        console.log('Assets Response:', assetsResponse);
+        console.log('Vehicles Data:', assetsResponse.data);
+        
+        // Filter vehicles from all assets
+        const vehicleAssets = assetsResponse.data.filter(asset => asset.category === 'Bus');
+        console.log('Filtered Vehicles:', vehicleAssets);
+        
         setWorkOrders(workOrdersResponse.data || []);
         setMaintenanceSchedules(maintenanceResponse.data || []);
-        setVehicles(assetsResponse.data || []);
+        setVehicles(vehicleAssets || []);
+        setInventoryItems(inventoryResponse.data || []);
         setStats(statsResponse.data || {});
       } catch (err) {
         console.error('Error fetching garage data:', err);
@@ -108,6 +129,65 @@ const Garage = () => {
     }
   };
 
+  // Parts management functions
+  const handleAddPart = () => {
+    if (newPart.inventoryItem && newPart.quantity > 0) {
+      const selectedItem = inventoryItems.find(item => item._id === newPart.inventoryItem);
+      if (selectedItem) {
+        const partData = {
+          ...newPart,
+          itemName: selectedItem.name,
+          unitCost: selectedItem.unitCost || 0,
+          totalCost: (selectedItem.unitCost || 0) * newPart.quantity
+        };
+        
+        setSelectedParts([...selectedParts, partData]);
+        setNewPart({
+          inventoryItem: '',
+          quantity: 1,
+          unitCost: 0
+        });
+      }
+    }
+  };
+
+  const handleRemovePart = (index) => {
+    setSelectedParts(selectedParts.filter((_, i) => i !== index));
+  };
+
+  const handlePartChange = (e) => {
+    const { name, value } = e.target;
+    setNewPart({ ...newPart, [name]: value });
+    
+    // Auto-calculate unit cost when item is selected
+    if (name === 'inventoryItem' && value) {
+      const selectedItem = inventoryItems.find(item => item._id === value);
+      if (selectedItem) {
+        setNewPart(prev => ({
+          ...prev,
+          unitCost: selectedItem.unitCost || 0
+        }));
+      }
+    }
+  };
+
+  // Create stock movement for parts used
+  const createStockMovement = async (partsUsed, workOrderId) => {
+    try {
+      for (const part of partsUsed) {
+        await stockMovementsAPI.create({
+          inventoryItem: part.inventoryItem,
+          movementType: 'out',
+          quantity: part.quantity,
+          reason: `Maintenance/Repair - Work Order: ${workOrderId}`,
+          reference: workOrderId
+        });
+      }
+    } catch (err) {
+      console.error('Error creating stock movement:', err);
+    }
+  };
+
   const handleSubmitWorkOrder = async (e) => {
     e.preventDefault();
     setIsSubmittingWorkOrder(true);
@@ -115,10 +195,16 @@ const Garage = () => {
     try {
       const workOrderData = {
         ...newWorkOrder,
-        scheduledDate: newWorkOrder.scheduledDate || new Date().toISOString().split('T')[0]
+        scheduledDate: newWorkOrder.scheduledDate || new Date().toISOString().split('T')[0],
+        partsUsed: selectedParts
       };
       
-      await garageAPI.createWorkOrder(workOrderData);
+      const response = await garageAPI.createWorkOrder(workOrderData);
+      
+      // Create stock movements for parts used
+      if (selectedParts.length > 0) {
+        await createStockMovement(selectedParts, response.data._id);
+      }
       
       // Refresh the data
       await refreshData();
@@ -130,8 +216,10 @@ const Garage = () => {
         priority: 'medium',
         title: '',
         description: '',
-        scheduledDate: ''
+        scheduledDate: '',
+        partsUsed: []
       });
+      setSelectedParts([]);
       
       setShowWorkOrderForm(false);
     } catch (err) {
@@ -149,7 +237,8 @@ const Garage = () => {
     try {
       const maintenanceData = {
         ...newMaintenance,
-        interval: parseInt(newMaintenance.interval) || 1
+        interval: parseInt(newMaintenance.interval) || 1,
+        requiredParts: selectedParts
       };
       
       await garageAPI.createMaintenanceSchedule(maintenanceData);
@@ -166,8 +255,10 @@ const Garage = () => {
         interval: 1,
         nextDue: '',
         priority: 'medium',
-        terminal: ''
+        terminal: '',
+        requiredParts: []
       });
+      setSelectedParts([]);
       
       setShowMaintenanceForm(false);
     } catch (err) {
@@ -234,37 +325,64 @@ const Garage = () => {
     return labels[priority] || priority;
   };
 
-  const getFrequencyLabel = (frequency) => {
-    const labels = {
-      'daily': 'Daily',
-      'weekly': 'Weekly',
-      'monthly': 'Monthly',
-      'quarterly': 'Quarterly',
-      'semi_annually': 'Semi-Annually',
-      'annually': 'Annually',
-      'mileage_based': 'Mileage Based',
-      'custom': 'Custom'
-    };
-    return labels[frequency] || frequency;
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString();
   };
 
-  const overdueMaintenance = maintenanceSchedules.filter(m => m.isOverdue);
-  const dueSoonMaintenance = maintenanceSchedules.filter(m => m.isDueSoon);
-  const pendingWorkOrders = workOrders.filter(w => w.status === 'pending');
+  const calculateDaysUntilDue = (dueDate) => {
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const getDaysUntilDueClass = (days) => {
+    if (days < 0) return 'overdue';
+    if (days <= 7) return 'critical';
+    if (days <= 30) return 'warning';
+    return 'normal';
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-state">
+        <div className="loading-spinner"></div>
+        <p>Loading work orders...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-state">
+        <p>Error: {error}</p>
+        <button onClick={() => window.location.reload()} className="retry-btn">Retry</button>
+      </div>
+    );
+  }
 
   return (
     <div className="garage-container">
-      <h2>Garage Management</h2>
-      
-      {/* Mini Dashboard */}
-      <div className="dashboard-stats">
+      {/* Header */}
+      <div className="garage-header">
+        <h2>Garage Management</h2>
+        <p>Manage work orders, maintenance schedules, and track vehicle repairs</p>
+      </div>
+
+      {/* Statistics Dashboard */}
+      <div className="stats-dashboard">
         <div className="stat-card">
           <h3>{stats.workOrders?.total || 0}</h3>
           <p>Total Work Orders</p>
         </div>
         <div className="stat-card">
           <h3>{stats.workOrders?.pending || 0}</h3>
-          <p>Pending Orders</p>
+          <p>Pending Work Orders</p>
+        </div>
+        <div className="stat-card">
+          <h3>{stats.maintenance?.total || 0}</h3>
+          <p>Maintenance Schedules</p>
         </div>
         <div className="stat-card">
           <h3>{stats.maintenance?.overdue || 0}</h3>
@@ -276,92 +394,81 @@ const Garage = () => {
         </div>
       </div>
 
-      {/* Alerts */}
-      {overdueMaintenance.length > 0 && (
-        <div className="alert warning">
-          <strong>Maintenance Alerts:</strong> {overdueMaintenance.length} maintenance(s) overdue
-        </div>
-      )}
-
-      {dueSoonMaintenance.length > 0 && (
-        <div className="alert info">
-          <strong>Maintenance Reminder:</strong> {dueSoonMaintenance.length} maintenance(s) due within 7 days
-        </div>
-      )}
-
-      {pendingWorkOrders.length > 0 && (
-        <div className="alert warning">
-          <strong>Work Orders:</strong> {pendingWorkOrders.length} pending work order(s) awaiting assignment
-        </div>
-      )}
-      
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        <button onClick={() => setShowWorkOrderForm(true)} className="action-btn">
+      {/* Action Buttons */}
+      <div className="action-buttons">
+        <button 
+          className="btn-primary"
+          onClick={() => setShowWorkOrderForm(true)}
+        >
           Create Work Order
         </button>
-        <button onClick={() => setShowMaintenanceForm(true)} className="action-btn">
+        <button 
+          className="btn-secondary"
+          onClick={() => setShowMaintenanceForm(true)}
+        >
           Schedule Maintenance
         </button>
       </div>
 
       {/* Work Orders Section */}
-      <div className="work-order-list">
+      <div className="section">
         <h3>Work Orders</h3>
         <div className="table-container">
-          {loading && (
-            <div className="loading-state">
-              <div className="loading-spinner"></div>
-              <p>Loading work orders...</p>
-            </div>
-          )}
-          
-          {error && (
-            <div className="error-state">
-              <p>Error: {error}</p>
-              <button onClick={refreshData} className="retry-btn">Retry</button>
-            </div>
-          )}
-          
-          {!loading && !error && (
-            <table>
-              <thead>
-                <tr>
-                  <th>Work Order #</th>
-                  <th>Vehicle</th>
-                  <th>Type</th>
-                  <th>Title</th>
-                  <th>Priority</th>
-                  <th>Scheduled Date</th>
-                  <th>Status</th>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Work Order #</th>
+                <th>Vehicle</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Scheduled Date</th>
+                <th>Parts Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              {workOrders.map((workOrder) => (
+                <tr key={workOrder._id}>
+                  <td>{workOrder.workOrderNumber}</td>
+                  <td>
+                    {workOrder.vehicle ? 
+                      `${workOrder.vehicle.registrationNumber} - ${workOrder.vehicle.name}` : 
+                      'N/A'
+                    }
+                  </td>
+                  <td>{getWorkTypeLabel(workOrder.workType)}</td>
+                  <td>{workOrder.title}</td>
+                  <td>
+                    <span className={`priority ${workOrder.priority}`}>
+                      {getPriorityLabel(workOrder.priority)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status ${getWorkOrderStatus(workOrder)}`}>
+                      {workOrder.status.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td>{formatDate(workOrder.scheduledDate)}</td>
+                  <td>
+                    {workOrder.partsUsed && workOrder.partsUsed.length > 0 ? (
+                      <ul className="parts-list">
+                        {workOrder.partsUsed.map((part, index) => (
+                          <li key={index}>
+                            {part.itemName || 'Unknown'} - Qty: {part.quantity}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      'No parts used'
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {workOrders.map((workOrder) => (
-                  <tr key={workOrder._id} className={`status-${getWorkOrderStatus(workOrder)}`}>
-                    <td>{workOrder.workOrderNumber}</td>
-                    <td>{workOrder.vehicle?.registrationNumber || 'N/A'}</td>
-                    <td>{getWorkTypeLabel(workOrder.workType)}</td>
-                    <td>{workOrder.title}</td>
-                    <td>
-                      <span className={`priority ${workOrder.priority}`}>
-                        {getPriorityLabel(workOrder.priority)}
-                      </span>
-                    </td>
-
-                    <td>{new Date(workOrder.scheduledDate).toLocaleDateString()}</td>
-                    <td>
-                      <span className={`status ${getWorkOrderStatus(workOrder)}`}>
-                        {workOrder.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+              ))}
+            </tbody>
+          </table>
           
-          {!loading && !error && workOrders.length === 0 && (
+          {workOrders.length === 0 && (
             <div className="no-results">
               <p>No work orders found.</p>
             </div>
@@ -370,42 +477,63 @@ const Garage = () => {
       </div>
 
       {/* Maintenance Schedules Section */}
-      <div className="maintenance-schedule-list">
+      <div className="section">
         <h3>Maintenance Schedules</h3>
         <div className="table-container">
-          <table>
+          <table className="data-table">
             <thead>
-                              <tr>
-                  <th>Vehicle</th>
-                  <th>Type</th>
-                  <th>Title</th>
-                  <th>Frequency</th>
-                  <th>Next Due</th>
-                  <th>Priority</th>
-                  <th>Status</th>
-                </tr>
+              <tr>
+                <th>Vehicle</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Frequency</th>
+                <th>Next Due</th>
+                <th>Days Until Due</th>
+                <th>Status</th>
+                <th>Required Parts</th>
+              </tr>
             </thead>
             <tbody>
-              {maintenanceSchedules.map((maintenance) => (
-                <tr key={maintenance._id} className={`status-${getMaintenanceStatus(maintenance)}`}>
-                  <td>{maintenance.vehicle?.registrationNumber || 'N/A'}</td>
-                  <td>{getMaintenanceTypeLabel(maintenance.maintenanceType)}</td>
-                  <td>{maintenance.title}</td>
-                  <td>{getFrequencyLabel(maintenance.frequency)}</td>
-                  <td>{new Date(maintenance.nextDue).toLocaleDateString()}</td>
-                  <td>
-                    <span className={`priority ${maintenance.priority}`}>
-                      {getPriorityLabel(maintenance.priority)}
-                    </span>
-                  </td>
-                  
-                  <td>
-                    <span className={`status ${getMaintenanceStatus(maintenance)}`}>
-                      {maintenance.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {maintenanceSchedules.map((maintenance) => {
+                const daysUntilDue = calculateDaysUntilDue(maintenance.nextDue);
+                return (
+                  <tr key={maintenance._id}>
+                    <td>
+                      {maintenance.vehicle ? 
+                        `${maintenance.vehicle.registrationNumber} - ${maintenance.vehicle.name}` : 
+                        'N/A'
+                      }
+                    </td>
+                    <td>{getMaintenanceTypeLabel(maintenance.maintenanceType)}</td>
+                    <td>{maintenance.title}</td>
+                    <td>{maintenance.frequency.replace('_', ' ')}</td>
+                    <td>{formatDate(maintenance.nextDue)}</td>
+                    <td>
+                      <span className={`days-until-due ${getDaysUntilDueClass(daysUntilDue)}`}>
+                        {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : `${daysUntilDue} days`}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`status ${getMaintenanceStatus(maintenance)}`}>
+                        {maintenance.status.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td>
+                      {maintenance.requiredParts && maintenance.requiredParts.length > 0 ? (
+                        <ul className="parts-list">
+                          {maintenance.requiredParts.map((part, index) => (
+                            <li key={index}>
+                              {part.itemName || 'Unknown'} - Qty: {part.quantity}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        'No parts required'
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           
@@ -438,7 +566,7 @@ const Garage = () => {
                     onChange={(e) => handleInputChange(e, 'workOrder')}
                     required
                   >
-                    <option value="">Select Vehicle</option>
+                    <option value="">Select Vehicle ({vehicles.length} available)</option>
                     {vehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
                         {vehicle.registrationNumber} - {vehicle.name} ({vehicle.model})
@@ -503,8 +631,8 @@ const Garage = () => {
                   value={newWorkOrder.description}
                   onChange={(e) => handleInputChange(e, 'workOrder')}
                   required
-                  placeholder="Detailed description of the work to be performed"
                   rows="3"
+                  placeholder="Detailed description of the work to be performed"
                 />
               </div>
 
@@ -519,12 +647,64 @@ const Garage = () => {
                   required
                 />
               </div>
-              
+
+              {/* Parts Selection */}
+              <div className="form-group">
+                <label>Parts Used</label>
+                <div className="parts-selection">
+                  <div className="parts-input-row">
+                    <select
+                      name="inventoryItem"
+                      value={newPart.inventoryItem}
+                      onChange={handlePartChange}
+                    >
+                      <option value="">Select Part</option>
+                      {inventoryItems.map(item => (
+                        <option key={item._id} value={item._id}>
+                          {item.name} - Stock: {item.quantity}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={newPart.quantity}
+                      onChange={handlePartChange}
+                      min="1"
+                      placeholder="Qty"
+                    />
+                    <button type="button" onClick={handleAddPart} className="btn-add-part">
+                      Add Part
+                    </button>
+                  </div>
+                  
+                  {selectedParts.length > 0 && (
+                    <div className="selected-parts">
+                      <h4>Selected Parts:</h4>
+                      <ul>
+                        {selectedParts.map((part, index) => (
+                          <li key={index}>
+                            {part.itemName} - Qty: {part.quantity} - Cost: ${part.totalCost}
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemovePart(index)}
+                              className="btn-remove-part"
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="form-actions">
-                <button type="button" onClick={() => setShowWorkOrderForm(false)} className="cancel-btn">
+                <button type="button" onClick={() => setShowWorkOrderForm(false)} className="btn-cancel">
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn" disabled={isSubmittingWorkOrder}>
+                <button type="submit" className="btn-submit" disabled={isSubmittingWorkOrder}>
                   {isSubmittingWorkOrder ? 'Creating...' : 'Create Work Order'}
                 </button>
               </div>
@@ -554,7 +734,7 @@ const Garage = () => {
                     onChange={(e) => handleInputChange(e, 'maintenance')}
                     required
                   >
-                    <option value="">Select Vehicle</option>
+                    <option value="">Select Vehicle ({vehicles.length} available)</option>
                     {vehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
                         {vehicle.registrationNumber} - {vehicle.name} ({vehicle.model})
@@ -663,12 +843,64 @@ const Garage = () => {
                   required
                 />
               </div>
-              
+
+              {/* Parts Selection for Maintenance */}
+              <div className="form-group">
+                <label>Required Parts</label>
+                <div className="parts-selection">
+                  <div className="parts-input-row">
+                    <select
+                      name="inventoryItem"
+                      value={newPart.inventoryItem}
+                      onChange={handlePartChange}
+                    >
+                      <option value="">Select Part</option>
+                      {inventoryItems.map(item => (
+                        <option key={item._id} value={item._id}>
+                          {item.name} - Stock: {item.quantity}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={newPart.quantity}
+                      onChange={handlePartChange}
+                      min="1"
+                      placeholder="Qty"
+                    />
+                    <button type="button" onClick={handleAddPart} className="btn-add-part">
+                      Add Part
+                    </button>
+                  </div>
+                  
+                  {selectedParts.length > 0 && (
+                    <div className="selected-parts">
+                      <h4>Required Parts:</h4>
+                      <ul>
+                        {selectedParts.map((part, index) => (
+                          <li key={index}>
+                            {part.itemName} - Qty: {part.quantity} - Cost: ${part.totalCost}
+                            <button 
+                              type="button" 
+                              onClick={() => handleRemovePart(index)}
+                              className="btn-remove-part"
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="form-actions">
-                <button type="button" onClick={() => setShowMaintenanceForm(false)} className="cancel-btn">
+                <button type="button" onClick={() => setShowMaintenanceForm(false)} className="btn-cancel">
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn" disabled={isSubmittingMaintenance}>
+                <button type="submit" className="btn-submit" disabled={isSubmittingMaintenance}>
                   {isSubmittingMaintenance ? 'Creating...' : 'Schedule Maintenance'}
                 </button>
               </div>

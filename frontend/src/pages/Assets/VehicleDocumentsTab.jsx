@@ -157,8 +157,8 @@ const VehicleDocumentsTab = () => {
 
   if (loading) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner"></div>
+      <div className="loading-state">
+        <div className="loading-spinner"></div>
         <p>Loading vehicle documents...</p>
       </div>
     );
@@ -166,10 +166,9 @@ const VehicleDocumentsTab = () => {
 
   if (error) {
     return (
-      <div className="error-message">
-        <h3>Error Loading Documents</h3>
-        <p>{error}</p>
-        <button onClick={fetchDocuments}>Retry</button>
+      <div className="error-state">
+        <p>Error: {error}</p>
+        <button onClick={fetchDocuments} className="retry-btn">Retry</button>
       </div>
     );
   }
