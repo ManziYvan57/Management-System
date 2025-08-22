@@ -171,16 +171,21 @@ const Garage = () => {
   const createStockMovement = async (partsUsed, workOrderId) => {
     try {
       for (const part of partsUsed) {
-        await stockMovementsAPI.create({
+        const stockMovementData = {
           inventoryItem: part.inventoryItem,
           movementType: 'out',
-          quantity: part.quantity,
-          reason: `Maintenance/Repair - Work Order: ${workOrderId}`,
-          reference: workOrderId
-        });
+          quantity: parseInt(part.quantity),
+          reason: 'maintenance',
+          reference: workOrderId,
+          notes: `Used in work order: ${workOrderId}`
+        };
+        
+        console.log('Creating stock movement:', stockMovementData);
+        await stockMovementsAPI.create(stockMovementData);
       }
     } catch (err) {
       console.error('Error creating stock movement:', err);
+      // Don't throw error to prevent work order creation from failing
     }
   };
 
@@ -192,7 +197,12 @@ const Garage = () => {
       const workOrderData = {
         ...newWorkOrder,
         scheduledDate: newWorkOrder.scheduledDate || new Date().toISOString().split('T')[0],
-        partsUsed: selectedParts
+        partsUsed: selectedParts.map(part => ({
+          inventoryItem: part.inventoryItem,
+          quantity: parseInt(part.quantity),
+          unitCost: parseFloat(part.unitCost),
+          totalCost: parseFloat(part.totalCost)
+        }))
       };
       
       const response = await garageAPI.createWorkOrder(workOrderData);
@@ -234,7 +244,11 @@ const Garage = () => {
       const maintenanceData = {
         ...newMaintenance,
         interval: parseInt(newMaintenance.interval) || 1,
-        requiredParts: selectedParts
+        requiredParts: selectedParts.map(part => ({
+          inventoryItem: part.inventoryItem,
+          quantity: parseInt(part.quantity),
+          estimatedCost: parseFloat(part.totalCost)
+        }))
       };
       
       await garageAPI.createMaintenanceSchedule(maintenanceData);

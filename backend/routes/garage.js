@@ -52,7 +52,7 @@ router.post('/work-orders', protect, [
   body('priority').isIn(['low', 'medium', 'high', 'critical']).withMessage('Invalid priority level'),
   body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title is required'),
   body('description').trim().isLength({ min: 1, max: 1000 }).withMessage('Description is required'),
-  body('scheduledDate').isISO8601().withMessage('Valid scheduled date is required')
+  body('scheduledDate').notEmpty().withMessage('Scheduled date is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -131,7 +131,7 @@ router.post('/maintenance-schedules', protect, [
   body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title is required'),
   body('frequency').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'semi_annually', 'annually', 'mileage_based', 'custom']).withMessage('Invalid frequency'),
   body('interval').isInt({ min: 1 }).withMessage('Interval must be at least 1'),
-  body('nextDue').isISO8601().withMessage('Valid next due date is required')
+  body('nextDue').notEmpty().withMessage('Next due date is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
