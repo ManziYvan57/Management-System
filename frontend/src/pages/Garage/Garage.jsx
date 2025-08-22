@@ -4,45 +4,47 @@ import './Garage.css';
 
 const Garage = () => {
   const [workOrders, setWorkOrders] = useState([]);
-  const [maintenanceSchedule, setMaintenanceSchedule] = useState([]);
+  const [maintenanceSchedules, setMaintenanceSchedules] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [mechanics, setMechanics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
-    totalWorkOrders: 0,
-    pendingWorkOrders: 0,
-    inProgressWorkOrders: 0,
-    completedWorkOrders: 0,
-    totalCost: 0,
-    averageCompletionTime: 0
+    workOrders: { total: 0, pending: 0, inProgress: 0, completed: 0 },
+    maintenance: { total: 0, overdue: 0 },
+    vehicles: { inMaintenance: 0 }
   });
-  // Parts will now come from main Inventory system
-  const [parts, setParts] = useState([
-    { id: 1, name: 'Engine Oil 5W-30', quantity: 50, minQuantity: 10 },
-    { id: 2, name: 'Brake Pads Front', quantity: 25, minQuantity: 5 },
-    { id: 3, name: 'Air Filter', quantity: 8, minQuantity: 15 },
-  ]);
+
+  // Form states
   const [showWorkOrderForm, setShowWorkOrderForm] = useState(false);
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
-  const [editingWorkOrder, setEditingWorkOrder] = useState(null);
+
+  // Loading states
+  const [isSubmittingWorkOrder, setIsSubmittingWorkOrder] = useState(false);
+  const [isSubmittingMaintenance, setIsSubmittingMaintenance] = useState(false);
+
+  // Form data
   const [newWorkOrder, setNewWorkOrder] = useState({
-    plateNumber: '',
-    date: '',
-    description: '',
-    selectedParts: [],
-    endDate: '',
+    vehicle: '',
+    workType: 'repair',
     priority: 'medium',
-    workType: 'repair' // repair, maintenance, inspection, other
-  });
-  const [newMaintenance, setNewMaintenance] = useState({
-    plateNumber: '',
-    maintenanceType: '',
-    scheduledDate: '',
+    title: '',
     description: '',
-    frequency: 'monthly',
-    lastPerformed: '',
-    nextDue: ''
+    assignedMechanic: '',
+    scheduledDate: '',
+    terminal: ''
   });
-  // Removed Add Part functionality - parts now managed in Inventory
+
+  const [newMaintenance, setNewMaintenance] = useState({
+    vehicle: '',
+    maintenanceType: 'general_inspection',
+    title: '',
+    frequency: 'monthly',
+    interval: 1,
+    nextDue: '',
+    priority: 'medium',
+    terminal: ''
+  });
 
   // Fetch data from API
   useEffect(() => {
@@ -51,12 +53,24 @@ const Garage = () => {
         setLoading(true);
         setError(null);
         
-        const [workOrdersResponse, statsResponse] = await Promise.all([
+        const [
+          workOrdersResponse,
+          maintenanceResponse,
+          vehiclesResponse,
+          mechanicsResponse,
+          statsResponse
+        ] = await Promise.all([
           garageAPI.getWorkOrders(),
+          garageAPI.getMaintenanceSchedules(),
+          garageAPI.getVehicles(),
+          garageAPI.getMechanics(),
           garageAPI.getStats()
         ]);
         
         setWorkOrders(workOrdersResponse.data || []);
+        setMaintenanceSchedules(maintenanceResponse.data || []);
+        setVehicles(vehiclesResponse.data || []);
+        setMechanics(mechanicsResponse.data || []);
         setStats(statsResponse.data || {});
       } catch (err) {
         console.error('Error fetching garage data:', err);
@@ -72,35 +86,19 @@ const Garage = () => {
   // Refresh data after adding/editing
   const refreshData = async () => {
     try {
-      const [workOrdersResponse, statsResponse] = await Promise.all([
+      const [workOrdersResponse, maintenanceResponse, statsResponse] = await Promise.all([
         garageAPI.getWorkOrders(),
+        garageAPI.getMaintenanceSchedules(),
         garageAPI.getStats()
       ]);
       
       setWorkOrders(workOrdersResponse.data || []);
+      setMaintenanceSchedules(maintenanceResponse.data || []);
       setStats(statsResponse.data || {});
     } catch (err) {
       console.error('Error refreshing garage data:', err);
     }
   };
-
-  // Dashboard Statistics
-  const activeWorkOrders = workOrders.filter(order => !order.endDate).length;
-  const completedToday = workOrders.filter(order => 
-    order.endDate === new Date().toLocaleDateString()
-  ).length;
-  const highPriorityPending = workOrders.filter(order => 
-    !order.endDate && order.priority === 'high'
-  ).length;
-  const lowStockParts = parts.filter(part => part.quantity <= part.minQuantity && part.quantity > 0).length;
-  const noStockParts = parts.filter(part => part.quantity === 0).length;
-  const upcomingMaintenance = maintenanceSchedule.filter(maintenance => {
-    const dueDate = new Date(maintenance.nextDue);
-    const today = new Date();
-    const diffTime = dueDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7 && diffDays >= 0;
-  }).length;
 
   const handleInputChange = (e, formType) => {
     const { name, value } = e.target;
@@ -116,240 +114,151 @@ const Garage = () => {
     }
   };
 
-  const handlePartSelect = (partId, isAdding) => {
-    const selectedParts = [...newWorkOrder.selectedParts];
-    if (isAdding) {
-      if (!selectedParts.find(p => p.partId === partId)) {
-        selectedParts.push({ partId, quantity: 1 });
-      }
-    } else {
-      const index = selectedParts.findIndex(p => p.partId === partId);
-      if (index > -1) {
-        selectedParts.splice(index, 1);
-      }
-    }
-    setNewWorkOrder({ ...newWorkOrder, selectedParts });
-  };
-
-  const handlePartQuantityChange = (partId, quantity) => {
-    const selectedParts = [...newWorkOrder.selectedParts];
-    const partIndex = selectedParts.findIndex(p => p.partId === partId);
-    if (partIndex > -1) {
-      selectedParts[partIndex] = { ...selectedParts[partIndex], quantity: parseInt(quantity) || 1 };
-    }
-    setNewWorkOrder({ ...newWorkOrder, selectedParts });
-  };
-
-  const handleNewPartInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewPart({ ...newPart, [name]: value.replace(/^0+/, '') });
-  };
-
   const handleSubmitWorkOrder = async (e) => {
     e.preventDefault();
+    setIsSubmittingWorkOrder(true);
     
     try {
       const workOrderData = {
         ...newWorkOrder,
-        date: newWorkOrder.date || new Date().toISOString().split('T')[0],
-        partsUsed: newWorkOrder.selectedParts.map(selectedPart => {
-          const part = parts.find(p => p.id === selectedPart.partId);
-          return { 
-            id: part.id, 
-            name: part.name, 
-            quantity: selectedPart.quantity 
-          };
-        })
+        scheduledDate: newWorkOrder.scheduledDate || new Date().toISOString().split('T')[0]
       };
       
-      if (editingWorkOrder) {
-        // Update existing work order
-        // TODO: Add update API call when backend supports it
-        console.log('Update work order:', workOrderData);
-      } else {
-        // Create new work order
-        await garageAPI.createWorkOrder(workOrderData);
-      }
+      await garageAPI.createWorkOrder(workOrderData);
       
       // Refresh the data
       await refreshData();
       
       // Reset form
-      setNewWorkOrder({ 
-        plateNumber: '', 
-        date: '', 
-        description: '', 
-        selectedParts: [], 
-        endDate: '',
+      setNewWorkOrder({
+        vehicle: '',
+        workType: 'repair',
         priority: 'medium',
-        actualCost: '',
-        workType: 'repair'
+        title: '',
+        description: '',
+        assignedMechanic: '',
+        scheduledDate: '',
+        terminal: ''
       });
       
-      setEditingWorkOrder(null);
       setShowWorkOrderForm(false);
     } catch (err) {
-      console.error('Error saving work order:', err);
-      alert(err.message || 'Failed to save work order');
+      console.error('Error creating work order:', err);
+      alert(err.message || 'Failed to create work order');
+    } finally {
+      setIsSubmittingWorkOrder(false);
     }
   };
 
-  const handleEditWorkOrder = (workOrder) => {
-    setEditingWorkOrder(workOrder);
-    setNewWorkOrder({
-      plateNumber: workOrder.plateNumber,
-      date: workOrder.date,
-      description: workOrder.description,
-      selectedParts: workOrder.partsUsed.map(part => ({
-        partId: part.id,
-        quantity: part.quantity
-      })),
-      endDate: workOrder.endDate,
-      priority: workOrder.priority,
-      workType: workOrder.workType
-    });
-    setShowWorkOrderForm(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingWorkOrder(null);
-    setNewWorkOrder({ 
-      plateNumber: '', 
-      date: '', 
-      description: '', 
-      selectedParts: [], 
-      endDate: '',
-      priority: 'medium',
-      workType: 'repair'
-    });
-    setShowWorkOrderForm(false);
-  };
-
-  const handleSubmitMaintenance = (e) => {
+  const handleSubmitMaintenance = async (e) => {
     e.preventDefault();
+    setIsSubmittingMaintenance(true);
     
-    // Calculate next due date based on frequency
-    const scheduledDate = new Date(newMaintenance.scheduledDate);
-    let nextDueDate = new Date(scheduledDate);
-    
-    switch(newMaintenance.frequency) {
-      case 'weekly':
-        nextDueDate.setDate(scheduledDate.getDate() + 7);
-        break;
-      case 'monthly':
-        nextDueDate.setMonth(scheduledDate.getMonth() + 1);
-        break;
-      case 'quarterly':
-        nextDueDate.setMonth(scheduledDate.getMonth() + 3);
-        break;
-      case 'yearly':
-        nextDueDate.setFullYear(scheduledDate.getFullYear() + 1);
-        break;
-      default:
-        nextDueDate.setMonth(scheduledDate.getMonth() + 1);
+    try {
+      const maintenanceData = {
+        ...newMaintenance,
+        interval: parseInt(newMaintenance.interval) || 1
+      };
+      
+      await garageAPI.createMaintenanceSchedule(maintenanceData);
+      
+      // Refresh the data
+      await refreshData();
+      
+      // Reset form
+      setNewMaintenance({
+        vehicle: '',
+        maintenanceType: 'general_inspection',
+        title: '',
+        frequency: 'monthly',
+        interval: 1,
+        nextDue: '',
+        priority: 'medium',
+        terminal: ''
+      });
+      
+      setShowMaintenanceForm(false);
+    } catch (err) {
+      console.error('Error creating maintenance schedule:', err);
+      alert(err.message || 'Failed to create maintenance schedule');
+    } finally {
+      setIsSubmittingMaintenance(false);
     }
-
-    const newMaintenanceItem = {
-      id: nextMaintenanceId,
-      ...newMaintenance,
-      scheduledDate: newMaintenance.scheduledDate || new Date().toISOString().split('T')[0],
-      nextDue: nextDueDate.toISOString().split('T')[0],
-      status: 'scheduled',
-      lastPerformed: newMaintenance.lastPerformed || ''
-    };
-
-    setMaintenanceSchedule([...maintenanceSchedule, newMaintenanceItem]);
-    setNewMaintenance({
-      plateNumber: '',
-      maintenanceType: '',
-      scheduledDate: '',
-      description: '',
-      frequency: 'monthly',
-      lastPerformed: '',
-      nextDue: ''
-    });
-    setShowMaintenanceForm(false);
-    setNextMaintenanceId(nextMaintenanceId + 1);
   };
 
-  const handleMarkMaintenanceComplete = (maintenanceId) => {
-    const today = new Date().toISOString().split('T')[0];
-    setMaintenanceSchedule(
-      maintenanceSchedule.map(maintenance =>
-        maintenance.id === maintenanceId 
-          ? { 
-              ...maintenance, 
-              lastPerformed: today,
-              status: 'completed',
-              nextDue: calculateNextDueDate(maintenance.scheduledDate, maintenance.frequency)
-            }
-          : maintenance
-      )
-    );
+  const getWorkOrderStatus = (workOrder) => {
+    if (workOrder.status === 'completed') return 'completed';
+    if (workOrder.status === 'in_progress') return 'in-progress';
+    if (workOrder.status === 'pending') return 'pending';
+    if (workOrder.status === 'cancelled') return 'cancelled';
+    return 'on-hold';
   };
-
-  const calculateNextDueDate = (lastDate, frequency) => {
-    const date = new Date(lastDate);
-    let nextDue = new Date(date);
-    
-    switch(frequency) {
-      case 'weekly':
-        nextDue.setDate(date.getDate() + 7);
-        break;
-      case 'monthly':
-        nextDue.setMonth(date.getMonth() + 1);
-        break;
-      case 'quarterly':
-        nextDue.setMonth(date.getMonth() + 3);
-        break;
-      case 'yearly':
-        nextDue.setFullYear(date.getFullYear() + 1);
-        break;
-      default:
-        nextDue.setMonth(date.getMonth() + 1);
-    }
-    
-    return nextDue.toISOString().split('T')[0];
-  };
-
-  const handleSubmitNewPart = (e) => {
-    e.preventDefault();
-    const newPartWithId = { 
-      ...newPart, 
-      id: Date.now(), 
-      quantity: parseInt(newPart.quantity) || 0,
-      minQuantity: parseInt(newPart.minQuantity) || 0
-    };
-    setParts([...parts, newPartWithId]);
-    setNewPart({ name: '', quantity: '', minQuantity: '' });
-    setShowAddPartForm(false);
-  };
-
-  // Parts management functions removed - now handled in main Inventory system
-
-  const handleMarkAsComplete = (orderId) => {
-    const completionDate = new Date().toLocaleDateString();
-    setWorkOrders(
-      workOrders.map(order =>
-        order.id === orderId ? { ...order, endDate: completionDate } : order
-      )
-    );
-  };
-
-  const lowStockPartsList = parts.filter(part => part.quantity <= part.minQuantity && part.quantity > 0);
-  const noStockPartsList = parts.filter(part => part.quantity === 0);
 
   const getMaintenanceStatus = (maintenance) => {
-    const dueDate = new Date(maintenance.nextDue);
-    const today = new Date();
-    const diffTime = dueDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
     if (maintenance.status === 'completed') return 'completed';
-    if (diffDays < 0) return 'overdue';
-    if (diffDays <= 7) return 'due-soon';
-    return 'scheduled';
+    if (maintenance.status === 'overdue') return 'overdue';
+    if (maintenance.status === 'in_progress') return 'in-progress';
+    if (maintenance.status === 'scheduled') return 'scheduled';
+    return 'cancelled';
   };
+
+  const getMaintenanceTypeLabel = (type) => {
+    const labels = {
+      'oil_change': 'Oil Change',
+      'tire_rotation': 'Tire Rotation',
+      'brake_service': 'Brake Service',
+      'engine_tune_up': 'Engine Tune Up',
+      'transmission_service': 'Transmission Service',
+      'air_filter': 'Air Filter',
+      'fuel_filter': 'Fuel Filter',
+      'spark_plugs': 'Spark Plugs',
+      'battery_check': 'Battery Check',
+      'coolant_check': 'Coolant Check',
+      'general_inspection': 'General Inspection',
+      'other': 'Other'
+    };
+    return labels[type] || type;
+  };
+
+  const getWorkTypeLabel = (type) => {
+    const labels = {
+      'repair': 'Repair',
+      'maintenance': 'Maintenance',
+      'inspection': 'Inspection',
+      'emergency': 'Emergency',
+      'preventive': 'Preventive',
+      'other': 'Other'
+    };
+    return labels[type] || type;
+  };
+
+  const getPriorityLabel = (priority) => {
+    const labels = {
+      'low': 'Low',
+      'medium': 'Medium',
+      'high': 'High',
+      'critical': 'Critical'
+    };
+    return labels[priority] || priority;
+  };
+
+  const getFrequencyLabel = (frequency) => {
+    const labels = {
+      'daily': 'Daily',
+      'weekly': 'Weekly',
+      'monthly': 'Monthly',
+      'quarterly': 'Quarterly',
+      'semi_annually': 'Semi-Annually',
+      'annually': 'Annually',
+      'mileage_based': 'Mileage Based',
+      'custom': 'Custom'
+    };
+    return labels[frequency] || frequency;
+  };
+
+  const overdueMaintenance = maintenanceSchedules.filter(m => m.isOverdue);
+  const dueSoonMaintenance = maintenanceSchedules.filter(m => m.isDueSoon);
+  const pendingWorkOrders = workOrders.filter(w => w.status === 'pending');
 
   return (
     <div className="garage-container">
@@ -358,47 +267,51 @@ const Garage = () => {
       {/* Mini Dashboard */}
       <div className="dashboard-stats">
         <div className="stat-card">
-          <h3>{activeWorkOrders}</h3>
-          <p>Active Work Orders</p>
+          <h3>{stats.workOrders?.total || 0}</h3>
+          <p>Total Work Orders</p>
         </div>
         <div className="stat-card">
-          <h3>{completedToday}</h3>
-          <p>Completed Today</p>
+          <h3>{stats.workOrders?.pending || 0}</h3>
+          <p>Pending Orders</p>
         </div>
         <div className="stat-card">
-          <h3>{highPriorityPending}</h3>
-          <p>High Priority Pending</p>
+          <h3>{stats.maintenance?.overdue || 0}</h3>
+          <p>Overdue Maintenance</p>
         </div>
         <div className="stat-card">
-          <h3>{upcomingMaintenance}</h3>
-          <p>Due This Week</p>
+          <h3>{stats.vehicles?.inMaintenance || 0}</h3>
+          <p>Vehicles in Maintenance</p>
         </div>
       </div>
 
-      {(lowStockPartsList.length > 0 || noStockPartsList.length > 0) && (
+      {/* Alerts */}
+      {overdueMaintenance.length > 0 && (
         <div className="alert warning">
-          <strong>Stock Alerts:</strong> 
-          {lowStockPartsList.length > 0 && ` ${lowStockPartsList.length} low stock items`}
-          {noStockPartsList.length > 0 && ` ${noStockPartsList.length} out of stock items`}
+          <strong>Maintenance Alerts:</strong> {overdueMaintenance.length} maintenance(s) overdue
         </div>
       )}
 
-      {maintenanceSchedule.filter(m => getMaintenanceStatus(m) === 'due-soon').length > 0 && (
-        <div className="alert maintenance">
-          <strong>Maintenance Reminder:</strong> 
-          {maintenanceSchedule.filter(m => getMaintenanceStatus(m) === 'due-soon').length} maintenance(s) due within 7 days
+      {dueSoonMaintenance.length > 0 && (
+        <div className="alert info">
+          <strong>Maintenance Reminder:</strong> {dueSoonMaintenance.length} maintenance(s) due within 7 days
+        </div>
+      )}
+
+      {pendingWorkOrders.length > 0 && (
+        <div className="alert warning">
+          <strong>Work Orders:</strong> {pendingWorkOrders.length} pending work order(s) awaiting assignment
         </div>
       )}
       
-              {/* Quick Actions */}
-        <div className="quick-actions">
-          <button onClick={() => setShowWorkOrderForm(true)} className="action-btn">
-            Create Work Order
-          </button>
-          <button onClick={() => setShowMaintenanceForm(true)} className="action-btn">
-            Schedule Maintenance
-          </button>
-        </div>
+      {/* Quick Actions */}
+      <div className="quick-actions">
+        <button onClick={() => setShowWorkOrderForm(true)} className="action-btn">
+          Create Work Order
+        </button>
+        <button onClick={() => setShowMaintenanceForm(true)} className="action-btn">
+          Schedule Maintenance
+        </button>
+      </div>
 
       {/* Work Orders Section */}
       <div className="work-order-list">
@@ -419,182 +332,144 @@ const Garage = () => {
           )}
           
           {!loading && !error && (
-            <>
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Plate</th>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Priority</th>
-                    <th>Parts</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+            <table>
+              <thead>
+                <tr>
+                  <th>Work Order #</th>
+                  <th>Vehicle</th>
+                  <th>Type</th>
+                  <th>Title</th>
+                  <th>Priority</th>
+                  <th>Assigned To</th>
+                  <th>Scheduled Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {workOrders.map((workOrder) => (
+                  <tr key={workOrder._id} className={`status-${getWorkOrderStatus(workOrder)}`}>
+                    <td>{workOrder.workOrderNumber}</td>
+                    <td>{workOrder.vehicle?.plateNumber || 'N/A'}</td>
+                    <td>{getWorkTypeLabel(workOrder.workType)}</td>
+                    <td>{workOrder.title}</td>
+                    <td>
+                      <span className={`priority ${workOrder.priority}`}>
+                        {getPriorityLabel(workOrder.priority)}
+                      </span>
+                    </td>
+                    <td>{workOrder.assignedMechanic ? `${workOrder.assignedMechanic.firstName} ${workOrder.assignedMechanic.lastName}` : 'Unassigned'}</td>
+                    <td>{new Date(workOrder.scheduledDate).toLocaleDateString()}</td>
+                    <td>
+                      <span className={`status ${getWorkOrderStatus(workOrder)}`}>
+                        {workOrder.status.replace('_', ' ')}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-              {workOrders.map((order) => (
-                <tr key={order.id} className={`priority-${order.priority}`}>
-                  <td>{order.id}</td>
-                  <td>{order.plateNumber}</td>
-                  <td>{order.date}</td>
+                ))}
+              </tbody>
+            </table>
+          )}
+          
+          {!loading && !error && workOrders.length === 0 && (
+            <div className="no-results">
+              <p>No work orders found.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Maintenance Schedules Section */}
+      <div className="maintenance-schedule-list">
+        <h3>Maintenance Schedules</h3>
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Vehicle</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Frequency</th>
+                <th>Next Due</th>
+                <th>Priority</th>
+                <th>Assigned To</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {maintenanceSchedules.map((maintenance) => (
+                <tr key={maintenance._id} className={`status-${getMaintenanceStatus(maintenance)}`}>
+                  <td>{maintenance.vehicle?.plateNumber || 'N/A'}</td>
+                  <td>{getMaintenanceTypeLabel(maintenance.maintenanceType)}</td>
+                  <td>{maintenance.title}</td>
+                  <td>{getFrequencyLabel(maintenance.frequency)}</td>
+                  <td>{new Date(maintenance.nextDue).toLocaleDateString()}</td>
                   <td>
-                    <span className={`work-type-badge ${order.workType}`}>
-                      {order.workType}
+                    <span className={`priority ${maintenance.priority}`}>
+                      {getPriorityLabel(maintenance.priority)}
                     </span>
                   </td>
-                  <td>{order.description}</td>
-                                     <td>
-                     <span className={`priority-badge ${order.priority}`}>
-                       {order.priority}
-                     </span>
-                   </td>
-                   <td>
-                     {order.partsUsed && order.partsUsed.length > 0 
-                       ? order.partsUsed.map(part => `${part.name} (${part.quantity})`).join(', ')
-                       : 'None'
-                     }
-                   </td>
+                  <td>{maintenance.assignedMechanic ? `${maintenance.assignedMechanic.firstName} ${maintenance.assignedMechanic.lastName}` : 'Unassigned'}</td>
                   <td>
-                    {order.endDate ? (
-                      <span className="status completed">Completed on {order.endDate}</span>
-                    ) : (
-                      <span className="status in-progress">In Progress</span>
-                    )}
-                  </td>
-                  <td>
-                    {!order.endDate ? (
-                      <div className="action-buttons-cell">
-                        <button 
-                          onClick={() => handleEditWorkOrder(order)} 
-                          className="edit-btn"
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => handleMarkAsComplete(order.id)} 
-                          className="status-btn"
-                        >
-                          Complete
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="status completed">Completed</span>
-                    )}
+                    <span className={`status ${getMaintenanceStatus(maintenance)}`}>
+                      {maintenance.status.replace('_', ' ')}
+                    </span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-            </>
+          
+          {maintenanceSchedules.length === 0 && (
+            <div className="no-results">
+              <p>No maintenance schedules found.</p>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Maintenance Schedule Section */}
-      <div className="maintenance-schedule-list">
-        <h3>Maintenance Schedule</h3>
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Plate</th>
-                <th>Type</th>
-                <th>Frequency</th>
-                <th>Last Performed</th>
-                <th>Next Due</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {maintenanceSchedule.map((maintenance) => {
-                const status = getMaintenanceStatus(maintenance);
-                return (
-                  <tr key={maintenance.id} className={`maintenance-${status}`}>
-                    <td>{maintenance.id}</td>
-                    <td>{maintenance.plateNumber}</td>
-                    <td>{maintenance.maintenanceType}</td>
-                    <td>{maintenance.frequency}</td>
-                    <td>{maintenance.lastPerformed || 'Never'}</td>
-                    <td>{maintenance.nextDue}</td>
-                    <td>
-                      <span className={`status ${status}`}>
-                        {status === 'completed' && 'Completed'}
-                        {status === 'overdue' && 'Overdue'}
-                        {status === 'due-soon' && 'Due Soon'}
-                        {status === 'scheduled' && 'Scheduled'}
-                      </span>
-                    </td>
-                    <td>
-                      {status !== 'completed' && (
-                        <button 
-                          onClick={() => handleMarkMaintenanceComplete(maintenance.id)} 
-                          className="status-btn"
-                        >
-                          Mark Complete
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Parts are now managed in the main Inventory system */}
-
       {/* Work Order Form Modal */}
-      {(showWorkOrderForm || editingWorkOrder) && (
+      {showWorkOrderForm && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h3>{editingWorkOrder ? 'Edit Work Order' : 'Create Work Order'}</h3>
-              <button onClick={handleCancelEdit} className="close-btn">
+              <h3>Create Work Order</h3>
+              <button onClick={() => setShowWorkOrderForm(false)} className="close-btn">
                 &times;
               </button>
             </div>
             <form onSubmit={handleSubmitWorkOrder} className="modal-form">
-              <div className="form-group">
-                <label htmlFor="plateNumber">Plate Number:</label>
-                <input
-                  type="text"
-                  id="plateNumber"
-                  name="plateNumber"
-                  value={newWorkOrder.plateNumber}
-                  onChange={(e) => handleInputChange(e, 'workOrder')}
-                  required
-                />
-              </div>
-              
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="date">Date:</label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={newWorkOrder.date}
+                  <label htmlFor="vehicle">Vehicle *</label>
+                  <select
+                    id="vehicle"
+                    name="vehicle"
+                    value={newWorkOrder.vehicle}
                     onChange={(e) => handleInputChange(e, 'workOrder')}
-                  />
+                    required
+                  >
+                    <option value="">Select Vehicle</option>
+                    {vehicles.map(vehicle => (
+                      <option key={vehicle._id} value={vehicle._id}>
+                        {vehicle.plateNumber} - {vehicle.busType} ({vehicle.manufacturer} {vehicle.model})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                
                 <div className="form-group">
-                  <label htmlFor="workType">Work Type:</label>
+                  <label htmlFor="workType">Work Type *</label>
                   <select
                     id="workType"
                     name="workType"
                     value={newWorkOrder.workType}
                     onChange={(e) => handleInputChange(e, 'workOrder')}
+                    required
                   >
                     <option value="repair">Repair</option>
                     <option value="maintenance">Maintenance</option>
                     <option value="inspection">Inspection</option>
+                    <option value="emergency">Emergency</option>
+                    <option value="preventive">Preventive</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
@@ -602,77 +477,97 @@ const Garage = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="priority">Priority:</label>
+                  <label htmlFor="title">Title *</label>
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={newWorkOrder.title}
+                    onChange={(e) => handleInputChange(e, 'workOrder')}
+                    required
+                    placeholder="Brief description of the work"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="priority">Priority *</label>
                   <select
                     id="priority"
                     name="priority"
                     value={newWorkOrder.priority}
                     onChange={(e) => handleInputChange(e, 'workOrder')}
+                    required
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
+                    <option value="critical">Critical</option>
                   </select>
                 </div>
-                
-
               </div>
-              
+
               <div className="form-group">
-                <label htmlFor="description">Description:</label>
+                <label htmlFor="description">Description *</label>
                 <textarea
                   id="description"
                   name="description"
                   value={newWorkOrder.description}
                   onChange={(e) => handleInputChange(e, 'workOrder')}
                   required
+                  placeholder="Detailed description of the work to be performed"
+                  rows="3"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="assignedMechanic">Assigned Mechanic *</label>
+                  <select
+                    id="assignedMechanic"
+                    name="assignedMechanic"
+                    value={newWorkOrder.assignedMechanic}
+                    onChange={(e) => handleInputChange(e, 'workOrder')}
+                    required
+                  >
+                    <option value="">Select Mechanic</option>
+                    {mechanics.map(mechanic => (
+                      <option key={mechanic._id} value={mechanic._id}>
+                        {mechanic.firstName} {mechanic.lastName} ({mechanic.employeeId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="scheduledDate">Scheduled Date *</label>
+                  <input
+                    type="date"
+                    id="scheduledDate"
+                    name="scheduledDate"
+                    value={newWorkOrder.scheduledDate}
+                    onChange={(e) => handleInputChange(e, 'workOrder')}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="terminal">Terminal *</label>
+                <input
+                  type="text"
+                  id="terminal"
+                  name="terminal"
+                  value={newWorkOrder.terminal}
+                  onChange={(e) => handleInputChange(e, 'workOrder')}
+                  required
+                  placeholder="e.g., Kampala Terminal"
                 />
               </div>
               
-              <div className="parts-selection">
-                <h4>Select Parts (from main Inventory):</h4>
-                <ul>
-                  {parts && parts.length > 0 ? parts.map((part) => {
-                    const isSelected = newWorkOrder.selectedParts.find(sp => sp.partId === part.id);
-                    const selectedPart = isSelected ? isSelected : null;
-                    return (
-                      <li key={part.id} className={part.quantity === 0 ? 'no-stock' : part.quantity <= part.minQuantity ? 'low-stock' : ''}>
-                        <div className="part-selection-row">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={!!isSelected}
-                              onChange={(e) => handlePartSelect(part.id, e.target.checked)}
-                              disabled={part.quantity === 0}
-                            />
-                            {part.name} - {part.quantity} available
-                            {part.quantity === 0 && ' (No Stock)'}
-                            {part.quantity <= part.minQuantity && part.quantity > 0 && ' (Low Stock)'}
-                          </label>
-                          {isSelected && (
-                            <input
-                              type="number"
-                              min="1"
-                              max={part.quantity}
-                              value={selectedPart.quantity}
-                              onChange={(e) => handlePartQuantityChange(part.id, e.target.value)}
-                              className="quantity-input"
-                              placeholder="Qty"
-                            />
-                          )}
-                        </div>
-                      </li>
-                    );
-                  }) : <li>No parts available</li>}
-                </ul>
-              </div>
-              
               <div className="form-actions">
-                <button type="button" onClick={handleCancelEdit} className="cancel-btn">
+                <button type="button" onClick={() => setShowWorkOrderForm(false)} className="cancel-btn">
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  {editingWorkOrder ? 'Update Work Order' : 'Create Work Order'}
+                <button type="submit" className="submit-btn" disabled={isSubmittingWorkOrder}>
+                  {isSubmittingWorkOrder ? 'Creating...' : 'Create Work Order'}
                 </button>
               </div>
             </form>
@@ -691,21 +586,26 @@ const Garage = () => {
               </button>
             </div>
             <form onSubmit={handleSubmitMaintenance} className="modal-form">
-              <div className="form-group">
-                <label htmlFor="maintenancePlateNumber">Plate Number:</label>
-                <input
-                  type="text"
-                  id="maintenancePlateNumber"
-                  name="plateNumber"
-                  value={newMaintenance.plateNumber}
-                  onChange={(e) => handleInputChange(e, 'maintenance')}
-                  required
-                />
-              </div>
-              
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="maintenanceType">Maintenance Type:</label>
+                  <label htmlFor="maintenanceVehicle">Vehicle *</label>
+                  <select
+                    id="maintenanceVehicle"
+                    name="vehicle"
+                    value={newMaintenance.vehicle}
+                    onChange={(e) => handleInputChange(e, 'maintenance')}
+                    required
+                  >
+                    <option value="">Select Vehicle</option>
+                    {vehicles.map(vehicle => (
+                      <option key={vehicle._id} value={vehicle._id}>
+                        {vehicle.plateNumber} - {vehicle.busType} ({vehicle.manufacturer} {vehicle.model})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="maintenanceType">Maintenance Type *</label>
                   <select
                     id="maintenanceType"
                     name="maintenanceType"
@@ -713,84 +613,127 @@ const Garage = () => {
                     onChange={(e) => handleInputChange(e, 'maintenance')}
                     required
                   >
-                    <option value="">Select Type</option>
-                    <option value="Oil Change">Oil Change</option>
-                    <option value="Brake Service">Brake Service</option>
-                    <option value="Tire Rotation">Tire Rotation</option>
-                    <option value="Engine Tune-up">Engine Tune-up</option>
-                    <option value="Inspection">Inspection</option>
-                    <option value="Other">Other</option>
+                    <option value="general_inspection">General Inspection</option>
+                    <option value="oil_change">Oil Change</option>
+                    <option value="tire_rotation">Tire Rotation</option>
+                    <option value="brake_service">Brake Service</option>
+                    <option value="engine_tune_up">Engine Tune Up</option>
+                    <option value="transmission_service">Transmission Service</option>
+                    <option value="air_filter">Air Filter</option>
+                    <option value="fuel_filter">Fuel Filter</option>
+                    <option value="spark_plugs">Spark Plugs</option>
+                    <option value="battery_check">Battery Check</option>
+                    <option value="coolant_check">Coolant Check</option>
+                    <option value="other">Other</option>
                   </select>
                 </div>
-                
+              </div>
+
+              <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="frequency">Frequency:</label>
+                  <label htmlFor="maintenanceTitle">Title *</label>
+                  <input
+                    type="text"
+                    id="maintenanceTitle"
+                    name="title"
+                    value={newMaintenance.title}
+                    onChange={(e) => handleInputChange(e, 'maintenance')}
+                    required
+                    placeholder="Maintenance title"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="priority">Priority *</label>
+                  <select
+                    id="priority"
+                    name="priority"
+                    value={newMaintenance.priority}
+                    onChange={(e) => handleInputChange(e, 'maintenance')}
+                    required
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="frequency">Frequency *</label>
                   <select
                     id="frequency"
                     name="frequency"
                     value={newMaintenance.frequency}
                     onChange={(e) => handleInputChange(e, 'maintenance')}
+                    required
                   >
+                    <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                     <option value="quarterly">Quarterly</option>
-                    <option value="yearly">Yearly</option>
+                    <option value="semi_annually">Semi-Annually</option>
+                    <option value="annually">Annually</option>
+                    <option value="mileage_based">Mileage Based</option>
+                    <option value="custom">Custom</option>
                   </select>
                 </div>
+                <div className="form-group">
+                  <label htmlFor="interval">Interval *</label>
+                  <input
+                    type="number"
+                    id="interval"
+                    name="interval"
+                    value={newMaintenance.interval}
+                    onChange={(e) => handleInputChange(e, 'maintenance')}
+                    required
+                    min="1"
+                    placeholder="1"
+                  />
+                </div>
               </div>
-              
+
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="scheduledDate">Scheduled Date:</label>
+                  <label htmlFor="nextDue">Next Due Date *</label>
                   <input
                     type="date"
-                    id="scheduledDate"
-                    name="scheduledDate"
-                    value={newMaintenance.scheduledDate}
+                    id="nextDue"
+                    name="nextDue"
+                    value={newMaintenance.nextDue}
                     onChange={(e) => handleInputChange(e, 'maintenance')}
                     required
                   />
                 </div>
-                
                 <div className="form-group">
-                  <label htmlFor="lastPerformed">Last Performed (Optional):</label>
+                  <label htmlFor="maintenanceTerminal">Terminal *</label>
                   <input
-                    type="date"
-                    id="lastPerformed"
-                    name="lastPerformed"
-                    value={newMaintenance.lastPerformed}
+                    type="text"
+                    id="maintenanceTerminal"
+                    name="terminal"
+                    value={newMaintenance.terminal}
                     onChange={(e) => handleInputChange(e, 'maintenance')}
+                    required
+                    placeholder="e.g., Kampala Terminal"
                   />
                 </div>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="maintenanceDescription">Description:</label>
-                <textarea
-                  id="maintenanceDescription"
-                  name="description"
-                  value={newMaintenance.description}
-                  onChange={(e) => handleInputChange(e, 'maintenance')}
-                  required
-                />
               </div>
               
               <div className="form-actions">
                 <button type="button" onClick={() => setShowMaintenanceForm(false)} className="cancel-btn">
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  Schedule Maintenance
+                <button type="submit" className="submit-btn" disabled={isSubmittingMaintenance}>
+                  {isSubmittingMaintenance ? 'Creating...' : 'Schedule Maintenance'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Parts are now managed in the main Inventory system */}
     </div>
   );
 };
 
-export default Garage;
+export default Garage; 

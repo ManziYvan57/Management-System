@@ -175,6 +175,30 @@ export const garageAPI = {
     });
   },
   
+  getMaintenanceSchedules: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/garage/maintenance-schedules${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  createMaintenanceSchedule: async (maintenanceData) => {
+    return apiRequest('/garage/maintenance-schedules', {
+      method: 'POST',
+      body: JSON.stringify(maintenanceData)
+    });
+  },
+  
+  getVehicles: async () => {
+    return apiRequest('/garage/vehicles');
+  },
+  
+  getMechanics: async () => {
+    return apiRequest('/garage/mechanics');
+  },
+  
+  getParts: async () => {
+    return apiRequest('/garage/parts');
+  },
+  
   getStats: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/garage/stats${queryString ? `?${queryString}` : ''}`);

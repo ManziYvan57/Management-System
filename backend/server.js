@@ -14,6 +14,7 @@ require('dotenv').config();
 // VEHICLE DOCUMENTS ROUTES INCLUDED - DEPLOYMENT TEST
 // LATEST VERSION - COMMIT f53f07f - AUTH MIDDLEWARE FIXED
 // STOCK MOVEMENTS & SUPPLIERS UPDATE - FORCE REDEPLOY - COMMIT c9d0e1f
+// GARAGE MODULE INTEGRATION - FORCE REDEPLOY - COMMIT garage-fix
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -108,7 +109,8 @@ app.get('/', (req, res) => {
       vehicleDocuments: '/api/vehicle-documents',
       suppliers: '/api/suppliers',
       purchaseOrders: '/api/purchase-orders',
-      stockMovements: '/api/stock-movements'
+      stockMovements: '/api/stock-movements',
+      garage: '/api/garage'
     }
   });
 });
@@ -139,6 +141,7 @@ app.use(`${apiPrefix}/vehicle-documents`, vehicleDocumentRoutes);
 app.use(`${apiPrefix}/suppliers`, supplierRoutes);
 app.use(`${apiPrefix}/purchase-orders`, purchaseOrderRoutes);
 app.use(`${apiPrefix}/stock-movements`, stockMovementRoutes);
+app.use(`${apiPrefix}/garage`, garageRoutes);
 
 // Error handling middleware
 app.use(notFound);
