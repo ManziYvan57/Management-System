@@ -467,8 +467,8 @@ const Garage = () => {
           <p>Pending Work Orders</p>
         </div>
         <div className="stat-card">
-          <h3>{stats.maintenance?.total || 0}</h3>
-          <p>Maintenance Schedules</p>
+          <h3>{stats.maintenance?.pending || 0}</h3>
+          <p>Pending Maintenance</p>
         </div>
         <div className="stat-card">
           <h3>{stats.maintenance?.overdue || 0}</h3>
@@ -553,23 +553,25 @@ const Garage = () => {
                    <td>
                      <div className="action-controls">
                        {workOrder.status !== 'completed' && (
-                         <button 
-                           onClick={() => handleSetWorkOrderComplete(workOrder._id)}
-                           className="status-btn"
-                           title="Mark as Complete"
-                           disabled={isUpdatingWorkOrder}
-                         >
-                           {isUpdatingWorkOrder ? 'Updating...' : 'Set Complete'}
-                         </button>
+                         <>
+                           <button 
+                             onClick={() => handleSetWorkOrderComplete(workOrder._id)}
+                             className="status-btn"
+                             title="Mark as Complete"
+                             disabled={isUpdatingWorkOrder}
+                           >
+                             {isUpdatingWorkOrder ? 'Updating...' : 'Set Complete'}
+                           </button>
+                           <button 
+                             onClick={() => handleEditWorkOrder(workOrder)}
+                             className="btn-edit"
+                             title="Edit Status"
+                             disabled={isUpdatingWorkOrder}
+                           >
+                             Edit
+                           </button>
+                         </>
                        )}
-                       <button 
-                         onClick={() => handleEditWorkOrder(workOrder)}
-                         className="btn-edit"
-                         title="Edit Status"
-                         disabled={isUpdatingWorkOrder}
-                       >
-                         Edit
-                       </button>
                      </div>
                    </td>
                  </tr>
@@ -644,23 +646,25 @@ const Garage = () => {
                      <td>
                        <div className="action-controls">
                          {maintenance.status !== 'completed' && (
-                           <button 
-                             onClick={() => handleSetMaintenanceComplete(maintenance._id)}
-                             className="status-btn"
-                             title="Mark as Complete"
-                             disabled={isUpdatingMaintenance}
-                           >
-                             {isUpdatingMaintenance ? 'Updating...' : 'Set Complete'}
-                           </button>
+                           <>
+                             <button 
+                               onClick={() => handleSetMaintenanceComplete(maintenance._id)}
+                               className="status-btn"
+                               title="Mark as Complete"
+                               disabled={isUpdatingMaintenance}
+                             >
+                               {isUpdatingMaintenance ? 'Updating...' : 'Set Complete'}
+                             </button>
+                             <button 
+                               onClick={() => handleEditMaintenance(maintenance)}
+                               className="btn-edit"
+                               title="Edit Status"
+                               disabled={isUpdatingMaintenance}
+                             >
+                               Edit
+                             </button>
+                           </>
                          )}
-                         <button 
-                           onClick={() => handleEditMaintenance(maintenance)}
-                           className="btn-edit"
-                           title="Edit Status"
-                           disabled={isUpdatingMaintenance}
-                         >
-                           Edit
-                         </button>
                        </div>
                      </td>
                    </tr>

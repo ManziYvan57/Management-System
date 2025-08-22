@@ -248,6 +248,9 @@ router.get('/stats', protect, async (req, res) => {
     const completedWorkOrders = await WorkOrder.countDocuments({ status: 'completed' });
 
     const totalMaintenanceSchedules = await MaintenanceSchedule.countDocuments();
+    const pendingMaintenanceSchedules = await MaintenanceSchedule.countDocuments({ 
+      status: { $in: ['scheduled', 'in_progress'] } 
+    });
     const overdueMaintenance = await MaintenanceSchedule.countDocuments({
       nextDue: { $lt: new Date() },
       status: { $ne: 'completed' }
@@ -266,6 +269,7 @@ router.get('/stats', protect, async (req, res) => {
         },
         maintenance: {
           total: totalMaintenanceSchedules,
+          pending: pendingMaintenanceSchedules,
           overdue: overdueMaintenance
         },
         vehicles: {
