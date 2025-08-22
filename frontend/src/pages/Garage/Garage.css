@@ -523,6 +523,50 @@
   background: #0056b3;
 }
 
+/* Edit Button Styles */
+.btn-edit {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+.btn-edit:hover {
+  background: #0056b3;
+}
+
+/* Modal Content Styles */
+.modal-content {
+  padding: 20px;
+}
+
+.modal-content .form-group {
+  margin-bottom: 15px;
+}
+
+.modal-content label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.modal-content p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.modal-content select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .garage-container {

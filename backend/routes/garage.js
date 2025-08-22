@@ -184,6 +184,82 @@ router.post('/maintenance-schedules', protect, [
   }
 });
 
+// PUT /api/garage/work-orders/:id - Update work order
+router.put('/work-orders/:id', protect, [
+  body('status').optional().isIn(['pending', 'in_progress', 'completed', 'cancelled', 'on_hold']).withMessage('Invalid status')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const workOrder = await WorkOrder.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body },
+      { new: true, runValidators: true }
+    ).populate('vehicle', 'plateNumber make model assignedRoute');
+
+    if (!workOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Work order not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Work order updated successfully',
+      data: workOrder
+    });
+  } catch (error) {
+    console.error('Update work order error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update work order' });
+  }
+});
+
+// PUT /api/garage/maintenance-schedules/:id - Update maintenance schedule
+router.put('/maintenance-schedules/:id', protect, [
+  body('status').optional().isIn(['scheduled', 'in_progress', 'completed', 'cancelled', 'overdue']).withMessage('Invalid status')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const maintenanceSchedule = await MaintenanceSchedule.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body },
+      { new: true, runValidators: true }
+    ).populate('vehicle', 'plateNumber make model assignedRoute');
+
+    if (!maintenanceSchedule) {
+      return res.status(404).json({
+        success: false,
+        message: 'Maintenance schedule not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Maintenance schedule updated successfully',
+      data: maintenanceSchedule
+    });
+  } catch (error) {
+    console.error('Update maintenance schedule error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update maintenance schedule' });
+  }
+});
+
 // GET /api/garage/stats - Get garage statistics
 router.get('/stats', protect, async (req, res) => {
   try {

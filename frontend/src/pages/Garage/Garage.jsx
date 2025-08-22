@@ -18,10 +18,16 @@ const Garage = () => {
   // Form states
   const [showWorkOrderForm, setShowWorkOrderForm] = useState(false);
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
+  const [showEditWorkOrder, setShowEditWorkOrder] = useState(false);
+  const [showEditMaintenance, setShowEditMaintenance] = useState(false);
+  const [editingWorkOrder, setEditingWorkOrder] = useState(null);
+  const [editingMaintenance, setEditingMaintenance] = useState(null);
 
   // Loading states
   const [isSubmittingWorkOrder, setIsSubmittingWorkOrder] = useState(false);
   const [isSubmittingMaintenance, setIsSubmittingMaintenance] = useState(false);
+  const [isUpdatingWorkOrder, setIsUpdatingWorkOrder] = useState(false);
+  const [isUpdatingMaintenance, setIsUpdatingMaintenance] = useState(false);
 
   // Form data
   const [newWorkOrder, setNewWorkOrder] = useState({
@@ -168,7 +174,7 @@ const Garage = () => {
   };
 
   // Create stock movement for parts used
-  const createStockMovement = async (partsUsed, workOrderId) => {
+  const createStockMovement = async (partsUsed, workOrderId, workOrderNumber) => {
     try {
       for (const part of partsUsed) {
         const stockMovementData = {
@@ -176,8 +182,8 @@ const Garage = () => {
           movementType: 'out',
           quantity: parseInt(part.quantity),
           reason: 'maintenance',
-          reference: workOrderId,
-          notes: `Used in work order: ${workOrderId}`
+          reference: `Work Order: ${workOrderNumber}`,
+          notes: `Used in work order: ${workOrderNumber}`
         };
         
         console.log('Creating stock movement:', stockMovementData);
@@ -194,23 +200,24 @@ const Garage = () => {
     setIsSubmittingWorkOrder(true);
     
     try {
-      const workOrderData = {
-        ...newWorkOrder,
-        scheduledDate: newWorkOrder.scheduledDate || new Date().toISOString().split('T')[0],
-        partsUsed: selectedParts.map(part => ({
-          inventoryItem: part.inventoryItem,
-          quantity: parseInt(part.quantity),
-          unitCost: parseFloat(part.unitCost),
-          totalCost: parseFloat(part.totalCost)
-        }))
-      };
+             const workOrderData = {
+         ...newWorkOrder,
+         scheduledDate: newWorkOrder.scheduledDate || new Date().toISOString().split('T')[0],
+         partsUsed: selectedParts.map(part => ({
+           inventoryItem: part.inventoryItem,
+           itemName: part.itemName,
+           quantity: parseInt(part.quantity),
+           unitCost: parseFloat(part.unitCost),
+           totalCost: parseFloat(part.totalCost)
+         }))
+       };
       
       const response = await garageAPI.createWorkOrder(workOrderData);
       
-      // Create stock movements for parts used
-      if (selectedParts.length > 0) {
-        await createStockMovement(selectedParts, response.data._id);
-      }
+             // Create stock movements for parts used
+       if (selectedParts.length > 0) {
+         await createStockMovement(selectedParts, response.data._id, response.data.workOrderNumber);
+       }
       
       // Refresh the data
       await refreshData();
@@ -236,7 +243,7 @@ const Garage = () => {
     }
   };
 
-  const handleSubmitMaintenance = async (e) => {
+    const handleSubmitMaintenance = async (e) => {
     e.preventDefault();
     setIsSubmittingMaintenance(true);
     
@@ -246,6 +253,7 @@ const Garage = () => {
         interval: parseInt(newMaintenance.interval) || 1,
         requiredParts: selectedParts.map(part => ({
           inventoryItem: part.inventoryItem,
+          itemName: part.itemName,
           quantity: parseInt(part.quantity),
           estimatedCost: parseFloat(part.totalCost)
         }))
@@ -276,6 +284,47 @@ const Garage = () => {
       alert(err.message || 'Failed to create maintenance schedule');
     } finally {
       setIsSubmittingMaintenance(false);
+    }
+  };
+
+  // Edit functions
+  const handleEditWorkOrder = (workOrder) => {
+    setEditingWorkOrder(workOrder);
+    setShowEditWorkOrder(true);
+  };
+
+  const handleEditMaintenance = (maintenance) => {
+    setEditingMaintenance(maintenance);
+    setShowEditMaintenance(true);
+  };
+
+  const handleUpdateWorkOrderStatus = async (workOrderId, newStatus) => {
+    setIsUpdatingWorkOrder(true);
+    try {
+      await garageAPI.updateWorkOrder(workOrderId, { status: newStatus });
+      await refreshData();
+      setShowEditWorkOrder(false);
+      setEditingWorkOrder(null);
+    } catch (err) {
+      console.error('Error updating work order:', err);
+      alert(err.message || 'Failed to update work order');
+    } finally {
+      setIsUpdatingWorkOrder(false);
+    }
+  };
+
+  const handleUpdateMaintenanceStatus = async (maintenanceId, newStatus) => {
+    setIsUpdatingMaintenance(true);
+    try {
+      await garageAPI.updateMaintenanceSchedule(maintenanceId, { status: newStatus });
+      await refreshData();
+      setShowEditMaintenance(false);
+      setEditingMaintenance(null);
+    } catch (err) {
+      console.error('Error updating maintenance schedule:', err);
+      alert(err.message || 'Failed to update maintenance schedule');
+    } finally {
+      setIsUpdatingMaintenance(false);
     }
   };
 
@@ -432,49 +481,59 @@ const Garage = () => {
                 <th>Type</th>
                 <th>Title</th>
                 <th>Priority</th>
-                <th>Status</th>
-                <th>Scheduled Date</th>
-                <th>Parts Used</th>
-              </tr>
-            </thead>
-            <tbody>
-              {workOrders.map((workOrder) => (
-                <tr key={workOrder._id}>
-                  <td>{workOrder.workOrderNumber}</td>
-                  <td>
-                    {workOrder.vehicle ? 
-                      `${workOrder.vehicle.plateNumber} - ${workOrder.vehicle.make} ${workOrder.vehicle.model}` : 
-                      'N/A'
-                    }
-                  </td>
-                  <td>{getWorkTypeLabel(workOrder.workType)}</td>
-                  <td>{workOrder.title}</td>
-                  <td>
-                    <span className={`priority ${workOrder.priority}`}>
-                      {getPriorityLabel(workOrder.priority)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`status ${getWorkOrderStatus(workOrder)}`}>
-                      {workOrder.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td>{formatDate(workOrder.scheduledDate)}</td>
-                  <td>
-                    {workOrder.partsUsed && workOrder.partsUsed.length > 0 ? (
-                      <ul className="parts-list">
-                        {workOrder.partsUsed.map((part, index) => (
-                          <li key={index}>
-                            {part.itemName || 'Unknown'} - Qty: {part.quantity}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      'No parts used'
-                    )}
-                  </td>
-                </tr>
-              ))}
+                                 <th>Status</th>
+                 <th>Scheduled Date</th>
+                 <th>Parts Used</th>
+                 <th>Actions</th>
+               </tr>
+             </thead>
+             <tbody>
+               {workOrders.map((workOrder) => (
+                 <tr key={workOrder._id}>
+                   <td>{workOrder.workOrderNumber}</td>
+                   <td>
+                     {workOrder.vehicle ? 
+                       `${workOrder.vehicle.plateNumber} - ${workOrder.vehicle.make} ${workOrder.vehicle.model}` : 
+                       'N/A'
+                     }
+                   </td>
+                   <td>{getWorkTypeLabel(workOrder.workType)}</td>
+                   <td>{workOrder.title}</td>
+                   <td>
+                     <span className={`priority ${workOrder.priority}`}>
+                       {getPriorityLabel(workOrder.priority)}
+                     </span>
+                   </td>
+                   <td>
+                     <span className={`status ${getWorkOrderStatus(workOrder)}`}>
+                       {workOrder.status.replace('_', ' ')}
+                     </span>
+                   </td>
+                   <td>{formatDate(workOrder.scheduledDate)}</td>
+                   <td>
+                     {workOrder.partsUsed && workOrder.partsUsed.length > 0 ? (
+                       <ul className="parts-list">
+                         {workOrder.partsUsed.map((part, index) => (
+                           <li key={index}>
+                             {part.itemName || 'Unknown'} - Qty: {part.quantity}
+                           </li>
+                         ))}
+                       </ul>
+                     ) : (
+                       'No parts used'
+                     )}
+                   </td>
+                   <td>
+                     <button 
+                       onClick={() => handleEditWorkOrder(workOrder)}
+                       className="btn-edit"
+                       title="Edit Status"
+                     >
+                       Edit
+                     </button>
+                   </td>
+                 </tr>
+               ))}
             </tbody>
           </table>
           
@@ -498,52 +557,62 @@ const Garage = () => {
                 <th>Title</th>
                 <th>Frequency</th>
                 <th>Next Due</th>
-                <th>Days Until Due</th>
-                <th>Status</th>
-                <th>Required Parts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {maintenanceSchedules.map((maintenance) => {
-                const daysUntilDue = calculateDaysUntilDue(maintenance.nextDue);
-                return (
-                  <tr key={maintenance._id}>
-                    <td>
-                      {maintenance.vehicle ? 
-                        `${maintenance.vehicle.plateNumber} - ${maintenance.vehicle.make} ${maintenance.vehicle.model}` : 
-                        'N/A'
-                      }
-                    </td>
-                    <td>{getMaintenanceTypeLabel(maintenance.maintenanceType)}</td>
-                    <td>{maintenance.title}</td>
-                    <td>{maintenance.frequency.replace('_', ' ')}</td>
-                    <td>{formatDate(maintenance.nextDue)}</td>
-                    <td>
-                      <span className={`days-until-due ${getDaysUntilDueClass(daysUntilDue)}`}>
-                        {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : `${daysUntilDue} days`}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`status ${getMaintenanceStatus(maintenance)}`}>
-                        {maintenance.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td>
-                      {maintenance.requiredParts && maintenance.requiredParts.length > 0 ? (
-                        <ul className="parts-list">
-                          {maintenance.requiredParts.map((part, index) => (
-                            <li key={index}>
-                              {part.itemName || 'Unknown'} - Qty: {part.quantity}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        'No parts required'
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                                 <th>Days Until Due</th>
+                 <th>Status</th>
+                 <th>Required Parts</th>
+                 <th>Actions</th>
+               </tr>
+             </thead>
+             <tbody>
+               {maintenanceSchedules.map((maintenance) => {
+                 const daysUntilDue = calculateDaysUntilDue(maintenance.nextDue);
+                 return (
+                   <tr key={maintenance._id}>
+                     <td>
+                       {maintenance.vehicle ? 
+                         `${maintenance.vehicle.plateNumber} - ${maintenance.vehicle.make} ${maintenance.vehicle.model}` : 
+                         'N/A'
+                       }
+                     </td>
+                     <td>{getMaintenanceTypeLabel(maintenance.maintenanceType)}</td>
+                     <td>{maintenance.title}</td>
+                     <td>{maintenance.frequency.replace('_', ' ')}</td>
+                     <td>{formatDate(maintenance.nextDue)}</td>
+                     <td>
+                       <span className={`days-until-due ${getDaysUntilDueClass(daysUntilDue)}`}>
+                         {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : `${daysUntilDue} days`}
+                       </span>
+                     </td>
+                     <td>
+                       <span className={`status ${getMaintenanceStatus(maintenance)}`}>
+                         {maintenance.status.replace('_', ' ')}
+                       </span>
+                     </td>
+                     <td>
+                       {maintenance.requiredParts && maintenance.requiredParts.length > 0 ? (
+                         <ul className="parts-list">
+                           {maintenance.requiredParts.map((part, index) => (
+                             <li key={index}>
+                               {part.itemName || 'Unknown'} - Qty: {part.quantity}
+                             </li>
+                           ))}
+                         </ul>
+                       ) : (
+                         'No parts required'
+                       )}
+                     </td>
+                     <td>
+                       <button 
+                         onClick={() => handleEditMaintenance(maintenance)}
+                         className="btn-edit"
+                         title="Edit Status"
+                       >
+                         Edit
+                       </button>
+                     </td>
+                   </tr>
+                 );
+               })}
             </tbody>
           </table>
           
@@ -916,10 +985,96 @@ const Garage = () => {
               </div>
             </form>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+                 </div>
+       )}
+
+       {/* Edit Work Order Modal */}
+       {showEditWorkOrder && editingWorkOrder && (
+         <div className="modal-overlay">
+           <div className="modal">
+             <div className="modal-header">
+               <h3>Update Work Order Status</h3>
+               <button onClick={() => setShowEditWorkOrder(false)} className="close-btn">
+                 &times;
+               </button>
+             </div>
+             <div className="modal-content">
+               <div className="form-group">
+                 <label>Work Order: {editingWorkOrder.workOrderNumber}</label>
+                 <p><strong>Vehicle:</strong> {editingWorkOrder.vehicle ? `${editingWorkOrder.vehicle.plateNumber} - ${editingWorkOrder.vehicle.make} ${editingWorkOrder.vehicle.model}` : 'N/A'}</p>
+                 <p><strong>Title:</strong> {editingWorkOrder.title}</p>
+                 <p><strong>Current Status:</strong> {editingWorkOrder.status.replace('_', ' ')}</p>
+               </div>
+               
+               <div className="form-group">
+                 <label htmlFor="newStatus">New Status</label>
+                 <select
+                   id="newStatus"
+                   onChange={(e) => {
+                     const newStatus = e.target.value;
+                     if (newStatus) {
+                       handleUpdateWorkOrderStatus(editingWorkOrder._id, newStatus);
+                     }
+                   }}
+                   defaultValue=""
+                 >
+                   <option value="">Select new status</option>
+                   <option value="pending">Pending</option>
+                   <option value="in_progress">In Progress</option>
+                   <option value="completed">Completed</option>
+                   <option value="cancelled">Cancelled</option>
+                   <option value="on_hold">On Hold</option>
+                 </select>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Edit Maintenance Schedule Modal */}
+       {showEditMaintenance && editingMaintenance && (
+         <div className="modal-overlay">
+           <div className="modal">
+             <div className="modal-header">
+               <h3>Update Maintenance Status</h3>
+               <button onClick={() => setShowEditMaintenance(false)} className="close-btn">
+                 &times;
+               </button>
+             </div>
+             <div className="modal-content">
+               <div className="form-group">
+                 <label>Maintenance: {editingMaintenance.title}</label>
+                 <p><strong>Vehicle:</strong> {editingMaintenance.vehicle ? `${editingMaintenance.vehicle.plateNumber} - ${editingMaintenance.vehicle.make} ${editingMaintenance.vehicle.model}` : 'N/A'}</p>
+                 <p><strong>Type:</strong> {getMaintenanceTypeLabel(editingMaintenance.maintenanceType)}</p>
+                 <p><strong>Current Status:</strong> {editingMaintenance.status.replace('_', ' ')}</p>
+               </div>
+               
+               <div className="form-group">
+                 <label htmlFor="newMaintenanceStatus">New Status</label>
+                 <select
+                   id="newMaintenanceStatus"
+                   onChange={(e) => {
+                     const newStatus = e.target.value;
+                     if (newStatus) {
+                       handleUpdateMaintenanceStatus(editingMaintenance._id, newStatus);
+                     }
+                   }}
+                   defaultValue=""
+                 >
+                   <option value="">Select new status</option>
+                   <option value="scheduled">Scheduled</option>
+                   <option value="in_progress">In Progress</option>
+                   <option value="completed">Completed</option>
+                   <option value="cancelled">Cancelled</option>
+                   <option value="overdue">Overdue</option>
+                 </select>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+     </div>
+   );
+ };
 
 export default Garage; 

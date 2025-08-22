@@ -202,6 +202,20 @@ export const garageAPI = {
   getStats: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/garage/stats${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  updateWorkOrder: async (id, workOrderData) => {
+    return apiRequest(`/garage/work-orders/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(workOrderData)
+    });
+  },
+  
+  updateMaintenanceSchedule: async (id, maintenanceData) => {
+    return apiRequest(`/garage/maintenance-schedules/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(maintenanceData)
+    });
   }
 };
 
