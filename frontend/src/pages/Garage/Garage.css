@@ -567,6 +567,33 @@
   font-size: 14px;
 }
 
+/* Action Controls */
+.action-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.status-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+.status-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.status-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .garage-container {

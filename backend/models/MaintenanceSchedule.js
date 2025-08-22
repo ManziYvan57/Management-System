@@ -103,6 +103,10 @@ const maintenanceScheduleSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Inventory'
     },
+    itemName: {
+      type: String,
+      required: true
+    },
     quantity: {
       type: Number,
       min: [1, 'Quantity must be at least 1'],

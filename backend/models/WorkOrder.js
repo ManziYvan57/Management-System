@@ -112,6 +112,10 @@ const workOrderSchema = new mongoose.Schema({
       ref: 'Inventory',
       required: true
     },
+    itemName: {
+      type: String,
+      required: true
+    },
     quantity: {
       type: Number,
       required: true,

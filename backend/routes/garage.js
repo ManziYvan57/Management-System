@@ -75,6 +75,7 @@ router.post('/work-orders', protect, [
       const date = new Date();
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
       
       // Get count of work orders for this month
       const count = await WorkOrder.countDocuments({
@@ -84,7 +85,7 @@ router.post('/work-orders', protect, [
         }
       });
       
-      workOrderData.workOrderNumber = `WO-${year}${month}-${String(count + 1).padStart(3, '0')}`;
+      workOrderData.workOrderNumber = `WO-${year}${month}${day}-${String(count + 1).padStart(3, '0')}`;
     }
 
     const workOrder = new WorkOrder(workOrderData);
@@ -185,19 +186,8 @@ router.post('/maintenance-schedules', protect, [
 });
 
 // PUT /api/garage/work-orders/:id - Update work order
-router.put('/work-orders/:id', protect, [
-  body('status').optional().isIn(['pending', 'in_progress', 'completed', 'cancelled', 'on_hold']).withMessage('Invalid status')
-], async (req, res) => {
+router.put('/work-orders/:id', protect, async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
     const workOrder = await WorkOrder.findByIdAndUpdate(
       req.params.id,
       { ...req.body },
@@ -223,19 +213,8 @@ router.put('/work-orders/:id', protect, [
 });
 
 // PUT /api/garage/maintenance-schedules/:id - Update maintenance schedule
-router.put('/maintenance-schedules/:id', protect, [
-  body('status').optional().isIn(['scheduled', 'in_progress', 'completed', 'cancelled', 'overdue']).withMessage('Invalid status')
-], async (req, res) => {
+router.put('/maintenance-schedules/:id', protect, async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
     const maintenanceSchedule = await MaintenanceSchedule.findByIdAndUpdate(
       req.params.id,
       { ...req.body },

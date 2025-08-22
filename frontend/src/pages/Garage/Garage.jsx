@@ -328,6 +328,33 @@ const Garage = () => {
     }
   };
 
+  // Quick action functions
+  const handleSetWorkOrderComplete = async (workOrderId) => {
+    setIsUpdatingWorkOrder(true);
+    try {
+      await garageAPI.updateWorkOrder(workOrderId, { status: 'completed' });
+      await refreshData();
+    } catch (err) {
+      console.error('Error completing work order:', err);
+      alert(err.message || 'Failed to complete work order');
+    } finally {
+      setIsUpdatingWorkOrder(false);
+    }
+  };
+
+  const handleSetMaintenanceComplete = async (maintenanceId) => {
+    setIsUpdatingMaintenance(true);
+    try {
+      await garageAPI.updateMaintenanceSchedule(maintenanceId, { status: 'completed' });
+      await refreshData();
+    } catch (err) {
+      console.error('Error completing maintenance:', err);
+      alert(err.message || 'Failed to complete maintenance');
+    } finally {
+      setIsUpdatingMaintenance(false);
+    }
+  };
+
   const getWorkOrderStatus = (workOrder) => {
     if (workOrder.status === 'completed') return 'completed';
     if (workOrder.status === 'in_progress') return 'in-progress';
@@ -524,13 +551,26 @@ const Garage = () => {
                      )}
                    </td>
                    <td>
-                     <button 
-                       onClick={() => handleEditWorkOrder(workOrder)}
-                       className="btn-edit"
-                       title="Edit Status"
-                     >
-                       Edit
-                     </button>
+                     <div className="action-controls">
+                       {workOrder.status !== 'completed' && (
+                         <button 
+                           onClick={() => handleSetWorkOrderComplete(workOrder._id)}
+                           className="status-btn"
+                           title="Mark as Complete"
+                           disabled={isUpdatingWorkOrder}
+                         >
+                           {isUpdatingWorkOrder ? 'Updating...' : 'Set Complete'}
+                         </button>
+                       )}
+                       <button 
+                         onClick={() => handleEditWorkOrder(workOrder)}
+                         className="btn-edit"
+                         title="Edit Status"
+                         disabled={isUpdatingWorkOrder}
+                       >
+                         Edit
+                       </button>
+                     </div>
                    </td>
                  </tr>
                ))}
@@ -602,13 +642,26 @@ const Garage = () => {
                        )}
                      </td>
                      <td>
-                       <button 
-                         onClick={() => handleEditMaintenance(maintenance)}
-                         className="btn-edit"
-                         title="Edit Status"
-                       >
-                         Edit
-                       </button>
+                       <div className="action-controls">
+                         {maintenance.status !== 'completed' && (
+                           <button 
+                             onClick={() => handleSetMaintenanceComplete(maintenance._id)}
+                             className="status-btn"
+                             title="Mark as Complete"
+                             disabled={isUpdatingMaintenance}
+                           >
+                             {isUpdatingMaintenance ? 'Updating...' : 'Set Complete'}
+                           </button>
+                         )}
+                         <button 
+                           onClick={() => handleEditMaintenance(maintenance)}
+                           className="btn-edit"
+                           title="Edit Status"
+                           disabled={isUpdatingMaintenance}
+                         >
+                           Edit
+                         </button>
+                       </div>
                      </td>
                    </tr>
                  );
