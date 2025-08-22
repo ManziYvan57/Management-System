@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { garageAPI } from '../../services/api';
+import { garageAPI, assetsAPI } from '../../services/api';
 import './Garage.css';
 
 const Garage = () => {
@@ -30,9 +30,7 @@ const Garage = () => {
     priority: 'medium',
     title: '',
     description: '',
-    assignedMechanic: '',
-    scheduledDate: '',
-    terminal: ''
+    scheduledDate: ''
   });
 
   const [newMaintenance, setNewMaintenance] = useState({
@@ -56,21 +54,18 @@ const Garage = () => {
         const [
           workOrdersResponse,
           maintenanceResponse,
-          vehiclesResponse,
-          mechanicsResponse,
+          assetsResponse,
           statsResponse
         ] = await Promise.all([
           garageAPI.getWorkOrders(),
           garageAPI.getMaintenanceSchedules(),
-          garageAPI.getVehicles(),
-          garageAPI.getMechanics(),
+          assetsAPI.getAll({ category: 'Bus', status: 'active' }),
           garageAPI.getStats()
         ]);
         
         setWorkOrders(workOrdersResponse.data || []);
         setMaintenanceSchedules(maintenanceResponse.data || []);
-        setVehicles(vehiclesResponse.data || []);
-        setMechanics(mechanicsResponse.data || []);
+        setVehicles(assetsResponse.data || []);
         setStats(statsResponse.data || {});
       } catch (err) {
         console.error('Error fetching garage data:', err);
@@ -136,9 +131,7 @@ const Garage = () => {
         priority: 'medium',
         title: '',
         description: '',
-        assignedMechanic: '',
-        scheduledDate: '',
-        terminal: ''
+        scheduledDate: ''
       });
       
       setShowWorkOrderForm(false);
@@ -340,7 +333,6 @@ const Garage = () => {
                   <th>Type</th>
                   <th>Title</th>
                   <th>Priority</th>
-                  <th>Assigned To</th>
                   <th>Scheduled Date</th>
                   <th>Status</th>
                 </tr>
@@ -349,7 +341,7 @@ const Garage = () => {
                 {workOrders.map((workOrder) => (
                   <tr key={workOrder._id} className={`status-${getWorkOrderStatus(workOrder)}`}>
                     <td>{workOrder.workOrderNumber}</td>
-                    <td>{workOrder.vehicle?.plateNumber || 'N/A'}</td>
+                    <td>{workOrder.vehicle?.registrationNumber || 'N/A'}</td>
                     <td>{getWorkTypeLabel(workOrder.workType)}</td>
                     <td>{workOrder.title}</td>
                     <td>
@@ -357,7 +349,7 @@ const Garage = () => {
                         {getPriorityLabel(workOrder.priority)}
                       </span>
                     </td>
-                    <td>{workOrder.assignedMechanic ? `${workOrder.assignedMechanic.firstName} ${workOrder.assignedMechanic.lastName}` : 'Unassigned'}</td>
+
                     <td>{new Date(workOrder.scheduledDate).toLocaleDateString()}</td>
                     <td>
                       <span className={`status ${getWorkOrderStatus(workOrder)}`}>
@@ -384,21 +376,20 @@ const Garage = () => {
         <div className="table-container">
           <table>
             <thead>
-              <tr>
-                <th>Vehicle</th>
-                <th>Type</th>
-                <th>Title</th>
-                <th>Frequency</th>
-                <th>Next Due</th>
-                <th>Priority</th>
-                <th>Assigned To</th>
-                <th>Status</th>
-              </tr>
+                              <tr>
+                  <th>Vehicle</th>
+                  <th>Type</th>
+                  <th>Title</th>
+                  <th>Frequency</th>
+                  <th>Next Due</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                </tr>
             </thead>
             <tbody>
               {maintenanceSchedules.map((maintenance) => (
                 <tr key={maintenance._id} className={`status-${getMaintenanceStatus(maintenance)}`}>
-                  <td>{maintenance.vehicle?.plateNumber || 'N/A'}</td>
+                  <td>{maintenance.vehicle?.registrationNumber || 'N/A'}</td>
                   <td>{getMaintenanceTypeLabel(maintenance.maintenanceType)}</td>
                   <td>{maintenance.title}</td>
                   <td>{getFrequencyLabel(maintenance.frequency)}</td>
@@ -408,7 +399,7 @@ const Garage = () => {
                       {getPriorityLabel(maintenance.priority)}
                     </span>
                   </td>
-                  <td>{maintenance.assignedMechanic ? `${maintenance.assignedMechanic.firstName} ${maintenance.assignedMechanic.lastName}` : 'Unassigned'}</td>
+                  
                   <td>
                     <span className={`status ${getMaintenanceStatus(maintenance)}`}>
                       {maintenance.status.replace('_', ' ')}
@@ -451,7 +442,7 @@ const Garage = () => {
                     <option value="">Select Vehicle</option>
                     {vehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.plateNumber} - {vehicle.busType} ({vehicle.manufacturer} {vehicle.model})
+                        {vehicle.registrationNumber} - {vehicle.name} ({vehicle.model})
                       </option>
                     ))}
                   </select>
@@ -518,47 +509,15 @@ const Garage = () => {
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="assignedMechanic">Assigned Mechanic *</label>
-                  <select
-                    id="assignedMechanic"
-                    name="assignedMechanic"
-                    value={newWorkOrder.assignedMechanic}
-                    onChange={(e) => handleInputChange(e, 'workOrder')}
-                    required
-                  >
-                    <option value="">Select Mechanic</option>
-                    {mechanics.map(mechanic => (
-                      <option key={mechanic._id} value={mechanic._id}>
-                        {mechanic.firstName} {mechanic.lastName} ({mechanic.employeeId})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="scheduledDate">Scheduled Date *</label>
-                  <input
-                    type="date"
-                    id="scheduledDate"
-                    name="scheduledDate"
-                    value={newWorkOrder.scheduledDate}
-                    onChange={(e) => handleInputChange(e, 'workOrder')}
-                    required
-                  />
-                </div>
-              </div>
-
               <div className="form-group">
-                <label htmlFor="terminal">Terminal *</label>
+                <label htmlFor="scheduledDate">Scheduled Date *</label>
                 <input
-                  type="text"
-                  id="terminal"
-                  name="terminal"
-                  value={newWorkOrder.terminal}
+                  type="date"
+                  id="scheduledDate"
+                  name="scheduledDate"
+                  value={newWorkOrder.scheduledDate}
                   onChange={(e) => handleInputChange(e, 'workOrder')}
                   required
-                  placeholder="e.g., Kampala Terminal"
                 />
               </div>
               
@@ -599,7 +558,7 @@ const Garage = () => {
                     <option value="">Select Vehicle</option>
                     {vehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.plateNumber} - {vehicle.busType} ({vehicle.manufacturer} {vehicle.model})
+                        {vehicle.registrationNumber} - {vehicle.name} ({vehicle.model})
                       </option>
                     ))}
                   </select>
@@ -694,30 +653,16 @@ const Garage = () => {
                 </div>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="nextDue">Next Due Date *</label>
-                  <input
-                    type="date"
-                    id="nextDue"
-                    name="nextDue"
-                    value={newMaintenance.nextDue}
-                    onChange={(e) => handleInputChange(e, 'maintenance')}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="maintenanceTerminal">Terminal *</label>
-                  <input
-                    type="text"
-                    id="maintenanceTerminal"
-                    name="terminal"
-                    value={newMaintenance.terminal}
-                    onChange={(e) => handleInputChange(e, 'maintenance')}
-                    required
-                    placeholder="e.g., Kampala Terminal"
-                  />
-                </div>
+              <div className="form-group">
+                <label htmlFor="nextDue">Next Due Date *</label>
+                <input
+                  type="date"
+                  id="nextDue"
+                  name="nextDue"
+                  value={newMaintenance.nextDue}
+                  onChange={(e) => handleInputChange(e, 'maintenance')}
+                  required
+                />
               </div>
               
               <div className="form-actions">

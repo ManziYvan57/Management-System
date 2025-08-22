@@ -65,11 +65,10 @@ const workOrderSchema = new mongoose.Schema({
     maxlength: [1000, 'Work performed description cannot exceed 1000 characters']
   },
   
-  // Personnel assignment
+  // Personnel assignment (optional - can be assigned later)
   assignedMechanic: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Personnel',
-    required: [true, 'Assigned mechanic is required']
+    ref: 'Personnel'
   },
   
   approvedBy: {
