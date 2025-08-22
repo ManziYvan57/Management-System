@@ -6,7 +6,6 @@ const Garage = () => {
   const [workOrders, setWorkOrders] = useState([]);
   const [maintenanceSchedules, setMaintenanceSchedules] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [mechanics, setMechanics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({

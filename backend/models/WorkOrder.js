@@ -12,7 +12,7 @@ const workOrderSchema = new mongoose.Schema({
   // Vehicle information
   vehicle: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Bus',
+    ref: 'Asset',
     required: [true, 'Vehicle is required']
   },
   

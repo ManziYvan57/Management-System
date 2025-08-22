@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const WorkOrder = require('../models/WorkOrder');
 const MaintenanceSchedule = require('../models/MaintenanceSchedule');
-const Bus = require('../models/Bus');
+const Asset = require('../models/Asset');
 const Personnel = require('../models/Personnel');
 const Inventory = require('../models/Inventory');
 const { protect } = require('../middleware/auth');
@@ -181,7 +181,7 @@ router.get('/stats', protect, async (req, res) => {
       status: { $ne: 'completed' }
     });
 
-    const vehiclesInMaintenance = await Bus.countDocuments({ status: 'maintenance' });
+    const vehiclesInMaintenance = await Asset.countDocuments({ status: 'maintenance', category: 'Bus' });
 
     res.json({
       success: true,
@@ -207,21 +207,7 @@ router.get('/stats', protect, async (req, res) => {
   }
 });
 
-// GET /api/garage/vehicles - Get vehicles for dropdown
-router.get('/vehicles', protect, async (req, res) => {
-  try {
-    const vehicles = await Bus.find({}, 'plateNumber busType manufacturer model status')
-      .sort({ plateNumber: 1 });
 
-    res.json({
-      success: true,
-      data: vehicles
-    });
-  } catch (error) {
-    console.error('Get vehicles error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch vehicles' });
-  }
-});
 
 // GET /api/garage/mechanics - Get mechanics for dropdown
 router.get('/mechanics', protect, async (req, res) => {
