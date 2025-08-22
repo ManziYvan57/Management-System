@@ -2,7 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const WorkOrder = require('../models/WorkOrder');
 const MaintenanceSchedule = require('../models/MaintenanceSchedule');
-const Asset = require('../models/Asset');
+const Vehicle = require('../models/Vehicle');
 const Personnel = require('../models/Personnel');
 const Inventory = require('../models/Inventory');
 const { protect } = require('../middleware/auth');
@@ -23,7 +23,7 @@ router.get('/work-orders', protect, async (req, res) => {
     if (terminal && terminal !== 'all') query.terminal = terminal;
 
     const workOrders = await WorkOrder.find(query)
-      .populate('vehicle', 'registrationNumber name model assignedTo')
+      .populate('vehicle', 'plateNumber make model assignedRoute')
       .sort({ dateCreated: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -74,7 +74,7 @@ router.post('/work-orders', protect, [
     await workOrder.save();
 
     await workOrder.populate([
-      { path: 'vehicle', select: 'registrationNumber name model assignedTo' }
+      { path: 'vehicle', select: 'plateNumber make model assignedRoute' }
     ]);
 
     res.status(201).json({
@@ -102,7 +102,7 @@ router.get('/maintenance-schedules', protect, async (req, res) => {
     if (terminal && terminal !== 'all') query.terminal = terminal;
 
     const maintenanceSchedules = await MaintenanceSchedule.find(query)
-      .populate('vehicle', 'registrationNumber name model assignedTo')
+      .populate('vehicle', 'plateNumber make model assignedRoute')
       .sort({ nextDue: 1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -153,7 +153,7 @@ router.post('/maintenance-schedules', protect, [
     await maintenanceSchedule.save();
 
     await maintenanceSchedule.populate([
-      { path: 'vehicle', select: 'registrationNumber name model assignedTo' }
+      { path: 'vehicle', select: 'plateNumber make model assignedRoute' }
     ]);
 
     res.status(201).json({
@@ -181,7 +181,7 @@ router.get('/stats', protect, async (req, res) => {
       status: { $ne: 'completed' }
     });
 
-    const vehiclesInMaintenance = await Asset.countDocuments({ status: 'maintenance', category: 'Bus' });
+    const vehiclesInMaintenance = await Vehicle.countDocuments({ status: 'maintenance' });
 
     res.json({
       success: true,

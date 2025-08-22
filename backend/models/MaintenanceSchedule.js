@@ -4,7 +4,7 @@ const maintenanceScheduleSchema = new mongoose.Schema({
   // Vehicle information
   vehicle: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Asset',
+    ref: 'Vehicle',
     required: [true, 'Vehicle is required']
   },
   

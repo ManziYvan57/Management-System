@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { garageAPI, assetsAPI, inventoryAPI, stockMovementsAPI } from '../../services/api';
+import { garageAPI, vehiclesAPI, inventoryAPI, stockMovementsAPI } from '../../services/api';
 import './Garage.css';
 
 const Garage = () => {
@@ -64,27 +64,23 @@ const Garage = () => {
         const [
           workOrdersResponse,
           maintenanceResponse,
-          assetsResponse,
+          vehiclesResponse,
           inventoryResponse,
           statsResponse
         ] = await Promise.all([
           garageAPI.getWorkOrders(),
           garageAPI.getMaintenanceSchedules(),
-          assetsAPI.getAll(),
+          vehiclesAPI.getAll(),
           inventoryAPI.getAll(),
           garageAPI.getStats()
         ]);
         
-        console.log('Assets Response:', assetsResponse);
-        console.log('Vehicles Data:', assetsResponse.data);
-        
-        // Filter vehicles from all assets
-        const vehicleAssets = assetsResponse.data.filter(asset => asset.category === 'Bus');
-        console.log('Filtered Vehicles:', vehicleAssets);
+        console.log('Vehicles Response:', vehiclesResponse);
+        console.log('Vehicles Data:', vehiclesResponse.data);
         
         setWorkOrders(workOrdersResponse.data || []);
         setMaintenanceSchedules(maintenanceResponse.data || []);
-        setVehicles(vehicleAssets || []);
+        setVehicles(vehiclesResponse.data || []);
         setInventoryItems(inventoryResponse.data || []);
         setStats(statsResponse.data || {});
       } catch (err) {
@@ -433,7 +429,7 @@ const Garage = () => {
                   <td>{workOrder.workOrderNumber}</td>
                   <td>
                     {workOrder.vehicle ? 
-                      `${workOrder.vehicle.registrationNumber} - ${workOrder.vehicle.name}` : 
+                      `${workOrder.vehicle.plateNumber} - ${workOrder.vehicle.make} ${workOrder.vehicle.model}` : 
                       'N/A'
                     }
                   </td>
@@ -500,7 +496,7 @@ const Garage = () => {
                   <tr key={maintenance._id}>
                     <td>
                       {maintenance.vehicle ? 
-                        `${maintenance.vehicle.registrationNumber} - ${maintenance.vehicle.name}` : 
+                        `${maintenance.vehicle.plateNumber} - ${maintenance.vehicle.make} ${maintenance.vehicle.model}` : 
                         'N/A'
                       }
                     </td>
@@ -569,7 +565,7 @@ const Garage = () => {
                     <option value="">Select Vehicle ({vehicles.length} available)</option>
                     {vehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.registrationNumber} - {vehicle.name} ({vehicle.model})
+                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model}
                       </option>
                     ))}
                   </select>
@@ -737,7 +733,7 @@ const Garage = () => {
                     <option value="">Select Vehicle ({vehicles.length} available)</option>
                     {vehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.registrationNumber} - {vehicle.name} ({vehicle.model})
+                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model}
                       </option>
                     ))}
                   </select>
