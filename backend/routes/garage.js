@@ -70,6 +70,23 @@ router.post('/work-orders', protect, [
       createdBy: req.user._id
     };
 
+    // Generate work order number manually if not provided
+    if (!workOrderData.workOrderNumber) {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      
+      // Get count of work orders for this month
+      const count = await WorkOrder.countDocuments({
+        createdAt: {
+          $gte: new Date(year, date.getMonth(), 1),
+          $lt: new Date(year, date.getMonth() + 1, 1)
+        }
+      });
+      
+      workOrderData.workOrderNumber = `WO-${year}${month}-${String(count + 1).padStart(3, '0')}`;
+    }
+
     const workOrder = new WorkOrder(workOrderData);
     await workOrder.save();
 
