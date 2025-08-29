@@ -574,6 +574,22 @@ const Transport = () => {
             <p>No daily schedules planned yet. Click "Plan Daily Schedule" to get started!</p>
           </div>
         )}
+        
+        {/* Debug Info */}
+        <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
+          <h4>Debug Info:</h4>
+          <p><strong>Available Vehicles:</strong> {availableVehicles.length}</p>
+          <p><strong>Available Drivers:</strong> {availableDrivers.length}</p>
+          <p><strong>Daily Schedules:</strong> {dailySchedules.length}</p>
+          <details>
+            <summary>Vehicles Data</summary>
+            <pre>{JSON.stringify(availableVehicles.slice(0, 3), null, 2)}</pre>
+          </details>
+          <details>
+            <summary>Drivers Data</summary>
+            <pre>{JSON.stringify(availableDrivers.slice(0, 3), null, 2)}</pre>
+          </details>
+        </div>
       </div>
 
       {/* Live Display */}
@@ -1087,7 +1103,7 @@ const Transport = () => {
                     <option value="">Select Vehicle</option>
                     {availableVehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.seatingCapacity} seats)
+                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.seatingCapacity || vehicle.capacity || 'N/A'} seats)
                       </option>
                     ))}
                   </select>

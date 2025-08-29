@@ -487,7 +487,7 @@ router.get('/available-vehicles', protect, async (req, res) => {
       query.terminal = terminal;
     }
     
-    const vehicles = await Vehicle.find(query, 'plateNumber make model capacity terminal')
+    const vehicles = await Vehicle.find(query, 'plateNumber make model seatingCapacity terminal')
       .sort({ plateNumber: 1 });
     
     res.json({
