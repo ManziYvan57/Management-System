@@ -52,11 +52,19 @@ const Transport = () => {
         
         // Fetch routes using test endpoint
         try {
+          console.log('🔍 Fetching routes from test endpoint...');
           const response = await fetch('/api/transport/test-routes');
+          console.log('📡 Routes response status:', response.status);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
           const routesData = await response.json();
+          console.log('📊 Routes data received:', routesData);
           setRoutes(routesData.data || []);
         } catch (routeErr) {
-          console.error('Error fetching routes:', routeErr);
+          console.error('❌ Error fetching routes:', routeErr);
           setRoutes([]);
         }
         
@@ -134,11 +142,19 @@ const Transport = () => {
     try {
       // Refresh routes using test endpoint
       try {
+        console.log('🔄 Refreshing routes...');
         const response = await fetch('/api/transport/test-routes');
+        console.log('📡 Refresh routes response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const routesData = await response.json();
+        console.log('📊 Refresh routes data:', routesData);
         setRoutes(routesData.data || []);
       } catch (routeErr) {
-        console.error('Error refreshing routes:', routeErr);
+        console.error('❌ Error refreshing routes:', routeErr);
       }
       
       // Refresh daily schedules
