@@ -797,8 +797,8 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
   body('departureTime').matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Valid departure time is required (HH:MM format)'),
   body('assignedVehicle').isMongoId().withMessage('Valid vehicle ID is required'),
   body('assignedDriver').isMongoId().withMessage('Valid driver ID is required'),
-  body('capacity').isInt({ min: 1 }).withMessage('Capacity must be at least 1'),
-  body('terminal').notEmpty().withMessage('Terminal is required')
+  body('capacity').isInt({ min: 1 }).withMessage('Capacity must be at least 1')
+  // Terminal will be set automatically by the backend based on user role
 ], async (req, res) => {
   try {
     console.log('🔍 Creating daily schedule with data:', req.body);
