@@ -86,10 +86,10 @@ const Transport = () => {
       try {
         console.log('Fetching available resources...');
         
-        // Use test endpoints temporarily (no authentication required)
+        // Use the same API calls as Garage section to get real data
         const [vehiclesResponse, personnelResponse] = await Promise.all([
-          fetch('/api/transport/test-vehicles').then(res => res.json()),
-          fetch('/api/transport/test-personnel').then(res => res.json())
+          vehiclesAPI.getAll(),
+          personnelAPI.getAll()
         ]);
         
         console.log('Vehicles Response:', vehiclesResponse);
