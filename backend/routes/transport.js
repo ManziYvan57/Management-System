@@ -802,8 +802,16 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
       });
     }
 
+    // Clean up the data - handle empty strings for optional ObjectId fields
+    const cleanData = { ...req.body };
+    
+    // Convert empty strings to undefined for optional ObjectId fields
+    if (cleanData.customerCare === '') {
+      delete cleanData.customerCare;
+    }
+    
     const scheduleData = {
-      ...req.body,
+      ...cleanData,
       terminal: req.user.role !== 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id
     };
