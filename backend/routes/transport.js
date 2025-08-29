@@ -70,41 +70,48 @@ router.get('/routes', protect, async (req, res) => {
   }
 });
 
+// @desc    Simple test endpoint
+// @route   GET /api/transport/test
+// @access  Public
+router.get('/test', async (req, res) => {
+  res.json({ message: 'Transport API is working!', timestamp: new Date().toISOString() });
+});
+
 // @desc    Get test routes (no authentication required for testing)
 // @route   GET /api/transport/test-routes
 // @access  Public
 router.get('/test-routes', async (req, res) => {
   try {
-    // Hard-coded test routes
+    console.log('🔍 Test routes endpoint called');
+    
+    // Simple hard-coded test routes
     const testRoutes = [
       {
-        _id: 'test-route-1',
+        _id: 'route-001',
         routeName: 'Kampala to Kigali',
         origin: 'Kampala',
         destination: 'Kigali',
         distance: 450,
         estimatedDuration: 8,
         fare: 25000,
-        terminal: 'Kampala',
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        terminal: 'Main Terminal',
+        status: 'active'
       },
       {
-        _id: 'test-route-2',
+        _id: 'route-002',
         routeName: 'Kigali to Kampala',
         origin: 'Kigali',
         destination: 'Kampala',
         distance: 450,
         estimatedDuration: 8,
         fare: 25000,
-        terminal: 'Kigali',
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        terminal: 'Main Terminal',
+        status: 'active'
       }
     ];
 
+    console.log('📤 Sending test routes:', testRoutes.length);
+    
     res.status(200).json({
       success: true,
       count: testRoutes.length,
@@ -112,7 +119,7 @@ router.get('/test-routes', async (req, res) => {
       data: testRoutes
     });
   } catch (error) {
-    console.error('Error fetching test routes:', error);
+    console.error('❌ Error in test routes:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching test routes',
