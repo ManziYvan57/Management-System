@@ -26,6 +26,22 @@ const Transport = () => {
     currentRoute: ''
   });
 
+  // New state for daily schedules
+  const [dailySchedules, setDailySchedules] = useState([]);
+  const [showDailyScheduleForm, setShowDailyScheduleForm] = useState(false);
+  const [newDailySchedule, setNewDailySchedule] = useState({
+    date: '',
+    route: '',
+    departureTime: '',
+    assignedVehicle: '',
+    assignedDriver: '',
+    customerCare: '',
+    capacity: '',
+    notes: ''
+  });
+  const [availableVehicles, setAvailableVehicles] = useState([]);
+  const [availableDrivers, setAvailableDrivers] = useState([]);
+
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +51,10 @@ const Transport = () => {
         
         const response = await transportAPI.getRoutes();
         setRoutes(response.data || []);
+        
+        // Also fetch daily schedules
+        const schedulesResponse = await transportAPI.getDailySchedules();
+        setDailySchedules(schedulesResponse.data || []);
       } catch (err) {
         console.error('Error fetching transport data:', err);
         setError(err.message || 'Failed to fetch transport data');
@@ -46,13 +66,134 @@ const Transport = () => {
     fetchData();
   }, []);
 
+  // Fetch available vehicles and drivers for daily schedules
+  useEffect(() => {
+    const fetchAvailableResources = async () => {
+      try {
+        // Get all vehicles and filter for active ones
+        const vehiclesResponse = await transportAPI.getAvailableVehicles();
+        console.log('Vehicles Response:', vehiclesResponse);
+        if (vehiclesResponse.success) {
+          setAvailableVehicles(vehiclesResponse.data || []);
+          console.log('Available Vehicles:', vehiclesResponse.data);
+        }
+        
+        // Get all personnel and filter for drivers
+        const driversResponse = await transportAPI.getAvailablePersonnel({ role: 'driver' });
+        console.log('Drivers Response:', driversResponse);
+        if (driversResponse.success) {
+          setAvailableDrivers(driversResponse.data || []);
+          console.log('Available Drivers:', driversResponse.data);
+        }
+      } catch (err) {
+        console.error('Error fetching available resources:', err);
+        // Fallback: try to get vehicles and personnel from other endpoints
+        try {
+          // Try to get vehicles from vehicles API
+          const vehiclesResponse = await fetch('/api/vehicles?status=active');
+          const vehiclesData = await vehiclesResponse.json();
+          if (vehiclesData.success) {
+            setAvailableVehicles(vehiclesData.data || []);
+          }
+          
+          // Try to get personnel from personnel API
+          const personnelResponse = await fetch('/api/personnel?role=driver');
+          const personnelData = await personnelResponse.json();
+          if (personnelData.success) {
+            setAvailableDrivers(personnelData.data || []);
+          }
+        } catch (fallbackErr) {
+          console.error('Fallback API calls also failed:', fallbackErr);
+        }
+      }
+    };
+
+    fetchAvailableResources();
+  }, []);
+
   // Refresh data after adding/editing
   const refreshData = async () => {
     try {
       const response = await transportAPI.getRoutes();
       setRoutes(response.data || []);
+      
+      // Also refresh daily schedules
+      const schedulesResponse = await transportAPI.getDailySchedules();
+      setDailySchedules(schedulesResponse.data || []);
     } catch (err) {
       console.error('Error refreshing transport data:', err);
+    }
+  };
+
+  // Handle daily schedule input changes
+  const handleDailyScheduleChange = (e) => {
+    const { name, value } = e.target;
+    setNewDailySchedule(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Get smart vehicle suggestions
+  const getSmartVehicleSuggestions = async (date, routeId, requiredCapacity) => {
+    try {
+      const response = await transportAPI.getSmartVehicleSuggestions({
+        date,
+        routeId,
+        requiredCapacity
+      });
+      
+      if (response.success) {
+        setAvailableVehicles(response.data);
+      }
+    } catch (err) {
+      console.error('Error getting vehicle suggestions:', err);
+    }
+  };
+
+  // Handle daily schedule submission
+  const handleDailyScheduleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const scheduleData = {
+        ...newDailySchedule,
+        terminal: 'Main Terminal', // Default terminal
+        capacity: parseInt(newDailySchedule.capacity)
+      };
+      
+      await transportAPI.createDailySchedule(scheduleData);
+      
+      // Reset form and refresh data
+      setNewDailySchedule({
+        date: '',
+        route: '',
+        departureTime: '',
+        assignedVehicle: '',
+        assignedDriver: '',
+        customerCare: '',
+        capacity: '',
+        notes: ''
+      });
+      setShowDailyScheduleForm(false);
+      refreshData();
+      
+      alert('Daily schedule created successfully!');
+    } catch (err) {
+      console.error('Error creating daily schedule:', err);
+      alert('Failed to create daily schedule: ' + err.message);
+    }
+  };
+
+  // Generate trips from daily schedules
+  const generateTripsFromSchedules = async (date) => {
+    try {
+      await transportAPI.generateTrips({ date });
+      alert('Trips generated successfully!');
+      refreshData();
+    } catch (err) {
+      console.error('Error generating trips:', err);
+      alert('Failed to generate trips: ' + err.message);
     }
   };
 
@@ -296,12 +437,26 @@ const Transport = () => {
           <h3>{dashboardStats.scheduledTrips}</h3>
           <p>Upcoming</p>
         </div>
+        <div className="stat-card">
+          <h3>{dailySchedules.filter(s => s.status === 'planned').length}</h3>
+          <p>Planned Schedules</p>
+        </div>
+        <div className="stat-card">
+          <h3>{dailySchedules.filter(s => s.status === 'confirmed').length}</h3>
+          <p>Confirmed Schedules</p>
+        </div>
       </div>
 
       {/* Quick Actions */}
       <div className="quick-actions">
         <button onClick={() => setShowAddTripForm(true)} className="action-btn">
           Add Trip
+        </button>
+        <button onClick={() => setShowDailyScheduleForm(true)} className="action-btn">
+          Plan Daily Schedule
+        </button>
+        <button onClick={() => generateTripsFromSchedules(new Date().toISOString().split('T')[0])} className="action-btn">
+          Generate Today's Trips
         </button>
         <button 
           onClick={() => setShowLiveDisplay(!showLiveDisplay)} 
@@ -315,6 +470,110 @@ const Transport = () => {
         >
           {autoUpdate ? 'Auto-Update: ON' : 'Auto-Update: OFF'}
         </button>
+      </div>
+
+      {/* Daily Schedules Section */}
+      <div className="daily-schedules-section">
+        <div className="section-header">
+          <h3>Daily Schedules</h3>
+          <div className="section-actions">
+            <button 
+              onClick={() => setShowDailyScheduleForm(true)} 
+              className="action-btn small"
+            >
+              + Add Schedule
+            </button>
+          </div>
+        </div>
+        
+        {dailySchedules.length > 0 ? (
+          <div className="schedules-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Route</th>
+                  <th>Departure</th>
+                  <th>Vehicle</th>
+                  <th>Driver</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dailySchedules.slice(0, 10).map((schedule) => (
+                  <tr key={schedule._id} className={`schedule-row ${schedule.status}`}>
+                    <td>{new Date(schedule.date).toLocaleDateString()}</td>
+                    <td>
+                      {schedule.route?.routeName || 'Loading...'}
+                      <br />
+                      <small>{schedule.route?.origin} → {schedule.route?.destination}</small>
+                    </td>
+                    <td>{schedule.departureTime}</td>
+                    <td>
+                      {schedule.assignedVehicle?.plateNumber || 'Loading...'}
+                      <br />
+                      <small>{schedule.assignedVehicle?.make} {schedule.assignedVehicle?.model}</small>
+                    </td>
+                    <td>
+                      {schedule.assignedDriver?.firstName} {schedule.assignedDriver?.lastName}
+                      <br />
+                      <small>{schedule.assignedDriver?.employeeId}</small>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${schedule.status}`}>
+                        {schedule.status.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        {schedule.status === 'planned' && (
+                          <button 
+                            onClick={() => {
+                              // Update status to confirmed
+                              transportAPI.updateDailySchedule(schedule._id, { status: 'confirmed' })
+                                .then(() => refreshData())
+                                .catch(err => alert('Failed to confirm schedule: ' + err.message));
+                            }}
+                            className="action-btn small confirm"
+                          >
+                            Confirm
+                          </button>
+                        )}
+                        {schedule.status === 'confirmed' && !schedule.tripGenerated && (
+                          <button 
+                            onClick={() => generateTripsFromSchedules(schedule.date)}
+                            className="action-btn small generate"
+                          >
+                            Generate Trip
+                          </button>
+                        )}
+                        {schedule.status === 'planned' && (
+                          <button 
+                            onClick={() => {
+                              if (window.confirm('Delete this schedule?')) {
+                                transportAPI.deleteDailySchedule(schedule._id)
+                                  .then(() => refreshData())
+                                  .catch(err => alert('Failed to delete schedule: ' + err.message));
+                              }
+                            }}
+                            className="action-btn small delete"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="no-schedules">
+            <p>No daily schedules planned yet. Click "Plan Daily Schedule" to get started!</p>
+          </div>
+        )}
       </div>
 
       {/* Live Display */}
@@ -737,6 +996,159 @@ const Transport = () => {
                 </button>
                 <button type="submit" className="submit-btn">
                   Update Trip
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Daily Schedule Form Modal */}
+      {showDailyScheduleForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>Plan Daily Schedule</h3>
+              <button onClick={() => setShowDailyScheduleForm(false)} className="close-btn">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleDailyScheduleSubmit} className="modal-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="scheduleDate">Date:</label>
+                  <input
+                    type="date"
+                    id="scheduleDate"
+                    name="date"
+                    value={newDailySchedule.date}
+                    onChange={handleDailyScheduleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="scheduleRoute">Route:</label>
+                  <select
+                    id="scheduleRoute"
+                    name="route"
+                    value={newDailySchedule.route}
+                    onChange={handleDailyScheduleChange}
+                    required
+                  >
+                    <option value="">Select Route</option>
+                    {routes.map(route => (
+                      <option key={route._id || route.id} value={route._id || route.id}>
+                        {route.routeName || route.name} ({route.origin} → {route.destination})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="departureTime">Departure Time:</label>
+                  <input
+                    type="time"
+                    id="departureTime"
+                    name="departureTime"
+                    value={newDailySchedule.departureTime}
+                    onChange={handleDailyScheduleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="capacity">Capacity:</label>
+                  <input
+                    type="number"
+                    id="capacity"
+                    name="capacity"
+                    value={newDailySchedule.capacity}
+                    onChange={handleDailyScheduleChange}
+                    min="1"
+                    placeholder="Required capacity"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="assignedVehicle">Vehicle:</label>
+                  <select
+                    id="assignedVehicle"
+                    name="assignedVehicle"
+                    value={newDailySchedule.assignedVehicle}
+                    onChange={handleDailyScheduleChange}
+                    required
+                  >
+                    <option value="">Select Vehicle</option>
+                    {availableVehicles.map(vehicle => (
+                      <option key={vehicle._id} value={vehicle._id}>
+                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.seatingCapacity} seats)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="assignedDriver">Driver:</label>
+                  <select
+                    id="assignedDriver"
+                    name="assignedDriver"
+                    value={newDailySchedule.assignedDriver}
+                    onChange={handleDailyScheduleChange}
+                    required
+                  >
+                    <option value="">Select Driver</option>
+                    {availableDrivers.map(driver => (
+                      <option key={driver._id} value={driver._id}>
+                        {driver.firstName} {driver.lastName} ({driver.employeeId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="customerCare">Customer Care (Optional):</label>
+                  <select
+                    id="customerCare"
+                    name="customerCare"
+                    value={newDailySchedule.customerCare}
+                    onChange={handleDailyScheduleChange}
+                  >
+                    <option value="">Select Customer Care</option>
+                    {availableDrivers.filter(d => d.role === 'customer_care').map(cc => (
+                      <option key={cc._id} value={cc._id}>
+                        {cc.firstName} {cc.lastName} ({cc.employeeId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="notes">Notes:</label>
+                  <input
+                    type="text"
+                    id="notes"
+                    name="notes"
+                    value={newDailySchedule.notes}
+                    onChange={handleDailyScheduleChange}
+                    placeholder="Additional notes"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-actions">
+                <button type="button" onClick={() => setShowDailyScheduleForm(false)} className="cancel-btn">
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Create Schedule
                 </button>
               </div>
             </form>

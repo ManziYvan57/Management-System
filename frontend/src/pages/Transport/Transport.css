@@ -78,23 +78,30 @@
 /* Quick Actions */
 .quick-actions {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 15px;
+  margin-bottom: 30px;
+  justify-content: center;
 }
 
 .action-btn {
-  background: #3b82f6;
-  color: white;
+  padding: 12px 24px;
   border: none;
-  padding: 0.75rem 1.5rem;
   border-radius: 6px;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #3498db;
+  color: white;
 }
 
 .action-btn:hover {
-  background: #2563eb;
+  background: #2980b9;
+  transform: translateY(-1px);
 }
 
 .action-btn.active {
@@ -715,4 +722,176 @@ tr:hover {
   color: #f59e0b;
   font-size: 0.9rem;
   flex-shrink: 0;
+}
+
+/* Daily Schedules Section */
+.daily-schedules-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.section-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.schedules-table {
+  overflow-x: auto;
+}
+
+.schedules-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.schedules-table th {
+  background: #f9fafb;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.schedules-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+}
+
+.schedule-row {
+  transition: background-color 0.2s;
+}
+
+.schedule-row:hover {
+  background: #f9fafb;
+}
+
+.schedule-row.planned {
+  border-left: 3px solid #6b7280;
+}
+
+.schedule-row.confirmed {
+  border-left: 3px solid #3b82f6;
+}
+
+.schedule-row.in_progress {
+  border-left: 3px solid #f59e0b;
+}
+
+.schedule-row.completed {
+  border-left: 3px solid #10b981;
+}
+
+.schedule-row.cancelled {
+  border-left: 3px solid #ef4444;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.planned {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.status-badge.confirmed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.in_progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-btn.small {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.action-btn.small.confirm {
+  background: #3498db;
+  color: white;
+}
+
+.action-btn.small.confirm:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.action-btn.small.generate {
+  background: #27ae60;
+  color: white;
+}
+
+.action-btn.small.generate:hover {
+  background: #229954;
+  transform: translateY(-1px);
+}
+
+.action-btn.small.delete {
+  background: #e74c3c;
+  color: white;
+}
+
+.action-btn.small.delete:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+.no-schedules {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.no-schedules p {
+  margin: 0;
+  font-size: 1rem;
 }

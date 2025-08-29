@@ -456,6 +456,57 @@ export const transportAPI = {
   getStats: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/transport/stats${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Daily Schedule API functions
+  getDailySchedules: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/transport/daily-schedules${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  createDailySchedule: async (scheduleData) => {
+    return apiRequest('/transport/daily-schedules', {
+      method: 'POST',
+      body: JSON.stringify(scheduleData)
+    });
+  },
+  
+  updateDailySchedule: async (id, scheduleData) => {
+    return apiRequest(`/transport/daily-schedules/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(scheduleData)
+    });
+  },
+  
+  deleteDailySchedule: async (id) => {
+    return apiRequest(`/transport/daily-schedules/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Smart vehicle suggestions
+  getSmartVehicleSuggestions: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/transport/smart-vehicle-suggestions${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Trip generation from schedules
+  generateTrips: async (params = {}) => {
+    return apiRequest('/transport/generate-trips', {
+      method: 'POST',
+      body: JSON.stringify(params)
+    });
+  },
+
+  // Available resources
+  getAvailableVehicles: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/transport/available-vehicles${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getAvailablePersonnel: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/transport/available-personnel${queryString ? `?${queryString}` : ''}`);
   }
 };
 
