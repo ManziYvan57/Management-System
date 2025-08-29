@@ -70,6 +70,57 @@ router.get('/routes', protect, async (req, res) => {
   }
 });
 
+// @desc    Get test routes (no authentication required for testing)
+// @route   GET /api/transport/test-routes
+// @access  Public
+router.get('/test-routes', async (req, res) => {
+  try {
+    // Hard-coded test routes
+    const testRoutes = [
+      {
+        _id: 'test-route-1',
+        routeName: 'Kampala to Kigali',
+        origin: 'Kampala',
+        destination: 'Kigali',
+        distance: 450,
+        estimatedDuration: 8,
+        fare: 25000,
+        terminal: 'Kampala',
+        status: 'active',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        _id: 'test-route-2',
+        routeName: 'Kigali to Kampala',
+        origin: 'Kigali',
+        destination: 'Kampala',
+        distance: 450,
+        estimatedDuration: 8,
+        fare: 25000,
+        terminal: 'Kigali',
+        status: 'active',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+
+    res.status(200).json({
+      success: true,
+      count: testRoutes.length,
+      total: testRoutes.length,
+      data: testRoutes
+    });
+  } catch (error) {
+    console.error('Error fetching test routes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching test routes',
+      error: error.message
+    });
+  }
+});
+
 // @desc    Create new route
 // @route   POST /api/transport/routes
 // @access  Private
@@ -504,6 +555,52 @@ router.get('/available-vehicles', protect, async (req, res) => {
   }
 });
 
+// @desc    Get test vehicles (no authentication required for testing)
+// @route   GET /api/transport/test-vehicles
+// @access  Public
+router.get('/test-vehicles', async (req, res) => {
+  try {
+    // Hard-coded test vehicles
+    const testVehicles = [
+      {
+        _id: 'test-vehicle-1',
+        plateNumber: 'TEST001',
+        make: 'Toyota',
+        model: 'Coaster',
+        seatingCapacity: 30,
+        status: 'active',
+        terminal: 'Kampala',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        _id: 'test-vehicle-2',
+        plateNumber: 'TEST002',
+        make: 'Isuzu',
+        model: 'NPR',
+        seatingCapacity: 25,
+        status: 'active',
+        terminal: 'Kigali',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+
+    res.status(200).json({
+      success: true,
+      count: testVehicles.length,
+      data: testVehicles
+    });
+  } catch (error) {
+    console.error('Error fetching test vehicles:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching test vehicles',
+      error: error.message
+    });
+  }
+});
+
 // @desc    Get available personnel for trip assignment
 // @route   GET /api/transport/available-personnel
 // @access  Private
@@ -531,6 +628,60 @@ router.get('/available-personnel', protect, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching available personnel',
+      error: error.message
+    });
+  }
+});
+
+// @desc    Get test personnel (no authentication required for testing)
+// @route   GET /api/transport/test-personnel
+// @access  Public
+router.get('/test-personnel', async (req, res) => {
+  try {
+    // Hard-coded test personnel
+    const testPersonnel = [
+      {
+        _id: 'test-driver-1',
+        firstName: 'John',
+        lastName: 'Driver',
+        role: 'driver',
+        employmentStatus: 'active',
+        terminal: 'Kampala',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        _id: 'test-driver-2',
+        firstName: 'Jane',
+        lastName: 'Driver',
+        role: 'driver',
+        employmentStatus: 'active',
+        terminal: 'Kigali',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        _id: 'test-care-1',
+        firstName: 'Mike',
+        lastName: 'Care',
+        role: 'customer_care',
+        employmentStatus: 'active',
+        terminal: 'Kampala',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+
+    res.status(200).json({
+      success: true,
+      count: testPersonnel.length,
+      data: testPersonnel
+    });
+  } catch (error) {
+    console.error('Error fetching test personnel:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching test personnel',
       error: error.message
     });
   }
