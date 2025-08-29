@@ -50,10 +50,11 @@ const Transport = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch routes
+        // Fetch routes using test endpoint
         try {
-          const response = await transportAPI.getRoutes();
-          setRoutes(response.data || []);
+          const response = await fetch('/api/transport/test-routes');
+          const routesData = await response.json();
+          setRoutes(routesData.data || []);
         } catch (routeErr) {
           console.error('Error fetching routes:', routeErr);
           setRoutes([]);
@@ -85,10 +86,10 @@ const Transport = () => {
       try {
         console.log('Fetching available resources...');
         
-        // Use the same API calls as Garage section
+        // Use test endpoints temporarily (no authentication required)
         const [vehiclesResponse, personnelResponse] = await Promise.all([
-          vehiclesAPI.getAll(),
-          personnelAPI.getAll()
+          fetch('/api/transport/test-vehicles').then(res => res.json()),
+          fetch('/api/transport/test-personnel').then(res => res.json())
         ]);
         
         console.log('Vehicles Response:', vehiclesResponse);
@@ -131,10 +132,11 @@ const Transport = () => {
   // Refresh data after adding/editing
   const refreshData = async () => {
     try {
-      // Refresh routes
+      // Refresh routes using test endpoint
       try {
-        const response = await transportAPI.getRoutes();
-        setRoutes(response.data || []);
+        const response = await fetch('/api/transport/test-routes');
+        const routesData = await response.json();
+        setRoutes(routesData.data || []);
       } catch (routeErr) {
         console.error('Error refreshing routes:', routeErr);
       }
