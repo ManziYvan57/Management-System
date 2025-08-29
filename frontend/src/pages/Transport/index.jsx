@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaRoute, FaBus, FaUserTie, FaClock, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
-import { transportAPI } from '../../services/api';
+import { transportAPI, vehiclesAPI, personnelAPI } from '../../services/api';
 import './Transport.css';
 
 const Transport = () => {
@@ -41,6 +41,7 @@ const Transport = () => {
   });
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [availableDrivers, setAvailableDrivers] = useState([]);
+  const [availableCustomerCare, setAvailableCustomerCare] = useState([]);
 
   // Fetch data from API
   useEffect(() => {
@@ -78,48 +79,49 @@ const Transport = () => {
     fetchData();
   }, []);
 
-  // Fetch available vehicles and drivers for daily schedules
+  // Fetch available resources (vehicles, drivers, customer care)
   useEffect(() => {
     const fetchAvailableResources = async () => {
       try {
-        // Get all vehicles and filter for active ones
-        const vehiclesResponse = await transportAPI.getAvailableVehicles();
-        console.log('Vehicles Response:', vehiclesResponse);
-        if (vehiclesResponse.success) {
-          setAvailableVehicles(vehiclesResponse.data || []);
-          console.log('Available Vehicles:', vehiclesResponse.data);
-        }
+        console.log('Fetching available resources...');
         
-        // Get all personnel and filter for drivers
-        const driversResponse = await transportAPI.getAvailablePersonnel({ role: 'driver' });
-        console.log('Drivers Response:', driversResponse);
-        if (driversResponse.success) {
-          setAvailableDrivers(driversResponse.data || []);
-          console.log('Available Drivers:', driversResponse.data);
-        }
-      } catch (err) {
-        console.error('Error fetching available resources:', err);
-        // Fallback: try to get vehicles and personnel from other endpoints
-        try {
-          // Try to get vehicles from vehicles API
-          const vehiclesResponse = await fetch('/api/vehicles?status=active');
-          const vehiclesData = await vehiclesResponse.json();
-          if (vehiclesData.success) {
-            setAvailableVehicles(vehiclesData.data || []);
-          }
-          
-          // Try to get personnel from personnel API
-          const personnelResponse = await fetch('/api/personnel?role=driver');
-          const personnelData = await personnelResponse.json();
-          if (personnelData.success) {
-            setAvailableDrivers(personnelData.data || []);
-          }
-        } catch (fallbackErr) {
-          console.error('Fallback API calls also failed:', fallbackErr);
-          // Set empty arrays to prevent undefined errors
-          setAvailableVehicles([]);
-          setAvailableDrivers([]);
-        }
+        // Use the same API calls as Garage section
+        const [vehiclesResponse, personnelResponse] = await Promise.all([
+          vehiclesAPI.getAll(),
+          personnelAPI.getAll()
+        ]);
+        
+        console.log('Vehicles Response:', vehiclesResponse);
+        console.log('Personnel Response:', personnelResponse);
+        
+        // Filter for active vehicles
+        const activeVehicles = (vehiclesResponse.data || []).filter(vehicle => 
+          vehicle.status === 'active'
+        );
+        
+        // Filter for active drivers
+        const activeDrivers = (personnelResponse.data || []).filter(person => 
+          person.role === 'driver' && person.employmentStatus === 'active'
+        );
+        
+        // Filter for active customer care
+        const activeCustomerCare = (personnelResponse.data || []).filter(person => 
+          person.role === 'customer_care' && person.employmentStatus === 'active'
+        );
+        
+        console.log('Active Vehicles:', activeVehicles.length);
+        console.log('Active Drivers:', activeDrivers.length);
+        console.log('Active Customer Care:', activeCustomerCare.length);
+        
+        setAvailableVehicles(activeVehicles);
+        setAvailableDrivers(activeDrivers);
+        setAvailableCustomerCare(activeCustomerCare);
+      } catch (error) {
+        console.error('Error fetching available resources:', error);
+        // Set empty arrays to prevent crashes
+        setAvailableVehicles([]);
+        setAvailableDrivers([]);
+        setAvailableCustomerCare([]);
       }
     };
 
@@ -1206,7 +1208,7 @@ const Transport = () => {
                     onChange={handleDailyScheduleChange}
                   >
                                          <option value="">Select Customer Care</option>
-                     {availableDrivers && Array.isArray(availableDrivers) && availableDrivers.filter(d => d && d.role === 'customer_care').map(cc => (
+                     {availableCustomerCare && Array.isArray(availableCustomerCare) && availableCustomerCare.map(cc => (
                        <option key={cc._id} value={cc._id}>
                          {cc.firstName || 'Unknown'} {cc.lastName || 'Unknown'} ({cc.employeeId || 'N/A'})
                        </option>

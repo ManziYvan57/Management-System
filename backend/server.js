@@ -152,13 +152,7 @@ const connectDB = async () => {
   try {
     console.log('🔌 Attempting to connect to MongoDB...');
     
-    const mongoUri = process.env.MONGODB_URI;
-
-    if (!mongoUri) {
-      console.error('❌ MongoDB URI is not defined. Please check your environment variables.');
-      console.error('Required: MONGODB_URI');
-      process.exit(1);
-    }
+    const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://trinitybussexpress:QIgksegX0rIFqe1e@trinitymanagementsystem.f7jcjip.mongodb.net/trinity_management_system?retryWrites=true&w=majority';
 
     console.log('📡 Connecting to MongoDB Atlas...');
     
