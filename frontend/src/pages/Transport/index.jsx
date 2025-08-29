@@ -208,7 +208,6 @@ const Transport = () => {
     try {
       const scheduleData = {
         ...newDailySchedule,
-        terminal: 'Main Terminal', // Default terminal
         capacity: parseInt(newDailySchedule.capacity)
       };
       
