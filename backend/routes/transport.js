@@ -84,31 +84,31 @@ router.get('/test-routes', async (req, res) => {
   try {
     console.log('🔍 Test routes endpoint called');
     
-    // Simple hard-coded test routes
-    const testRoutes = [
-      {
-        _id: 'route-001',
-        routeName: 'Kampala to Kigali',
-        origin: 'Kampala',
-        destination: 'Kigali',
-        distance: 450,
-        estimatedDuration: 8,
-        fare: 25000,
-        terminal: 'Main Terminal',
-        status: 'active'
-      },
-      {
-        _id: 'route-002',
-        routeName: 'Kigali to Kampala',
-        origin: 'Kigali',
-        destination: 'Kampala',
-        distance: 450,
-        estimatedDuration: 8,
-        fare: 25000,
-        terminal: 'Main Terminal',
-        status: 'active'
-      }
-    ];
+            // Simple hard-coded test routes with valid MongoDB ObjectId format
+        const testRoutes = [
+          {
+            _id: '507f1f77bcf86cd799439011', // Valid MongoDB ObjectId format
+            routeName: 'Kampala to Kigali',
+            origin: 'Kampala',
+            destination: 'Kigali',
+            distance: 450,
+            estimatedDuration: 8,
+            fare: 25000,
+            terminal: 'Main Terminal',
+            status: 'active'
+          },
+          {
+            _id: '507f1f77bcf86cd799439012', // Valid MongoDB ObjectId format
+            routeName: 'Kigali to Kampala',
+            origin: 'Kigali',
+            destination: 'Kampala',
+            distance: 450,
+            estimatedDuration: 8,
+            fare: 25000,
+            terminal: 'Main Terminal',
+            status: 'active'
+          }
+        ];
 
     console.log('📤 Sending test routes:', testRoutes.length);
     
