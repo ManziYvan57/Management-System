@@ -789,8 +789,12 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
   body('terminal').notEmpty().withMessage('Terminal is required')
 ], async (req, res) => {
   try {
+    console.log('🔍 Creating daily schedule with data:', req.body);
+    console.log('👤 User info:', { id: req.user.id, role: req.user.role, terminal: req.user.terminal });
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -803,6 +807,8 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
       terminal: req.user.role !== 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id
     };
+    
+    console.log('📝 Final schedule data:', scheduleData);
 
     const schedule = await DailySchedule.create(scheduleData);
     
@@ -819,7 +825,14 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
       data: populatedSchedule
     });
   } catch (error) {
-    console.error('Error creating daily schedule:', error);
+    console.error('❌ Error creating daily schedule:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code
+    });
+    
     res.status(500).json({
       success: false,
       message: 'Error creating daily schedule',
