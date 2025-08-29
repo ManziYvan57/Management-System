@@ -68,15 +68,18 @@ const Transport = () => {
           setRoutes([]);
         }
         
-        // Fetch daily schedules (handle separately to prevent complete failure)
-        try {
-          const schedulesResponse = await transportAPI.getDailySchedules();
-          setDailySchedules(schedulesResponse.data || []);
-        } catch (scheduleErr) {
-          console.error('Error fetching daily schedules:', scheduleErr);
-          setDailySchedules([]);
-          // Don't set main error for daily schedules failure
-        }
+                 // Fetch daily schedules (handle separately to prevent complete failure)
+         try {
+           console.log('🔍 Fetching daily schedules...');
+           const schedulesResponse = await transportAPI.getDailySchedules();
+           console.log('📊 Initial daily schedules response:', schedulesResponse);
+           setDailySchedules(schedulesResponse.data || []);
+           console.log('✅ Initial daily schedules set:', schedulesResponse.data?.length || 0, 'schedules');
+         } catch (scheduleErr) {
+           console.error('❌ Error fetching daily schedules:', scheduleErr);
+           setDailySchedules([]);
+           // Don't set main error for daily schedules failure
+         }
       } catch (err) {
         console.error('Error fetching transport data:', err);
         setError(err.message || 'Failed to fetch transport data');
@@ -159,10 +162,13 @@ const Transport = () => {
       
       // Refresh daily schedules
       try {
+        console.log('🔄 Refreshing daily schedules...');
         const schedulesResponse = await transportAPI.getDailySchedules();
+        console.log('📊 Daily schedules response:', schedulesResponse);
         setDailySchedules(schedulesResponse.data || []);
+        console.log('✅ Daily schedules updated:', schedulesResponse.data?.length || 0, 'schedules');
       } catch (scheduleErr) {
-        console.error('Error refreshing daily schedules:', scheduleErr);
+        console.error('❌ Error refreshing daily schedules:', scheduleErr);
       }
     } catch (err) {
       console.error('Error refreshing transport data:', err);

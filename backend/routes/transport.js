@@ -701,6 +701,12 @@ router.get('/test-personnel', async (req, res) => {
 // @access  Private
 router.get('/daily-schedules', protect, async (req, res) => {
   try {
+    console.log('🔍 Fetching daily schedules for user:', { 
+      id: req.user.id, 
+      role: req.user.role, 
+      terminal: req.user.terminal 
+    });
+    
     const { page = 1, limit = 10, search, status, terminal, date, route } = req.query;
     
     let query = { status: { $ne: 'deleted' } };
@@ -708,8 +714,10 @@ router.get('/daily-schedules', protect, async (req, res) => {
     // Terminal-based filtering
     if (req.user.role !== 'super_admin') {
       query.terminal = req.user.terminal;
+      console.log('🔍 Filtering by user terminal:', req.user.terminal);
     } else if (terminal) {
       query.terminal = terminal;
+      console.log('🔍 Filtering by query terminal:', terminal);
     }
     
     // Date filtering
@@ -742,6 +750,8 @@ router.get('/daily-schedules', protect, async (req, res) => {
     
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
+    console.log('🔍 Final query:', JSON.stringify(query, null, 2));
+    
     const schedules = await DailySchedule.find(query)
       .populate('route', 'routeName origin destination')
       .populate('assignedVehicle', 'plateNumber make model seatingCapacity')
@@ -753,6 +763,8 @@ router.get('/daily-schedules', protect, async (req, res) => {
       .limit(parseInt(limit));
     
     const total = await DailySchedule.countDocuments(query);
+    
+    console.log('📊 Found schedules:', schedules.length, 'out of total:', total);
     
     res.status(200).json({
       success: true,
@@ -812,7 +824,7 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
     
     const scheduleData = {
       ...cleanData,
-      terminal: req.user.role !== 'super_admin' ? req.body.terminal : req.user.terminal,
+      terminal: req.user.role !== 'super_admin' ? req.user.terminal : req.body.terminal,
       createdBy: req.user.id
     };
     
