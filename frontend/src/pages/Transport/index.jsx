@@ -49,12 +49,24 @@ const Transport = () => {
         setLoading(true);
         setError(null);
         
-        const response = await transportAPI.getRoutes();
-        setRoutes(response.data || []);
+        // Fetch routes
+        try {
+          const response = await transportAPI.getRoutes();
+          setRoutes(response.data || []);
+        } catch (routeErr) {
+          console.error('Error fetching routes:', routeErr);
+          setRoutes([]);
+        }
         
-        // Also fetch daily schedules
-        const schedulesResponse = await transportAPI.getDailySchedules();
-        setDailySchedules(schedulesResponse.data || []);
+        // Fetch daily schedules (handle separately to prevent complete failure)
+        try {
+          const schedulesResponse = await transportAPI.getDailySchedules();
+          setDailySchedules(schedulesResponse.data || []);
+        } catch (scheduleErr) {
+          console.error('Error fetching daily schedules:', scheduleErr);
+          setDailySchedules([]);
+          // Don't set main error for daily schedules failure
+        }
       } catch (err) {
         console.error('Error fetching transport data:', err);
         setError(err.message || 'Failed to fetch transport data');
@@ -104,6 +116,9 @@ const Transport = () => {
           }
         } catch (fallbackErr) {
           console.error('Fallback API calls also failed:', fallbackErr);
+          // Set empty arrays to prevent undefined errors
+          setAvailableVehicles([]);
+          setAvailableDrivers([]);
         }
       }
     };
@@ -114,12 +129,21 @@ const Transport = () => {
   // Refresh data after adding/editing
   const refreshData = async () => {
     try {
-      const response = await transportAPI.getRoutes();
-      setRoutes(response.data || []);
+      // Refresh routes
+      try {
+        const response = await transportAPI.getRoutes();
+        setRoutes(response.data || []);
+      } catch (routeErr) {
+        console.error('Error refreshing routes:', routeErr);
+      }
       
-      // Also refresh daily schedules
-      const schedulesResponse = await transportAPI.getDailySchedules();
-      setDailySchedules(schedulesResponse.data || []);
+      // Refresh daily schedules
+      try {
+        const schedulesResponse = await transportAPI.getDailySchedules();
+        setDailySchedules(schedulesResponse.data || []);
+      } catch (scheduleErr) {
+        console.error('Error refreshing daily schedules:', scheduleErr);
+      }
     } catch (err) {
       console.error('Error refreshing transport data:', err);
     }
@@ -205,16 +229,31 @@ const Transport = () => {
 
   // Dashboard Statistics - Made reactive to state changes
   const dashboardStats = React.useMemo(() => {
+    if (!routes || !Array.isArray(routes)) {
+      return {
+        totalRoutes: 0,
+        totalVehicles: 0,
+        activeTrips: 0,
+        scheduledTrips: 0,
+        departedTrips: 0,
+        boardingTrips: 0,
+        readyTrips: 0,
+        totalPersonnel: 0
+      };
+    }
+    
     const totalRoutes = routes.length;
-    const totalVehicles = routes.reduce((sum, route) => sum + (route.vehicles?.length || 0), 0);
+    const totalVehicles = routes.reduce((sum, route) => sum + ((route.vehicles && Array.isArray(route.vehicles)) ? route.vehicles.length : 0), 0);
     
     // Count trips by status
     const tripsByStatus = routes.reduce((acc, route) => {
-      (route.vehicles || []).forEach(vehicle => {
-        if (vehicle.status) {
-          acc[vehicle.status] = (acc[vehicle.status] || 0) + 1;
-        }
-      });
+      if (route.vehicles && Array.isArray(route.vehicles)) {
+        route.vehicles.forEach(vehicle => {
+          if (vehicle && vehicle.status) {
+            acc[vehicle.status] = (acc[vehicle.status] || 0) + 1;
+          }
+        });
+      }
       return acc;
     }, {});
     
@@ -226,9 +265,10 @@ const Transport = () => {
     
     // Calculate total personnel more accurately
     const totalPersonnel = routes.reduce((sum, route) => {
-      const drivers = route.vehicles?.length || 0;
-      const customerCare = (route.vehicles || []).filter(v => v.customerCare && v.customerCare.trim() !== '').length;
-      const reserves = (route.reserveDrivers?.length || 0) + (route.reserveCCs?.length || 0);
+      const drivers = (route.vehicles && Array.isArray(route.vehicles)) ? route.vehicles.length : 0;
+      const customerCare = (route.vehicles && Array.isArray(route.vehicles)) ? route.vehicles.filter(v => v && v.customerCare && v.customerCare.trim() !== '').length : 0;
+      const reserves = ((route.reserveDrivers && Array.isArray(route.reserveDrivers)) ? route.reserveDrivers.length : 0) + 
+                      ((route.reserveCCs && Array.isArray(route.reserveCCs)) ? route.reserveCCs.length : 0);
       return sum + drivers + customerCare + reserves;
     }, 0);
     
@@ -266,42 +306,64 @@ const Transport = () => {
   // Update vehicle statuses automatically
   const updateVehicleStatuses = () => {
     setRoutes(prevRoutes => {
-      return prevRoutes.map(route => ({
-        ...route,
-        vehicles: route.vehicles.map(vehicle => ({
-          ...vehicle,
-          status: getUpdatedStatus(vehicle.departure, vehicle.status)
-        }))
-      }));
+      if (!prevRoutes || !Array.isArray(prevRoutes)) return prevRoutes;
+      
+      return prevRoutes.map(route => {
+        if (!route.vehicles || !Array.isArray(route.vehicles)) return route;
+        
+        return {
+          ...route,
+          vehicles: route.vehicles.map(vehicle => {
+            if (!vehicle) return vehicle;
+            return {
+              ...vehicle,
+              status: getUpdatedStatus(vehicle.departure, vehicle.status)
+            };
+          })
+        };
+      });
     });
   };
 
   // Filter trips based on search and filters
-  const filteredTrips = routes.flatMap(route => 
-    (route.vehicles || []).map(vehicle => ({
-      ...vehicle,
-      routeName: route.name,
-      teamLeader: route.teamLeader
-    }))
-  ).filter(trip => {
-    const matchesSearch = (trip.plate && trip.plate.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (trip.driver && trip.driver.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (trip.routeName && trip.routeName.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredTrips = React.useMemo(() => {
+    if (!routes || !Array.isArray(routes)) return [];
     
-    const matchesRoute = routeFilter === 'all' || trip.routeName === routeFilter;
-    const matchesStatus = statusFilter === 'all' || trip.status === statusFilter;
-    
-    return matchesSearch && matchesRoute && matchesStatus;
-  });
+    return routes.flatMap(route => {
+      if (!route.vehicles || !Array.isArray(route.vehicles)) return [];
+      
+      return route.vehicles.map(vehicle => ({
+        ...vehicle,
+        routeName: route.name || 'Unknown Route',
+        teamLeader: route.teamLeader || 'N/A'
+      }));
+    }).filter(trip => {
+      if (!trip) return false;
+      
+      const matchesSearch = (trip.plate && trip.plate.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                           (trip.driver && trip.driver.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                           (trip.routeName && trip.routeName.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesRoute = routeFilter === 'all' || trip.routeName === routeFilter;
+      const matchesStatus = statusFilter === 'all' || trip.status === statusFilter;
+      
+      return matchesSearch && matchesRoute && matchesStatus;
+    });
+  }, [routes, searchTerm, routeFilter, statusFilter]);
 
   // Sort trips by departure time for live display and filter out completed trips
-  const sortedTrips = [...filteredTrips]
-    .filter(trip => trip.status !== 'completed') // Don't show completed trips in live display
-    .sort((a, b) => {
-      const timeA = new Date(`2000-01-01T${a.departure}:00`);
-      const timeB = new Date(`2000-01-01T${b.departure}:00`);
-      return timeA - timeB;
-    });
+  const sortedTrips = React.useMemo(() => {
+    if (!filteredTrips || !Array.isArray(filteredTrips)) return [];
+    
+    return [...filteredTrips]
+      .filter(trip => trip && trip.status !== 'completed') // Don't show completed trips in live display
+      .sort((a, b) => {
+        if (!a.departure || !b.departure) return 0;
+        const timeA = new Date(`2000-01-01T${a.departure}:00`);
+        const timeB = new Date(`2000-01-01T${b.departure}:00`);
+        return timeA - timeB;
+      });
+  }, [filteredTrips]);
 
   // Auto-update every minute
   React.useEffect(() => {
@@ -314,7 +376,7 @@ const Transport = () => {
 
   // Auto-scroll live display every 5 seconds
   React.useEffect(() => {
-    if (showLiveDisplay && sortedTrips.length > 8) {
+    if (showLiveDisplay && sortedTrips && Array.isArray(sortedTrips) && sortedTrips.length > 8) {
       const scrollInterval = setInterval(() => {
         setCurrentDisplayIndex(prevIndex => {
           const nextIndex = prevIndex + 8;
@@ -324,7 +386,7 @@ const Transport = () => {
       
       return () => clearInterval(scrollInterval);
     }
-  }, [showLiveDisplay, sortedTrips.length]);
+  }, [showLiveDisplay, sortedTrips]);
 
   // Update current time every second
   React.useEffect(() => {
@@ -437,14 +499,14 @@ const Transport = () => {
           <h3>{dashboardStats.scheduledTrips}</h3>
           <p>Upcoming</p>
         </div>
-        <div className="stat-card">
-          <h3>{dailySchedules.filter(s => s.status === 'planned').length}</h3>
-          <p>Planned Schedules</p>
-        </div>
-        <div className="stat-card">
-          <h3>{dailySchedules.filter(s => s.status === 'confirmed').length}</h3>
-          <p>Confirmed Schedules</p>
-        </div>
+                 <div className="stat-card">
+           <h3>{dailySchedules && Array.isArray(dailySchedules) ? dailySchedules.filter(s => s && s.status === 'planned').length : 0}</h3>
+           <p>Planned Schedules</p>
+         </div>
+         <div className="stat-card">
+           <h3>{dailySchedules && Array.isArray(dailySchedules) ? dailySchedules.filter(s => s && s.status === 'confirmed').length : 0}</h3>
+           <p>Confirmed Schedules</p>
+         </div>
       </div>
 
       {/* Quick Actions */}
@@ -486,7 +548,7 @@ const Transport = () => {
           </div>
         </div>
         
-        {dailySchedules.length > 0 ? (
+                 {dailySchedules && Array.isArray(dailySchedules) && dailySchedules.length > 0 ? (
           <div className="schedules-table">
             <table>
               <thead>
@@ -501,69 +563,69 @@ const Transport = () => {
                 </tr>
               </thead>
               <tbody>
-                {dailySchedules.slice(0, 10).map((schedule) => (
-                  <tr key={schedule._id} className={`schedule-row ${schedule.status}`}>
-                    <td>{new Date(schedule.date).toLocaleDateString()}</td>
-                    <td>
-                      {schedule.route?.routeName || 'Loading...'}
-                      <br />
-                      <small>{schedule.route?.origin} → {schedule.route?.destination}</small>
-                    </td>
-                    <td>{schedule.departureTime}</td>
-                    <td>
-                      {schedule.assignedVehicle?.plateNumber || 'Loading...'}
-                      <br />
-                      <small>{schedule.assignedVehicle?.make} {schedule.assignedVehicle?.model}</small>
-                    </td>
-                    <td>
-                      {schedule.assignedDriver?.firstName} {schedule.assignedDriver?.lastName}
-                      <br />
-                      <small>{schedule.assignedDriver?.employeeId}</small>
-                    </td>
-                    <td>
-                      <span className={`status-badge ${schedule.status}`}>
-                        {schedule.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        {schedule.status === 'planned' && (
-                          <button 
-                            onClick={() => {
-                              // Update status to confirmed
-                              transportAPI.updateDailySchedule(schedule._id, { status: 'confirmed' })
-                                .then(() => refreshData())
-                                .catch(err => alert('Failed to confirm schedule: ' + err.message));
-                            }}
-                            className="action-btn small confirm"
-                          >
-                            Confirm
-                          </button>
-                        )}
-                        {schedule.status === 'confirmed' && !schedule.tripGenerated && (
-                          <button 
-                            onClick={() => generateTripsFromSchedules(schedule.date)}
-                            className="action-btn small generate"
-                          >
-                            Generate Trip
-                          </button>
-                        )}
-                        {schedule.status === 'planned' && (
-                          <button 
-                            onClick={() => {
-                              if (window.confirm('Delete this schedule?')) {
-                                transportAPI.deleteDailySchedule(schedule._id)
-                                  .then(() => refreshData())
-                                  .catch(err => alert('Failed to delete schedule: ' + err.message));
-                              }
-                            }}
-                            className="action-btn small delete"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                                 {dailySchedules && Array.isArray(dailySchedules) && dailySchedules.slice(0, 10).map((schedule) => (
+                   <tr key={schedule._id} className={`schedule-row ${schedule.status || 'planned'}`}>
+                     <td>{schedule.date ? new Date(schedule.date).toLocaleDateString() : 'N/A'}</td>
+                     <td>
+                       {schedule.route?.routeName || 'Loading...'}
+                       <br />
+                       <small>{schedule.route?.origin || 'Unknown'} → {schedule.route?.destination || 'Unknown'}</small>
+                     </td>
+                     <td>{schedule.departureTime || 'N/A'}</td>
+                     <td>
+                       {schedule.assignedVehicle?.plateNumber || 'Loading...'}
+                       <br />
+                       <small>{schedule.assignedVehicle?.make || 'Unknown'} {schedule.assignedVehicle?.model || 'Unknown'}</small>
+                     </td>
+                     <td>
+                       {schedule.assignedDriver?.firstName || 'Unknown'} {schedule.assignedDriver?.lastName || 'Unknown'}
+                       <br />
+                       <small>{schedule.assignedDriver?.employeeId || 'N/A'}</small>
+                     </td>
+                                         <td>
+                       <span className={`status-badge ${schedule.status || 'planned'}`}>
+                         {(schedule.status || 'planned').replace('_', ' ')}
+                       </span>
+                     </td>
+                     <td>
+                       <div className="action-buttons">
+                         {schedule.status === 'planned' && (
+                           <button 
+                             onClick={() => {
+                               // Update status to confirmed
+                               transportAPI.updateDailySchedule(schedule._id, { status: 'confirmed' })
+                                 .then(() => refreshData())
+                                 .catch(err => alert('Failed to confirm schedule: ' + err.message));
+                             }}
+                             className="action-btn small confirm"
+                           >
+                             Confirm
+                           </button>
+                         )}
+                         {schedule.status === 'confirmed' && !schedule.tripGenerated && (
+                           <button 
+                             onClick={() => generateTripsFromSchedules(schedule.date)}
+                             className="action-btn small generate"
+                           >
+                             Generate Trip
+                           </button>
+                         )}
+                         {schedule.status === 'planned' && (
+                           <button 
+                             onClick={() => {
+                               if (window.confirm('Delete this schedule?')) {
+                                 transportAPI.deleteDailySchedule(schedule._id)
+                                   .then(() => refreshData())
+                                   .catch(err => alert('Failed to delete schedule: ' + err.message));
+                               }
+                             }}
+                             className="action-btn small delete"
+                           >
+                             Delete
+                           </button>
+                         )}
+                       </div>
+                     </td>
                   </tr>
                 ))}
               </tbody>
@@ -575,21 +637,21 @@ const Transport = () => {
           </div>
         )}
         
-        {/* Debug Info */}
-        <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
-          <h4>Debug Info:</h4>
-          <p><strong>Available Vehicles:</strong> {availableVehicles.length}</p>
-          <p><strong>Available Drivers:</strong> {availableDrivers.length}</p>
-          <p><strong>Daily Schedules:</strong> {dailySchedules.length}</p>
-          <details>
-            <summary>Vehicles Data</summary>
-            <pre>{JSON.stringify(availableVehicles.slice(0, 3), null, 2)}</pre>
-          </details>
-          <details>
-            <summary>Drivers Data</summary>
-            <pre>{JSON.stringify(availableDrivers.slice(0, 3), null, 2)}</pre>
-          </details>
-        </div>
+                 {/* Debug Info */}
+         <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
+           <h4>Debug Info:</h4>
+           <p><strong>Available Vehicles:</strong> {availableVehicles && Array.isArray(availableVehicles) ? availableVehicles.length : 0}</p>
+           <p><strong>Available Drivers:</strong> {availableDrivers && Array.isArray(availableDrivers) ? availableDrivers.length : 0}</p>
+           <p><strong>Daily Schedules:</strong> {dailySchedules && Array.isArray(dailySchedules) ? dailySchedules.length : 0}</p>
+           <details>
+             <summary>Vehicles Data</summary>
+             <pre>{JSON.stringify((availableVehicles && Array.isArray(availableVehicles)) ? availableVehicles.slice(0, 3) : [], null, 2)}</pre>
+           </details>
+           <details>
+             <summary>Drivers Data</summary>
+             <pre>{JSON.stringify((availableDrivers && Array.isArray(availableDrivers)) ? availableDrivers.slice(0, 3) : [], null, 2)}</pre>
+           </details>
+         </div>
       </div>
 
       {/* Live Display */}
@@ -610,49 +672,49 @@ const Transport = () => {
                 </tr>
               </thead>
               <tbody>
-                {sortedTrips.slice(currentDisplayIndex, currentDisplayIndex + 8).map((trip) => (
-                  <tr key={trip.id} className={`live-row ${trip.status}`}>
-                    <td>
-                      <div className="plate-cell">
-                        <FaBus className="vehicle-icon" />
-                        <strong>{trip.plate}</strong>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="route-cell">
-                        <FaRoute className="route-icon" />
-                        {trip.routeName}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="time-cell">
-                        <FaClock className="time-icon" />
-                        <strong>{trip.departure}</strong>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="status-cell">
-                        <span className={`live-status ${trip.status}`}>
-                          {trip.status.toUpperCase()}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {sortedTrips.length === 0 && (
-                  <tr>
-                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                      No upcoming departures at this time
-                    </td>
-                  </tr>
-                )}
-                {sortedTrips.length > 0 && sortedTrips.slice(currentDisplayIndex, currentDisplayIndex + 8).length === 0 && (
-                  <tr>
-                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                      Loading more departures...
-                    </td>
-                  </tr>
-                )}
+                                 {sortedTrips && Array.isArray(sortedTrips) && sortedTrips.slice(currentDisplayIndex, currentDisplayIndex + 8).map((trip) => (
+                   <tr key={trip.id || trip._id || Math.random()} className={`live-row ${trip.status || 'scheduled'}`}>
+                     <td>
+                       <div className="plate-cell">
+                         <FaBus className="vehicle-icon" />
+                         <strong>{trip.plate || 'N/A'}</strong>
+                       </div>
+                     </td>
+                     <td>
+                       <div className="route-cell">
+                         <FaRoute className="route-icon" />
+                         {trip.routeName || 'Unknown Route'}
+                       </div>
+                     </td>
+                     <td>
+                       <div className="time-cell">
+                         <FaClock className="time-icon" />
+                         <strong>{trip.departure || 'N/A'}</strong>
+                       </div>
+                     </td>
+                     <td>
+                       <div className="status-cell">
+                         <span className={`live-status ${trip.status || 'scheduled'}`}>
+                           {(trip.status || 'scheduled').toUpperCase()}
+                         </span>
+                       </div>
+                     </td>
+                   </tr>
+                 ))}
+                                 {(!sortedTrips || !Array.isArray(sortedTrips) || sortedTrips.length === 0) && (
+                   <tr>
+                     <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                       No upcoming departures at this time
+                     </td>
+                   </tr>
+                 )}
+                 {sortedTrips && Array.isArray(sortedTrips) && sortedTrips.length > 0 && sortedTrips.slice(currentDisplayIndex, currentDisplayIndex + 8).length === 0 && (
+                   <tr>
+                     <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                       Loading more departures...
+                     </td>
+                   </tr>
+                 )}
               </tbody>
             </table>
           </div>
@@ -675,16 +737,18 @@ const Transport = () => {
             </div>
             
             <div className="filter-group">
-              <select
-                value={routeFilter}
-                onChange={(e) => setRouteFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">All Routes</option>
-                {routes.map(route => (
-                  <option key={route.id} value={route.name}>{route.name}</option>
-                ))}
-              </select>
+                               <select
+                   value={routeFilter}
+                   onChange={(e) => setRouteFilter(e.target.value)}
+                   className="filter-select"
+                 >
+                   <option value="all">All Routes</option>
+                   {routes && Array.isArray(routes) && routes.map(route => (
+                     <option key={route.id || route._id} value={route.name || route.routeName}>
+                       {route.name || route.routeName || 'Unknown Route'}
+                     </option>
+                   ))}
+                 </select>
               
               <select
                 value={statusFilter}
@@ -807,18 +871,20 @@ const Transport = () => {
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="route">Route:</label>
-                  <select
-                    id="route"
-                    name="route"
-                    value={newTrip.route}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select Route</option>
-                    {routes.map(route => (
-                      <option key={route.id} value={route.name}>{route.name}</option>
-                    ))}
-                  </select>
+                                     <select
+                     id="route"
+                     name="route"
+                     value={newTrip.route}
+                     onChange={handleInputChange}
+                     required
+                   >
+                     <option value="">Select Route</option>
+                     {routes && Array.isArray(routes) && routes.map(route => (
+                       <option key={route.id || route._id} value={route.name || route.routeName}>
+                         {route.name || route.routeName || 'Unknown Route'}
+                       </option>
+                     ))}
+                   </select>
                 </div>
                 
                 <div className="form-group">
@@ -920,18 +986,20 @@ const Transport = () => {
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="editRoute">Route:</label>
-                  <select
-                    id="editRoute"
-                    name="route"
-                    value={newTrip.route}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select Route</option>
-                    {routes.map(route => (
-                      <option key={route.id} value={route.name}>{route.name}</option>
-                    ))}
-                  </select>
+                                     <select
+                     id="editRoute"
+                     name="route"
+                     value={newTrip.route}
+                     onChange={handleInputChange}
+                     required
+                   >
+                     <option value="">Select Route</option>
+                     {routes && Array.isArray(routes) && routes.map(route => (
+                       <option key={route.id || route._id} value={route.name || route.routeName}>
+                         {route.name || route.routeName || 'Unknown Route'}
+                       </option>
+                     ))}
+                   </select>
                 </div>
                 
                 <div className="form-group">
@@ -1052,12 +1120,12 @@ const Transport = () => {
                     onChange={handleDailyScheduleChange}
                     required
                   >
-                    <option value="">Select Route</option>
-                    {routes.map(route => (
-                      <option key={route._id || route.id} value={route._id || route.id}>
-                        {route.routeName || route.name} ({route.origin} → {route.destination})
-                      </option>
-                    ))}
+                                         <option value="">Select Route</option>
+                     {routes && Array.isArray(routes) && routes.map(route => (
+                       <option key={route._id || route.id} value={route._id || route.id}>
+                         {route.routeName || route.name || 'Unknown Route'} ({route.origin || 'Unknown'} → {route.destination || 'Unknown'})
+                       </option>
+                     ))}
                   </select>
                 </div>
               </div>
@@ -1100,12 +1168,12 @@ const Transport = () => {
                     onChange={handleDailyScheduleChange}
                     required
                   >
-                    <option value="">Select Vehicle</option>
-                    {availableVehicles.map(vehicle => (
-                      <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.seatingCapacity || vehicle.capacity || 'N/A'} seats)
-                      </option>
-                    ))}
+                                         <option value="">Select Vehicle</option>
+                     {availableVehicles && Array.isArray(availableVehicles) && availableVehicles.map(vehicle => (
+                       <option key={vehicle._id} value={vehicle._id}>
+                         {vehicle.plateNumber || 'Unknown'} - {vehicle.make || 'Unknown'} {vehicle.model || 'Unknown'} ({vehicle.seatingCapacity || vehicle.capacity || 'N/A'} seats)
+                       </option>
+                     ))}
                   </select>
                 </div>
                 
@@ -1118,12 +1186,12 @@ const Transport = () => {
                     onChange={handleDailyScheduleChange}
                     required
                   >
-                    <option value="">Select Driver</option>
-                    {availableDrivers.map(driver => (
-                      <option key={driver._id} value={driver._id}>
-                        {driver.firstName} {driver.lastName} ({driver.employeeId})
-                      </option>
-                    ))}
+                                         <option value="">Select Driver</option>
+                     {availableDrivers && Array.isArray(availableDrivers) && availableDrivers.map(driver => (
+                       <option key={driver._id} value={driver._id}>
+                         {driver.firstName || 'Unknown'} {driver.lastName || 'Unknown'} ({driver.employeeId || 'N/A'})
+                       </option>
+                     ))}
                   </select>
                 </div>
               </div>
@@ -1137,12 +1205,12 @@ const Transport = () => {
                     value={newDailySchedule.customerCare}
                     onChange={handleDailyScheduleChange}
                   >
-                    <option value="">Select Customer Care</option>
-                    {availableDrivers.filter(d => d.role === 'customer_care').map(cc => (
-                      <option key={cc._id} value={cc._id}>
-                        {cc.firstName} {cc.lastName} ({cc.employeeId})
-                      </option>
-                    ))}
+                                         <option value="">Select Customer Care</option>
+                     {availableDrivers && Array.isArray(availableDrivers) && availableDrivers.filter(d => d && d.role === 'customer_care').map(cc => (
+                       <option key={cc._id} value={cc._id}>
+                         {cc.firstName || 'Unknown'} {cc.lastName || 'Unknown'} ({cc.employeeId || 'N/A'})
+                       </option>
+                     ))}
                   </select>
                 </div>
                 
