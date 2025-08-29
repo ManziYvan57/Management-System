@@ -53,7 +53,7 @@ const Transport = () => {
         // Fetch routes using test endpoint
         try {
           console.log('🔍 Fetching routes from test endpoint...');
-          const response = await fetch('/api/transport/test-routes');
+          const response = await fetch('https://trinity-management-system.onrender.com/api/transport/test-routes');
           console.log('📡 Routes response status:', response.status);
           
           if (!response.ok) {
@@ -143,7 +143,7 @@ const Transport = () => {
       // Refresh routes using test endpoint
       try {
         console.log('🔄 Refreshing routes...');
-        const response = await fetch('/api/transport/test-routes');
+        const response = await fetch('https://trinity-management-system.onrender.com/api/transport/test-routes');
         console.log('📡 Refresh routes response status:', response.status);
         
         if (!response.ok) {
