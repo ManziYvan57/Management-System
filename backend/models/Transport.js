@@ -205,7 +205,6 @@ tripSchema.virtual('delay').get(function() {
 
 // Indexes for efficient queries
 routeSchema.index({ routeName: 1 });
-routeSchema.index({ terminal: 1 });
 routeSchema.index({ status: 1 });
 routeSchema.index({ createdBy: 1 });
 
@@ -215,7 +214,6 @@ tripSchema.index({ vehicle: 1 });
 tripSchema.index({ driver: 1 });
 tripSchema.index({ status: 1 });
 tripSchema.index({ departureTime: 1 });
-tripSchema.index({ terminal: 1 });
 tripSchema.index({ createdBy: 1 });
 
 // Ensure virtuals are included in JSON output

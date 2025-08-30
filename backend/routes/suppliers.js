@@ -9,17 +9,10 @@ const Supplier = require('../models/Supplier');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, terminal } = req.query;
+    const { page = 1, limit = 10, search, status } = req.query;
     
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { isActive: true };
-    
-    // Terminal-based filtering
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal && terminal !== 'all') {
-      query.terminal = terminal;
-    }
     
     // Search functionality
     if (search) {
@@ -101,7 +94,6 @@ router.post('/', protect, authorize('inventory', 'create'), [
 
     const supplierData = {
       ...req.body,
-      terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id
     };
     
@@ -254,16 +246,8 @@ router.delete('/:id', protect, authorize('inventory', 'delete'), async (req, res
 // @access  Private
 router.get('/stats/overview', protect, async (req, res) => {
   try {
-    const { terminal } = req.query;
-    
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { isActive: true };
-    
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal && terminal !== 'all') {
-      query.terminal = terminal;
-    }
     
     // Get statistics
     const totalSuppliers = await Supplier.countDocuments(query);

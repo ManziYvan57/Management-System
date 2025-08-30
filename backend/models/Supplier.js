@@ -73,11 +73,7 @@ const SupplierSchema = new mongoose.Schema({
     trim: true,
     maxlength: [1000, 'Notes cannot exceed 1000 characters']
   },
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba']
-  },
+
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -94,7 +90,7 @@ const SupplierSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Indexes for better performance
-SupplierSchema.index({ name: 1, terminal: 1 });
+SupplierSchema.index({ name: 1 });
 SupplierSchema.index({ status: 1 });
 SupplierSchema.index({ createdBy: 1 });
 

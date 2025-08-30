@@ -142,11 +142,6 @@ const InventorySchema = new mongoose.Schema({
   },
   
   // System Fields
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba']
-  },
   
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -171,7 +166,6 @@ const InventorySchema = new mongoose.Schema({
 InventorySchema.index({ sku: 1 });
 InventorySchema.index({ category: 1 });
 InventorySchema.index({ status: 1 });
-InventorySchema.index({ terminal: 1 });
 InventorySchema.index({ 'supplier.name': 1 });
 InventorySchema.index({ isActive: 1 });
 

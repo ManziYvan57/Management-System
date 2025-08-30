@@ -174,12 +174,7 @@ const workOrderSchema = new mongoose.Schema({
     maxlength: [1000, 'Notes cannot exceed 1000 characters']
   },
   
-  // Location and terminal
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    trim: true
-  },
+  // Location
   
   location: {
     type: String,
@@ -237,7 +232,6 @@ workOrderSchema.index({ status: 1 });
 workOrderSchema.index({ workType: 1 });
 workOrderSchema.index({ priority: 1 });
 workOrderSchema.index({ scheduledDate: 1 });
-workOrderSchema.index({ terminal: 1 });
 workOrderSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to generate work order number

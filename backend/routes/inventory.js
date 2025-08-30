@@ -9,17 +9,10 @@ const Inventory = require('../models/Inventory');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, category, status, terminal } = req.query;
+    const { page = 1, limit = 10, search, category, status } = req.query;
     
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { isActive: true };
-    
-    // Terminal-based filtering
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
     
     // Search functionality
     if (search) {
@@ -114,7 +107,6 @@ router.post('/', protect, authorize('inventory', 'create'), [
     const inventoryData = {
       ...req.body,
       sku: req.body.sku.toUpperCase(),
-      terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id
     };
     
@@ -143,16 +135,8 @@ router.post('/', protect, authorize('inventory', 'create'), [
 // @access  Private
 router.get('/stats', protect, async (req, res) => {
   try {
-    const { terminal } = req.query;
-    
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { isActive: true };
-    
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
     
     // Get real statistics from database
     const totalItems = await Inventory.countDocuments(query);

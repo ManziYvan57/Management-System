@@ -8,17 +8,10 @@ const Vehicle = require('../models/Vehicle');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, terminal, fuelType } = req.query;
+    const { page = 1, limit = 10, search, status, fuelType } = req.query;
     
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { isActive: true };
-    
-    // Terminal-based filtering
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
     
     // Search functionality
     if (search) {
@@ -87,13 +80,7 @@ router.get('/:id', protect, async (req, res) => {
       });
     }
     
-    // Check terminal access
-    if (req.user.role !== 'super_admin' && vehicle.terminal !== req.user.terminal) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied to this vehicle'
-      });
-    }
+
     
     res.status(200).json({
       success: true,
@@ -127,10 +114,8 @@ router.post('/', protect, authorize('vehicles', 'create'), async (req, res) => {
       });
     }
     
-    // Set terminal based on user role
     const vehicleData = {
       ...req.body,
-      terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id
     };
     
@@ -169,13 +154,7 @@ router.put('/:id', protect, authorize('vehicles', 'edit'), async (req, res) => {
       });
     }
     
-    // Check terminal access
-    if (req.user.role !== 'super_admin' && vehicle.terminal !== req.user.terminal) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied to this vehicle'
-      });
-    }
+
     
     // Check if plate number is being changed and if it already exists
     if (req.body.plateNumber && req.body.plateNumber !== vehicle.plateNumber) {
@@ -193,10 +172,7 @@ router.put('/:id', protect, authorize('vehicles', 'edit'), async (req, res) => {
       }
     }
     
-    // Prevent terminal change for non-super admins
-    if (req.user.role !== 'super_admin') {
-      delete req.body.terminal;
-    }
+
     
     // Remove createdBy from update data to prevent modification
     delete req.body.createdBy;
@@ -237,13 +213,7 @@ router.delete('/:id', protect, authorize('vehicles', 'delete'), async (req, res)
       });
     }
     
-    // Check terminal access
-    if (req.user.role !== 'super_admin' && vehicle.terminal !== req.user.terminal) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied to this vehicle'
-      });
-    }
+
     
     // Soft delete - set isActive to false
     vehicle.isActive = false;
@@ -268,16 +238,8 @@ router.delete('/:id', protect, authorize('vehicles', 'delete'), async (req, res)
 // @access  Private
 router.get('/stats/overview', protect, async (req, res) => {
   try {
-    const { terminal } = req.query;
-    
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { isActive: true };
-    
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
     
     const [
       totalVehicles,
@@ -341,8 +303,6 @@ router.get('/stats/overview', protect, async (req, res) => {
 // @access  Private
 router.get('/available', protect, async (req, res) => {
   try {
-    const { terminal } = req.query;
-    
     let query = { 
       isActive: true,
       status: 'active',
@@ -351,12 +311,6 @@ router.get('/available', protect, async (req, res) => {
         { assignedDriver: null }
       ]
     };
-    
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
     
     const vehicles = await Vehicle.find(query)
       .populate('createdBy', 'username firstName lastName')

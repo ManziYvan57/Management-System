@@ -151,12 +151,7 @@ const maintenanceScheduleSchema = new mongoose.Schema({
     maxlength: [2000, 'Instructions cannot exceed 2000 characters']
   },
   
-  // Location and terminal
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    trim: true
-  },
+  // Location
   
   location: {
     type: String,
@@ -208,7 +203,6 @@ maintenanceScheduleSchema.index({ nextDue: 1 });
 maintenanceScheduleSchema.index({ status: 1 });
 maintenanceScheduleSchema.index({ priority: 1 });
 maintenanceScheduleSchema.index({ maintenanceType: 1 });
-maintenanceScheduleSchema.index({ terminal: 1 });
 maintenanceScheduleSchema.index({ assignedMechanic: 1 });
 
 // Virtual for days until due

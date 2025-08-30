@@ -12,17 +12,10 @@ const VehicleDocument = require('../models/VehicleDocument');
 // @access  Private
 router.get('/routes', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, terminal } = req.query;
+    const { page = 1, limit = 10, search, status } = req.query;
     
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { status: { $ne: 'deleted' } };
-    
-    // Terminal-based filtering
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
     
     // Search functionality
     if (search) {
@@ -94,7 +87,6 @@ router.get('/test-routes', async (req, res) => {
             distance: 450,
             estimatedDuration: 8,
             fare: 25000,
-            terminal: 'Main Terminal',
             status: 'active'
           },
           {
@@ -105,7 +97,6 @@ router.get('/test-routes', async (req, res) => {
             distance: 450,
             estimatedDuration: 8,
             fare: 25000,
-            terminal: 'Main Terminal',
             status: 'active'
           }
         ];
@@ -138,7 +129,7 @@ router.post('/routes', protect, authorize('transport', 'create'), [
   body('distance').isNumeric().withMessage('Distance must be a number'),
   body('estimatedDuration').isNumeric().withMessage('Estimated duration must be a number'),
   body('fare').isNumeric().withMessage('Fare must be a number'),
-  body('terminal').notEmpty().withMessage('Terminal is required')
+
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -152,7 +143,6 @@ router.post('/routes', protect, authorize('transport', 'create'), [
 
     const routeData = {
       ...req.body,
-      terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id
     };
 
@@ -249,17 +239,10 @@ router.delete('/routes/:id', protect, authorize('transport', 'delete'), async (r
 // @access  Private
 router.get('/trips', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, route, terminal, date } = req.query;
+    const { page = 1, limit = 10, search, status, route, date } = req.query;
     
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { status: { $ne: 'deleted' } };
-    
-    // Terminal-based filtering
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
     
     // Search functionality
     if (search) {
@@ -336,7 +319,7 @@ router.post('/trips', protect, authorize('transport', 'create'), [
   body('arrivalTime').notEmpty().withMessage('Arrival time is required'),
   body('capacity').isNumeric().withMessage('Capacity must be a number'),
   body('fare').isNumeric().withMessage('Fare must be a number'),
-  body('terminal').notEmpty().withMessage('Terminal is required')
+
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -350,7 +333,6 @@ router.post('/trips', protect, authorize('transport', 'create'), [
 
     const tripData = {
       ...req.body,
-      terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id,
       status: 'scheduled'
     };
@@ -452,16 +434,10 @@ router.delete('/trips/:id', protect, authorize('transport', 'delete'), async (re
 // @access  Private
 router.get('/stats', protect, async (req, res) => {
   try {
-    const { terminal, date } = req.query;
+    const {  date } = req.query;
     
-    // Build query based on user role and terminal
+    // Build query based on user role
     let query = { status: { $ne: 'deleted' } };
-    
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
     
     // Filter by date if provided
     if (date) {
@@ -482,21 +458,11 @@ router.get('/stats', protect, async (req, res) => {
     
     // Get route statistics
     const routeQuery = { status: { $ne: 'deleted' } };
-    if (req.user.role !== 'super_admin') {
-      routeQuery.terminal = req.user.terminal;
-    } else if (terminal) {
-      routeQuery.terminal = terminal;
-    }
     
     const totalRoutes = await Route.countDocuments(routeQuery);
     
     // Get vehicle statistics
     const vehicleQuery = { status: { $ne: 'deleted' } };
-    if (req.user.role !== 'super_admin') {
-      vehicleQuery.terminal = req.user.terminal;
-    } else if (terminal) {
-      vehicleQuery.terminal = terminal;
-    }
     
     const totalVehicles = await Vehicle.countDocuments(vehicleQuery);
     
@@ -535,17 +501,11 @@ router.get('/stats', protect, async (req, res) => {
 // @access  Private
 router.get('/available-vehicles', protect, async (req, res) => {
   try {
-    const { terminal, date } = req.query;
+    const {  date } = req.query;
     
     let query = { status: 'active' };
     
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
-      query.terminal = terminal;
-    }
-    
-    const vehicles = await Vehicle.find(query, 'plateNumber make model seatingCapacity terminal')
+    const vehicles = await Vehicle.find(query, 'plateNumber make model seatingCapacity')
       .sort({ plateNumber: 1 });
     
     res.json({
@@ -576,7 +536,7 @@ router.get('/test-vehicles', async (req, res) => {
         model: 'Coaster',
         seatingCapacity: 30,
         status: 'active',
-        terminal: 'Kampala',
+        
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -587,7 +547,7 @@ router.get('/test-vehicles', async (req, res) => {
         model: 'NPR',
         seatingCapacity: 25,
         status: 'active',
-        terminal: 'Kigali',
+        
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -653,7 +613,7 @@ router.get('/test-personnel', async (req, res) => {
         lastName: 'Driver',
         role: 'driver',
         employmentStatus: 'active',
-        terminal: 'Kampala',
+        
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -663,7 +623,7 @@ router.get('/test-personnel', async (req, res) => {
         lastName: 'Driver',
         role: 'driver',
         employmentStatus: 'active',
-        terminal: 'Kigali',
+        
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -673,7 +633,7 @@ router.get('/test-personnel', async (req, res) => {
         lastName: 'Care',
         role: 'customer_care',
         employmentStatus: 'active',
-        terminal: 'Kampala',
+        
         createdAt: new Date(),
         updatedAt: new Date()
       }
@@ -704,21 +664,12 @@ router.get('/daily-schedules', protect, async (req, res) => {
     console.log('🔍 Fetching daily schedules for user:', { 
       id: req.user.id, 
       role: req.user.role, 
-      terminal: req.user.terminal 
+       
     });
     
-    const { page = 1, limit = 10, search, status, terminal, date, route } = req.query;
+    const { page = 1, limit = 10, search, status, date, route } = req.query;
     
     let query = { status: { $ne: 'deleted' } };
-    
-    // Terminal-based filtering
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-      console.log('🔍 Filtering by user terminal:', req.user.terminal);
-    } else if (terminal) {
-      query.terminal = terminal;
-      console.log('🔍 Filtering by query terminal:', terminal);
-    }
     
     // Date filtering
     if (date) {
@@ -798,11 +749,11 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
   body('assignedVehicle').isMongoId().withMessage('Valid vehicle ID is required'),
   body('assignedDriver').isMongoId().withMessage('Valid driver ID is required'),
   body('capacity').isInt({ min: 1 }).withMessage('Capacity must be at least 1')
-  // Terminal will be set automatically by the backend based on user role
+  
 ], async (req, res) => {
   try {
     console.log('🔍 Creating daily schedule with data:', req.body);
-    console.log('👤 User info:', { id: req.user.id, role: req.user.role, terminal: req.user.terminal });
+    console.log('👤 User info:', { id: req.user.id, role: req.user.role });
     
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -824,7 +775,6 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
     
     const scheduleData = {
       ...cleanData,
-      terminal: req.user.role !== 'super_admin' ? req.user.terminal : req.body.terminal,
       createdBy: req.user.id
     };
     
@@ -951,7 +901,7 @@ router.delete('/daily-schedules/:id', protect, authorize('transport', 'edit'), a
 // @access  Private
 router.get('/smart-vehicle-suggestions', protect, async (req, res) => {
   try {
-    const { terminal, date, routeId, requiredCapacity } = req.query;
+    const {  date, routeId, requiredCapacity } = req.query;
     
     if (!date || !routeId || !requiredCapacity) {
       return res.status(400).json({
@@ -970,11 +920,7 @@ router.get('/smart-vehicle-suggestions', protect, async (req, res) => {
       seatingCapacity: { $gte: parseInt(requiredCapacity) }
     };
     
-    if (req.user.role !== 'super_admin') {
-      vehicleQuery.terminal = req.user.terminal;
-    } else if (terminal) {
-      vehicleQuery.terminal = terminal;
-    }
+
     
     // Get all active vehicles with document validation
     const allVehicles = await Vehicle.find(vehicleQuery)
@@ -1016,7 +962,6 @@ router.get('/smart-vehicle-suggestions', protect, async (req, res) => {
         make: vehicle.make,
         model: vehicle.model,
         seatingCapacity: vehicle.seatingCapacity,
-        terminal: vehicle.terminal,
         assignedDriver: vehicle.assignedDriver,
         // Score based on capacity match (closer to required = higher score)
         score: Math.abs(vehicle.seatingCapacity - parseInt(requiredCapacity))
@@ -1097,7 +1042,7 @@ router.post('/generate-trips', protect, authorize('transport', 'create'), async 
           arrivalTime: arrivalTime,
           capacity: schedule.capacity,
           fare: schedule.route.fare,
-          terminal: schedule.terminal,
+          ,
           createdBy: req.user.id
         };
         

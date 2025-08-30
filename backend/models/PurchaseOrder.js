@@ -103,11 +103,7 @@ const PurchaseOrderSchema = new mongoose.Schema({
     trim: true,
     maxlength: [1000, 'Notes cannot exceed 1000 characters']
   },
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba']
-  },
+
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -135,7 +131,6 @@ PurchaseOrderSchema.index({ orderNumber: 1 });
 PurchaseOrderSchema.index({ supplier: 1 });
 PurchaseOrderSchema.index({ status: 1 });
 PurchaseOrderSchema.index({ orderDate: -1 });
-PurchaseOrderSchema.index({ terminal: 1 });
 
 // Pre-save middleware to calculate totals
 PurchaseOrderSchema.pre('save', function(next) {

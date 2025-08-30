@@ -81,13 +81,21 @@
   gap: 15px;
   margin-bottom: 30px;
   justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.quick-actions p {
+  margin: 0;
+  text-align: center;
+  width: 100%;
 }
 
 .action-btn {
   padding: 12px 24px;
   border: none;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -98,8 +106,14 @@
   background: #3498db;
   color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  min-width: 140px;
+  min-width: 160px;
+  max-width: 200px;
   justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: auto;
+  line-height: 1.2;
 }
 
 .action-btn:hover {
@@ -130,8 +144,14 @@
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 80px;
+  min-width: 100px;
+  max-width: 120px;
   justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: auto;
+  line-height: 1.2;
 }
 
 .action-btn.small.confirm {

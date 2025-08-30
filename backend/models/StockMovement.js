@@ -78,11 +78,7 @@ const StockMovementSchema = new mongoose.Schema({
     trim: true,
     maxlength: [1000, 'Notes cannot exceed 1000 characters']
   },
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba']
-  },
+
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -104,7 +100,6 @@ const StockMovementSchema = new mongoose.Schema({
 // Indexes for better performance
 StockMovementSchema.index({ inventoryItem: 1, createdAt: -1 });
 StockMovementSchema.index({ movementType: 1 });
-StockMovementSchema.index({ terminal: 1 });
 StockMovementSchema.index({ createdBy: 1 });
 StockMovementSchema.index({ referenceType: 1, referenceId: 1 });
 
