@@ -80,11 +80,7 @@ const AssetSchema = new mongoose.Schema({
     trim: true,
     maxlength: [500, 'Notes cannot be more than 500 characters']
   },
-  terminal: {
-    type: String,
-    required: [true, 'Please specify terminal'],
-    enum: ['kigali', 'kampala', 'nairobi', 'juba']
-  },
+
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
