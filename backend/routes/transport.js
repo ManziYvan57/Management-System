@@ -1042,7 +1042,6 @@ router.post('/generate-trips', protect, authorize('transport', 'create'), async 
           arrivalTime: arrivalTime,
           capacity: schedule.capacity,
           fare: schedule.route.fare,
-          ,
           createdBy: req.user.id
         };
         
