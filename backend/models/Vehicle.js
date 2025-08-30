@@ -100,12 +100,7 @@ const VehicleSchema = new mongoose.Schema({
     trim: true
   },
   
-  // Location and terminal
-  terminal: {
-    type: String,
-    required: [true, 'Please specify terminal'],
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba']
-  },
+  // Location
   currentLocation: {
     type: String,
     trim: true
@@ -193,7 +188,7 @@ const VehicleSchema = new mongoose.Schema({
 
 // Indexes for better query performance
 VehicleSchema.index({ plateNumber: 1 }, { unique: true });
-VehicleSchema.index({ terminal: 1, status: 1 });
+
 VehicleSchema.index({ assignedDriver: 1 });
 VehicleSchema.index({ status: 1 });
 VehicleSchema.index({ 'insurance.expiryDate': 1 });

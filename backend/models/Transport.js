@@ -45,12 +45,6 @@ const routeSchema = new mongoose.Schema({
     default: 'active'
   },
   
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    trim: true
-  },
-  
   description: {
     type: String,
     trim: true,
@@ -130,12 +124,6 @@ const tripSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Fare is required'],
     min: [0, 'Fare cannot be negative']
-  },
-  
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    trim: true
   },
   
   notes: {
@@ -304,12 +292,6 @@ const dailyScheduleSchema = new mongoose.Schema({
     maxlength: [500, 'Notes cannot exceed 500 characters']
   },
   
-  terminal: {
-    type: String,
-    required: [true, 'Terminal is required'],
-    trim: true
-  },
-  
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -358,7 +340,7 @@ dailyScheduleSchema.index({ date: 1, route: 1 });
 dailyScheduleSchema.index({ date: 1, assignedVehicle: 1 });
 dailyScheduleSchema.index({ date: 1, assignedDriver: 1 });
 dailyScheduleSchema.index({ status: 1 });
-dailyScheduleSchema.index({ terminal: 1 });
+
 
 const Route = mongoose.model('Route', routeSchema);
 const Trip = mongoose.model('Trip', tripSchema);

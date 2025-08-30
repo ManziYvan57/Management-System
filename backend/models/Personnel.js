@@ -60,11 +60,7 @@ const personnelSchema = new mongoose.Schema({
     enum: ['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'compliance', 'other'],
     required: [true, 'Department is required']
   },
-  terminal: {
-    type: String,
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
-    required: [true, 'Terminal is required']
-  },
+
   hireDate: {
     type: Date,
     required: false
@@ -266,7 +262,7 @@ personnelSchema.pre('save', function(next) {
 personnelSchema.index({ email: 1 });
 
 personnelSchema.index({ role: 1 });
-personnelSchema.index({ terminal: 1 });
+
 personnelSchema.index({ employmentStatus: 1 });
 personnelSchema.index({ licenseNumber: 1 }, { sparse: true });
 personnelSchema.index({ assignedVehicle: 1 }, { sparse: true });

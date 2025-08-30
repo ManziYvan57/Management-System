@@ -1,33 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { FaRoute, FaBus, FaUserTie, FaClock, FaMapMarkerAlt, FaUsers } from 'react-icons/fa';
-import { transportAPI, vehiclesAPI, personnelAPI } from '../../services/api';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FaClock, FaRoute, FaBus, FaUserTie, FaUsers } from 'react-icons/fa';
+import { vehiclesAPI, personnelAPI, transportAPI } from '../../services/api';
 import './Transport.css';
 
 const Transport = () => {
+  // Hardcoded routes for testing
+  const hardcodedRoutes = [
+    {
+      _id: '507f1f77bcf86cd799439011',
+      routeName: 'Kigali -> Kampala',
+      origin: 'Kigali',
+      destination: 'Kampala',
+      departureTime: '09:00'
+    },
+    {
+      _id: '507f1f77bcf86cd799439012',
+      routeName: 'Kigali -> Nairobi',
+      origin: 'Kigali',
+      destination: 'Nairobi',
+      departureTime: '07:00'
+    }
+  ];
+
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [showAddTripForm, setShowAddTripForm] = useState(false);
-  const [showEditTripForm, setShowEditTripForm] = useState(false);
-  const [editingTrip, setEditingTrip] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [routeFilter, setRouteFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-
-  const [newTrip, setNewTrip] = useState({
-    route: '',
-    vehicle: '',
-    driver: '',
-    customerCare: '',
-    departure: '',
-    status: 'scheduled',
-    homeRoute: '',
-    currentRoute: ''
-  });
-
-  // New state for daily schedules
-  const [dailySchedules, setDailySchedules] = useState([]);
+  // Daily Schedule Form State
   const [showDailyScheduleForm, setShowDailyScheduleForm] = useState(false);
   const [newDailySchedule, setNewDailySchedule] = useState({
     date: '',
@@ -43,16 +42,21 @@ const Transport = () => {
   const [availableDrivers, setAvailableDrivers] = useState([]);
   const [availableCustomerCare, setAvailableCustomerCare] = useState([]);
 
+  // Live Display Mode - Keeping this as requested
+  const [showLiveDisplay, setShowLiveDisplay] = useState(false);
+  const [autoUpdate, setAutoUpdate] = useState(true);
+  const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
         
         // Fetch routes using test endpoint
         try {
-          console.log('🔍 Fetching routes from test endpoint...');
+          console.log('🔍 Fetching routes...');
           const response = await fetch('https://trinity-management-system.onrender.com/api/transport/test-routes');
           console.log('📡 Routes response status:', response.status);
           
@@ -61,28 +65,15 @@ const Transport = () => {
           }
           
           const routesData = await response.json();
-          console.log('📊 Routes data received:', routesData);
+          console.log('📊 Routes data:', routesData);
           setRoutes(routesData.data || []);
         } catch (routeErr) {
           console.error('❌ Error fetching routes:', routeErr);
           setRoutes([]);
         }
-        
-                 // Fetch daily schedules (handle separately to prevent complete failure)
-         try {
-           console.log('🔍 Fetching daily schedules...');
-           const schedulesResponse = await transportAPI.getDailySchedules();
-           console.log('📊 Initial daily schedules response:', schedulesResponse);
-           setDailySchedules(schedulesResponse.data || []);
-           console.log('✅ Initial daily schedules set:', schedulesResponse.data?.length || 0, 'schedules');
-         } catch (scheduleErr) {
-           console.error('❌ Error fetching daily schedules:', scheduleErr);
-           setDailySchedules([]);
-           // Don't set main error for daily schedules failure
-         }
       } catch (err) {
         console.error('Error fetching transport data:', err);
-        setError(err.message || 'Failed to fetch transport data');
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -91,113 +82,78 @@ const Transport = () => {
     fetchData();
   }, []);
 
-  // Fetch available resources (vehicles, drivers, customer care)
+  // Fetch available resources
   useEffect(() => {
     const fetchAvailableResources = async () => {
       try {
-        console.log('Fetching available resources...');
+        console.log('🔍 Fetching available resources...');
         
-        // Use the same API calls as Garage section to get real data
-        const [vehiclesResponse, personnelResponse] = await Promise.all([
-          vehiclesAPI.getAll(),
-          personnelAPI.getAll()
-        ]);
+        // Fetch vehicles
+        const vehiclesResponse = await vehiclesAPI.getAll();
+        console.log('🚗 Vehicles response:', vehiclesResponse);
+        setAvailableVehicles(vehiclesResponse.data || []);
         
-        console.log('Vehicles Response:', vehiclesResponse);
-        console.log('Personnel Response:', personnelResponse);
+        // Fetch personnel (drivers and customer care)
+        const personnelResponse = await personnelAPI.getAll();
+        console.log('👥 Personnel response:', personnelResponse);
         
-        // Filter for active vehicles
-        const activeVehicles = (vehiclesResponse.data || []).filter(vehicle => 
-          vehicle.status === 'active'
-        );
-        
-        // Filter for active drivers
-        const activeDrivers = (personnelResponse.data || []).filter(person => 
-          person.role === 'driver' && person.employmentStatus === 'active'
-        );
-        
-        // Filter for active customer care
-        const activeCustomerCare = (personnelResponse.data || []).filter(person => 
-          person.role === 'customer_care' && person.employmentStatus === 'active'
-        );
-        
-        console.log('Active Vehicles:', activeVehicles.length);
-        console.log('Active Drivers:', activeDrivers.length);
-        console.log('Active Customer Care:', activeCustomerCare.length);
-        
-        setAvailableVehicles(activeVehicles);
-        setAvailableDrivers(activeDrivers);
-        setAvailableCustomerCare(activeCustomerCare);
-      } catch (error) {
-        console.error('Error fetching available resources:', error);
-        // Set empty arrays to prevent crashes
-        setAvailableVehicles([]);
-        setAvailableDrivers([]);
-        setAvailableCustomerCare([]);
+        if (personnelResponse.data && Array.isArray(personnelResponse.data)) {
+          const drivers = personnelResponse.data.filter(p => p.role === 'driver');
+          const customerCare = personnelResponse.data.filter(p => p.role === 'customer_care');
+          
+          setAvailableDrivers(drivers);
+          setAvailableCustomerCare(customerCare);
+          
+          console.log('🚗 Available drivers:', drivers.length);
+          console.log('👥 Available customer care:', customerCare.length);
+        }
+      } catch (err) {
+        console.error('Error fetching available resources:', err);
       }
     };
 
     fetchAvailableResources();
   }, []);
 
-  // Refresh data after adding/editing
-  const refreshData = async () => {
-    try {
-      // Refresh routes using test endpoint
-      try {
-        console.log('🔄 Refreshing routes...');
-        const response = await fetch('https://trinity-management-system.onrender.com/api/transport/test-routes');
-        console.log('📡 Refresh routes response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const routesData = await response.json();
-        console.log('📊 Refresh routes data:', routesData);
-        setRoutes(routesData.data || []);
-      } catch (routeErr) {
-        console.error('❌ Error refreshing routes:', routeErr);
-      }
-      
-      // Refresh daily schedules
-      try {
-        console.log('🔄 Refreshing daily schedules...');
-        const schedulesResponse = await transportAPI.getDailySchedules();
-        console.log('📊 Daily schedules response:', schedulesResponse);
-        setDailySchedules(schedulesResponse.data || []);
-        console.log('✅ Daily schedules updated:', schedulesResponse.data?.length || 0, 'schedules');
-      } catch (scheduleErr) {
-        console.error('❌ Error refreshing daily schedules:', scheduleErr);
-      }
-    } catch (err) {
-      console.error('Error refreshing transport data:', err);
-    }
-  };
-
   // Handle daily schedule input changes
   const handleDailyScheduleChange = (e) => {
     const { name, value } = e.target;
-    setNewDailySchedule(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // Get smart vehicle suggestions
-  const getSmartVehicleSuggestions = async (date, routeId, requiredCapacity) => {
-    try {
-      const response = await transportAPI.getSmartVehicleSuggestions({
-        date,
-        routeId,
-        requiredCapacity
-      });
-      
-      if (response.success) {
-        setAvailableVehicles(response.data);
+    
+    if (name === 'route') {
+      // Auto-fill departure time when route is selected
+      const selectedRoute = hardcodedRoutes.find(route => route._id === value);
+      if (selectedRoute) {
+        setNewDailySchedule(prev => ({
+          ...prev,
+          route: value,
+          departureTime: selectedRoute.departureTime // Auto-fill departure time
+        }));
+      } else {
+        setNewDailySchedule(prev => ({
+          ...prev,
+          route: value
+        }));
       }
-    } catch (err) {
-      console.error('Error getting vehicle suggestions:', err);
+    } else if (name === 'assignedVehicle') {
+      // Auto-fill capacity when vehicle is selected
+      const selectedVehicle = availableVehicles.find(vehicle => vehicle._id === value);
+      if (selectedVehicle) {
+        setNewDailySchedule(prev => ({
+          ...prev,
+          assignedVehicle: value,
+          capacity: selectedVehicle.seatingCapacity || selectedVehicle.capacity || '' // Auto-fill capacity
+        }));
+      } else {
+        setNewDailySchedule(prev => ({
+          ...prev,
+          assignedVehicle: value
+        }));
+      }
+    } else {
+      setNewDailySchedule(prev => ({
+        ...prev,
+        [name]: value
+      }));
     }
   };
 
@@ -211,9 +167,14 @@ const Transport = () => {
         capacity: parseInt(newDailySchedule.capacity)
       };
       
+      console.log('🔍 Submitting daily schedule:', scheduleData);
+      console.log('🔍 User info from context:', { 
+        role: 'super_admin' // This should come from your auth context
+      });
+      
       await transportAPI.createDailySchedule(scheduleData);
       
-      // Reset form and refresh data
+      // Reset form and close modal
       setNewDailySchedule({
         date: '',
         route: '',
@@ -225,7 +186,6 @@ const Transport = () => {
         notes: ''
       });
       setShowDailyScheduleForm(false);
-      refreshData();
       
       alert('Daily schedule created successfully!');
     } catch (err) {
@@ -234,26 +194,8 @@ const Transport = () => {
     }
   };
 
-  // Generate trips from daily schedules
-  const generateTripsFromSchedules = async (date) => {
-    try {
-      await transportAPI.generateTrips({ date });
-      alert('Trips generated successfully!');
-      refreshData();
-    } catch (err) {
-      console.error('Error generating trips:', err);
-      alert('Failed to generate trips: ' + err.message);
-    }
-  };
-
-  // Live Display Mode
-  const [showLiveDisplay, setShowLiveDisplay] = useState(false);
-  const [autoUpdate, setAutoUpdate] = useState(true);
-  const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
-  const [currentTime, setCurrentTime] = useState(new Date());
-
   // Dashboard Statistics - Made reactive to state changes
-  const dashboardStats = React.useMemo(() => {
+  const dashboardStats = useMemo(() => {
     if (!routes || !Array.isArray(routes)) {
       return {
         totalRoutes: 0,
@@ -310,183 +252,78 @@ const Transport = () => {
   }, [routes]); // This will recalculate whenever routes change
 
   // Auto-update status based on time
-  const getUpdatedStatus = (departureTime, currentStatus) => {
-    if (currentStatus === 'completed' || currentStatus === 'cancelled') return currentStatus;
-    
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const departureDateTime = new Date(`${today}T${departureTime}:00`);
-    const timeDiff = departureDateTime - now;
-    const minutesDiff = Math.floor(timeDiff / (1000 * 60));
-    
-    // For testing purposes, let's make some trips show different statuses
-    // In real implementation, this would be based on actual time
-    if (minutesDiff < -120) return 'completed'; // 2 hours after departure
-    if (minutesDiff < 0) return 'departed';
-    if (minutesDiff < 30) return 'boarding';
-    if (minutesDiff < 60) return 'ready';
-    return 'scheduled';
-  };
-
-  // Update vehicle statuses automatically
-  const updateVehicleStatuses = () => {
-    setRoutes(prevRoutes => {
-      if (!prevRoutes || !Array.isArray(prevRoutes)) return prevRoutes;
+  useEffect(() => {
+    const updateVehicleStatuses = () => {
+      if (!routes || !Array.isArray(routes)) return;
       
-      return prevRoutes.map(route => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const currentTime = currentHour * 60 + currentMinute;
+      
+      const updatedRoutes = routes.map(route => {
         if (!route.vehicles || !Array.isArray(route.vehicles)) return route;
         
-        return {
-          ...route,
-          vehicles: route.vehicles.map(vehicle => {
-            if (!vehicle) return vehicle;
-            return {
-              ...vehicle,
-              status: getUpdatedStatus(vehicle.departure, vehicle.status)
-            };
-          })
-        };
+        const updatedVehicles = route.vehicles.map(vehicle => {
+          if (!vehicle || !vehicle.departure) return vehicle;
+          
+          const [departureHour, departureMinute] = vehicle.departure.split(':').map(Number);
+          const departureTime = departureHour * 60 + departureMinute;
+          
+          let newStatus = vehicle.status;
+          
+          if (currentTime < departureTime - 30) {
+            newStatus = 'scheduled';
+          } else if (currentTime >= departureTime - 30 && currentTime < departureTime - 15) {
+            newStatus = 'ready';
+          } else if (currentTime >= departureTime - 15 && currentTime < departureTime) {
+            newStatus = 'boarding';
+          } else if (currentTime >= departureTime && currentTime < departureTime + 120) {
+            newStatus = 'departed';
+          } else {
+            newStatus = 'completed';
+          }
+          
+          return { ...vehicle, status: newStatus };
+        });
+        
+        return { ...route, vehicles: updatedVehicles };
       });
-    });
-  };
+      
+      setRoutes(updatedRoutes);
+    };
 
-  // Filter trips based on search and filters
-  const filteredTrips = React.useMemo(() => {
-    if (!routes || !Array.isArray(routes)) return [];
+    updateVehicleStatuses();
     
-    return routes.flatMap(route => {
-      if (!route.vehicles || !Array.isArray(route.vehicles)) return [];
-      
-      return route.vehicles.map(vehicle => ({
-        ...vehicle,
-        routeName: route.name || 'Unknown Route',
-        teamLeader: route.teamLeader || 'N/A'
-      }));
-    }).filter(trip => {
-      if (!trip) return false;
-      
-      const matchesSearch = (trip.plate && trip.plate.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                           (trip.driver && trip.driver.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                           (trip.routeName && trip.routeName.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesRoute = routeFilter === 'all' || trip.routeName === routeFilter;
-      const matchesStatus = statusFilter === 'all' || trip.status === statusFilter;
-      
-      return matchesSearch && matchesRoute && matchesStatus;
-    });
-  }, [routes, searchTerm, routeFilter, statusFilter]);
-
-  // Sort trips by departure time for live display and filter out completed trips
-  const sortedTrips = React.useMemo(() => {
-    if (!filteredTrips || !Array.isArray(filteredTrips)) return [];
-    
-    return [...filteredTrips]
-      .filter(trip => trip && trip.status !== 'completed') // Don't show completed trips in live display
-      .sort((a, b) => {
-        if (!a.departure || !b.departure) return 0;
-        const timeA = new Date(`2000-01-01T${a.departure}:00`);
-        const timeB = new Date(`2000-01-01T${b.departure}:00`);
-        return timeA - timeB;
-      });
-  }, [filteredTrips]);
-
-  // Auto-update every minute
-  React.useEffect(() => {
     if (autoUpdate) {
-      updateVehicleStatuses();
       const interval = setInterval(updateVehicleStatuses, 60000); // Update every minute
       return () => clearInterval(interval);
     }
   }, [autoUpdate]); // Removed routes dependency to prevent infinite loop
 
   // Auto-scroll live display every 5 seconds
-  React.useEffect(() => {
-    if (showLiveDisplay && sortedTrips && Array.isArray(sortedTrips) && sortedTrips.length > 8) {
+  useEffect(() => {
+    if (showLiveDisplay && routes && Array.isArray(routes)) {
       const scrollInterval = setInterval(() => {
         setCurrentDisplayIndex(prevIndex => {
+          const totalTrips = routes.reduce((sum, route) => sum + (route.vehicles ? route.vehicles.length : 0), 0);
           const nextIndex = prevIndex + 8;
-          return nextIndex >= sortedTrips.length ? 0 : nextIndex;
+          return nextIndex >= totalTrips ? 0 : nextIndex;
         });
       }, 5000); // Change every 5 seconds
       
       return () => clearInterval(scrollInterval);
     }
-  }, [showLiveDisplay, sortedTrips]);
+  }, [showLiveDisplay, routes]);
 
   // Update current time every second
-  React.useEffect(() => {
+  useEffect(() => {
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
     
     return () => clearInterval(timeInterval);
   }, []);
-
-  // Form handling functions
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewTrip({ ...newTrip, [name]: value });
-  };
-
-  const handleSubmitTrip = async (e) => {
-    e.preventDefault();
-    
-    try {
-      if (editingTrip) {
-        // Update existing trip
-        // TODO: Add update API call when backend supports it
-        console.log('Update trip:', newTrip);
-      } else {
-        // Add new trip
-        await transportAPI.createTrip(newTrip);
-      }
-      
-      // Refresh the data
-      await refreshData();
-      
-      setNewTrip({
-        route: '',
-        vehicle: '',
-        driver: '',
-        customerCare: '',
-        departure: '',
-        status: 'scheduled'
-      });
-      setEditingTrip(null);
-      setShowAddTripForm(false);
-      setShowEditTripForm(false);
-    } catch (err) {
-      console.error('Error saving trip:', err);
-      alert(err.message || 'Failed to save trip');
-    }
-  };
-
-  const handleEditTrip = (trip) => {
-    setEditingTrip(trip);
-    setNewTrip({
-      route: trip.routeName,
-      vehicle: trip.plate,
-      driver: trip.driver,
-      customerCare: trip.customerCare,
-      departure: trip.departure,
-      status: trip.status
-    });
-    setShowEditTripForm(true);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingTrip(null);
-    setNewTrip({
-      route: '',
-      vehicle: '',
-      driver: '',
-      customerCare: '',
-      departure: '',
-      status: 'scheduled'
-    });
-    setShowAddTripForm(false);
-    setShowEditTripForm(false);
-  };
 
   return (
     <div className="transport-container">
@@ -516,175 +353,39 @@ const Transport = () => {
           <h3>{dashboardStats.totalPersonnel}</h3>
           <p>Total Personnel</p>
         </div>
-        <div className="stat-card">
-          <h3>{dashboardStats.boardingTrips + dashboardStats.departedTrips}</h3>
-          <p>In Transit</p>
-        </div>
-        <div className="stat-card">
-          <h3>{dashboardStats.scheduledTrips}</h3>
-          <p>Upcoming</p>
-        </div>
-                 <div className="stat-card">
-           <h3>{dailySchedules && Array.isArray(dailySchedules) ? dailySchedules.filter(s => s && s.status === 'planned').length : 0}</h3>
-           <p>Planned Schedules</p>
-         </div>
-         <div className="stat-card">
-           <h3>{dailySchedules && Array.isArray(dailySchedules) ? dailySchedules.filter(s => s && s.status === 'confirmed').length : 0}</h3>
-           <p>Confirmed Schedules</p>
-         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Starting with just Plan Daily Schedule */}
       <div className="quick-actions">
-        <button onClick={() => setShowAddTripForm(true)} className="action-btn">
-          Add Trip
-        </button>
         <button onClick={() => setShowDailyScheduleForm(true)} className="action-btn">
-          Plan Daily Schedule
+          📅 Plan Daily Schedule
         </button>
-        <button onClick={() => generateTripsFromSchedules(new Date().toISOString().split('T')[0])} className="action-btn">
-          Generate Today's Trips
-        </button>
-        <button 
-          onClick={() => setShowLiveDisplay(!showLiveDisplay)} 
-          className={`action-btn ${showLiveDisplay ? 'active' : ''}`}
-        >
-          {showLiveDisplay ? 'Hide Live Display' : 'Show Live Display'}
-        </button>
-        <button 
-          onClick={() => setAutoUpdate(!autoUpdate)} 
-          className={`action-btn ${autoUpdate ? 'active' : ''}`}
-        >
-          {autoUpdate ? 'Auto-Update: ON' : 'Auto-Update: OFF'}
-        </button>
+        <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+          🚧 More actions coming soon! 🚧
+        </p>
       </div>
 
-      {/* Daily Schedules Section */}
-      <div className="daily-schedules-section">
-        <div className="section-header">
-          <h3>Daily Schedules</h3>
-          <div className="section-actions">
-            <button 
-              onClick={() => setShowDailyScheduleForm(true)} 
-              className="action-btn small"
-            >
-              + Add Schedule
-            </button>
-          </div>
-        </div>
-        
-                 {dailySchedules && Array.isArray(dailySchedules) && dailySchedules.length > 0 ? (
-          <div className="schedules-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Route</th>
-                  <th>Departure</th>
-                  <th>Vehicle</th>
-                  <th>Driver</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                                 {dailySchedules && Array.isArray(dailySchedules) && dailySchedules.slice(0, 10).map((schedule) => (
-                   <tr key={schedule._id} className={`schedule-row ${schedule.status || 'planned'}`}>
-                     <td>{schedule.date ? new Date(schedule.date).toLocaleDateString() : 'N/A'}</td>
-                     <td>
-                       {schedule.route?.routeName || 'Loading...'}
-                       <br />
-                       <small>{schedule.route?.origin || 'Unknown'} → {schedule.route?.destination || 'Unknown'}</small>
-                     </td>
-                     <td>{schedule.departureTime || 'N/A'}</td>
-                     <td>
-                       {schedule.assignedVehicle?.plateNumber || 'Loading...'}
-                       <br />
-                       <small>{schedule.assignedVehicle?.make || 'Unknown'} {schedule.assignedVehicle?.model || 'Unknown'}</small>
-                     </td>
-                     <td>
-                       {schedule.assignedDriver?.firstName || 'Unknown'} {schedule.assignedDriver?.lastName || 'Unknown'}
-                       <br />
-                       <small>{schedule.assignedDriver?.employeeId || 'N/A'}</small>
-                     </td>
-                                         <td>
-                       <span className={`status-badge ${schedule.status || 'planned'}`}>
-                         {(schedule.status || 'planned').replace('_', ' ')}
-                       </span>
-                     </td>
-                     <td>
-                       <div className="action-buttons">
-                         {schedule.status === 'planned' && (
-                           <button 
-                             onClick={() => {
-                               // Update status to confirmed
-                               transportAPI.updateDailySchedule(schedule._id, { status: 'confirmed' })
-                                 .then(() => refreshData())
-                                 .catch(err => alert('Failed to confirm schedule: ' + err.message));
-                             }}
-                             className="action-btn small confirm"
-                           >
-                             Confirm
-                           </button>
-                         )}
-                         {schedule.status === 'confirmed' && !schedule.tripGenerated && (
-                           <button 
-                             onClick={() => generateTripsFromSchedules(schedule.date)}
-                             className="action-btn small generate"
-                           >
-                             Generate Trip
-                           </button>
-                         )}
-                         {schedule.status === 'planned' && (
-                           <button 
-                             onClick={() => {
-                               if (window.confirm('Delete this schedule?')) {
-                                 transportAPI.deleteDailySchedule(schedule._id)
-                                   .then(() => refreshData())
-                                   .catch(err => alert('Failed to delete schedule: ' + err.message));
-                               }
-                             }}
-                             className="action-btn small delete"
-                           >
-                             Delete
-                           </button>
-                         )}
-                       </div>
-                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="no-schedules">
-            <p>No daily schedules planned yet. Click "Plan Daily Schedule" to get started!</p>
-          </div>
-        )}
-        
-                 {/* Debug Info */}
-         <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
-           <h4>Debug Info:</h4>
-           <p><strong>Available Vehicles:</strong> {availableVehicles && Array.isArray(availableVehicles) ? availableVehicles.length : 0}</p>
-           <p><strong>Available Drivers:</strong> {availableDrivers && Array.isArray(availableDrivers) ? availableDrivers.length : 0}</p>
-           <p><strong>Daily Schedules:</strong> {dailySchedules && Array.isArray(dailySchedules) ? dailySchedules.length : 0}</p>
-           <details>
-             <summary>Vehicles Data</summary>
-             <pre>{JSON.stringify((availableVehicles && Array.isArray(availableVehicles)) ? availableVehicles.slice(0, 3) : [], null, 2)}</pre>
-           </details>
-           <details>
-             <summary>Drivers Data</summary>
-             <pre>{JSON.stringify((availableDrivers && Array.isArray(availableDrivers)) ? availableDrivers.slice(0, 3) : [], null, 2)}</pre>
-           </details>
-         </div>
+      {/* Debug Info */}
+      <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
+        <h4>Debug Info:</h4>
+        <p><strong>Available Vehicles:</strong> {availableVehicles && Array.isArray(availableVehicles) ? availableVehicles.length : 0}</p>
+        <p><strong>Available Drivers:</strong> {availableDrivers && Array.isArray(availableDrivers) ? availableDrivers.length : 0}</p>
+        <details>
+          <summary>Vehicles Data</summary>
+          <pre>{JSON.stringify((availableVehicles && Array.isArray(availableVehicles)) ? availableVehicles.slice(0, 3) : [], null, 2)}</pre>
+        </details>
+        <details>
+          <summary>Drivers Data</summary>
+          <pre>{JSON.stringify((availableDrivers && Array.isArray(availableDrivers)) ? availableDrivers.slice(0, 3) : [], null, 2)}</pre>
+        </details>
       </div>
 
       {/* Live Display */}
       {showLiveDisplay && (
         <div className="live-display">
           <div className="live-header">
-            <h3>TRINITY TRANSPORT - LIVE DEPARTURES</h3>
-            <div className="live-time">{new Date().toLocaleTimeString()}</div>
+            <h3>Live Departure Board</h3>
+            <span className="live-time">{currentTime.toLocaleTimeString()}</span>
           </div>
           <div className="live-table">
             <table>
@@ -697,49 +398,44 @@ const Transport = () => {
                 </tr>
               </thead>
               <tbody>
-                                 {sortedTrips && Array.isArray(sortedTrips) && sortedTrips.slice(currentDisplayIndex, currentDisplayIndex + 8).map((trip) => (
-                   <tr key={trip.id || trip._id || Math.random()} className={`live-row ${trip.status || 'scheduled'}`}>
-                     <td>
-                       <div className="plate-cell">
-                         <FaBus className="vehicle-icon" />
-                         <strong>{trip.plate || 'N/A'}</strong>
-                       </div>
-                     </td>
-                     <td>
-                       <div className="route-cell">
-                         <FaRoute className="route-icon" />
-                         {trip.routeName || 'Unknown Route'}
-                       </div>
-                     </td>
-                     <td>
-                       <div className="time-cell">
-                         <FaClock className="time-icon" />
-                         <strong>{trip.departure || 'N/A'}</strong>
-                       </div>
-                     </td>
-                     <td>
-                       <div className="status-cell">
-                         <span className={`live-status ${trip.status || 'scheduled'}`}>
-                           {(trip.status || 'scheduled').toUpperCase()}
-                         </span>
-                       </div>
-                     </td>
-                   </tr>
-                 ))}
-                                 {(!sortedTrips || !Array.isArray(sortedTrips) || sortedTrips.length === 0) && (
-                   <tr>
-                     <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                       No upcoming departures at this time
-                     </td>
-                   </tr>
-                 )}
-                 {sortedTrips && Array.isArray(sortedTrips) && sortedTrips.length > 0 && sortedTrips.slice(currentDisplayIndex, currentDisplayIndex + 8).length === 0 && (
-                   <tr>
-                     <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                       Loading more departures...
-                     </td>
-                   </tr>
-                 )}
+                {routes && Array.isArray(routes) && routes.slice(currentDisplayIndex, currentDisplayIndex + 8).map((route) => (
+                  route.vehicles && Array.isArray(route.vehicles) && route.vehicles.map((vehicle) => (
+                    <tr key={vehicle.id || vehicle._id || Math.random()} className={`live-row ${vehicle.status || 'scheduled'}`}>
+                      <td>
+                        <div className="plate-cell">
+                          <FaBus className="vehicle-icon" />
+                          <strong>{vehicle.plate || 'N/A'}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="route-cell">
+                          <FaRoute className="route-icon" />
+                          {route.name || 'Unknown Route'}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="time-cell">
+                          <FaClock className="time-icon" />
+                          <strong>{vehicle.departure || 'N/A'}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="status-cell">
+                          <span className={`live-status ${vehicle.status || 'scheduled'}`}>
+                            {(vehicle.status || 'scheduled').toUpperCase()}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ))}
+                {(!routes || !Array.isArray(routes) || routes.length === 0) && (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                      No upcoming departures at this time
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -750,47 +446,6 @@ const Transport = () => {
       <div className="transport-list">
         <div className="list-header">
           <h3>Transport Operations</h3>
-          <div className="header-controls">
-            <div className="search-box">
-              <input
-                type="text"
-                placeholder="Search trips..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
-              />
-            </div>
-            
-            <div className="filter-group">
-                               <select
-                   value={routeFilter}
-                   onChange={(e) => setRouteFilter(e.target.value)}
-                   className="filter-select"
-                 >
-                   <option value="all">All Routes</option>
-                   {routes && Array.isArray(routes) && routes.map(route => (
-                     <option key={route.id || route._id} value={route.name || route.routeName}>
-                       {route.name || route.routeName || 'Unknown Route'}
-                     </option>
-                   ))}
-                 </select>
-              
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="all">All Status</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="ready">Ready</option>
-                <option value="boarding">Boarding</option>
-                <option value="departed">Departed</option>
-                <option value="delayed">Delayed</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-          </div>
         </div>
         
         <div className="table-container">
@@ -804,7 +459,6 @@ const Transport = () => {
           {error && (
             <div className="error-state">
               <p>Error: {error}</p>
-              <button onClick={refreshData} className="retry-btn">Retry</button>
             </div>
           )}
           
@@ -820,297 +474,71 @@ const Transport = () => {
                     <th>Departure</th>
                     <th>Team Leader</th>
                     <th>Status</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTrips.map((trip) => (
-                <tr key={trip.id}>
-                  <td>
-                    <div className="route-info">
-                      <FaRoute className="route-icon" />
-                      {trip.routeName}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="vehicle-info">
-                      <FaBus className="vehicle-icon" />
-                      {trip.plate}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="driver-info">
-                      <FaUserTie className="driver-icon" />
-                      {trip.driver}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="customer-care-info">
-                      <FaUsers className="cc-icon" />
-                      {trip.customerCare || 'N/A'}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="departure-info">
-                      <FaClock className="time-icon" />
-                      {trip.departure}
-                    </div>
-                  </td>
-                  <td>{trip.teamLeader}</td>
-                  <td>
-                    <span className={`status-badge ${trip.status}`}>
-                      {trip.status}
-                    </span>
-                    {trip.currentRoute !== trip.homeRoute && (
-                      <small className="route-note">(Temporary Assignment)</small>
-                    )}
-                  </td>
-                  <td>
-                    <button 
-                      className="edit-btn" 
-                      onClick={() => handleEditTrip(trip)}
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  {(() => {
+                    const trips = routes && Array.isArray(routes) ? routes.map(route => 
+                      route.vehicles && Array.isArray(route.vehicles) ? route.vehicles.map(vehicle => ({
+                        ...vehicle,
+                        routeName: route.name || 'Unknown Route',
+                        teamLeader: route.teamLeader || 'N/A'
+                      })) : []
+                    ).flat().filter(trip => trip && trip.routeName) : [];
+                    
+                    return trips.length > 0 ? trips.map((trip) => (
+                    <tr key={trip.id}>
+                      <td>
+                        <div className="route-info">
+                          <FaRoute className="route-icon" />
+                          {trip.routeName}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="vehicle-info">
+                          <FaBus className="vehicle-icon" />
+                          {trip.plate}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="driver-info">
+                          <FaUserTie className="driver-icon" />
+                          {trip.driver}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="customer-care-info">
+                          <FaUsers className="cc-icon" />
+                          {trip.customerCare || 'N/A'}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="departure-info">
+                          <FaClock className="time-icon" />
+                          {trip.departure}
+                        </div>
+                      </td>
+                      <td>{trip.teamLeader}</td>
+                      <td>
+                        <span className={`status-badge ${trip.status}`}>
+                          {trip.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                        No transport data available
+                      </td>
+                    </tr>
+                  );
+                  })()}
+                </tbody>
+              </table>
             </>
           )}
         </div>
       </div>
-
-      {/* Add Trip Form Modal */}
-      {showAddTripForm && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Add New Trip</h3>
-              <button onClick={handleCancelEdit} className="close-btn">
-                &times;
-              </button>
-            </div>
-            <form onSubmit={handleSubmitTrip} className="modal-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="route">Route:</label>
-                                     <select
-                     id="route"
-                     name="route"
-                     value={newTrip.route}
-                     onChange={handleInputChange}
-                     required
-                   >
-                     <option value="">Select Route</option>
-                     {routes && Array.isArray(routes) && routes.map(route => (
-                       <option key={route.id || route._id} value={route.name || route.routeName}>
-                         {route.name || route.routeName || 'Unknown Route'}
-                       </option>
-                     ))}
-                   </select>
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="vehicle">Vehicle Plate:</label>
-                  <input
-                    type="text"
-                    id="vehicle"
-                    name="vehicle"
-                    value={newTrip.vehicle}
-                    onChange={handleInputChange}
-                    placeholder="e.g., RAG 599 K"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="driver">Driver:</label>
-                  <input
-                    type="text"
-                    id="driver"
-                    name="driver"
-                    value={newTrip.driver}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="customerCare">Customer Care:</label>
-                  <input
-                    type="text"
-                    id="customerCare"
-                    name="customerCare"
-                    value={newTrip.customerCare}
-                    onChange={handleInputChange}
-                    placeholder="Optional"
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="departure">Departure Time:</label>
-                  <input
-                    type="time"
-                    id="departure"
-                    name="departure"
-                    value={newTrip.departure}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="status">Status:</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={newTrip.status}
-                    onChange={handleInputChange}
-                  >
-                    <option value="scheduled">Scheduled</option>
-                    <option value="ready">Ready</option>
-                    <option value="boarding">Boarding</option>
-                    <option value="departed">Departed</option>
-                    <option value="delayed">Delayed</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" onClick={handleCancelEdit} className="cancel-btn">
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  Add Trip
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Trip Form Modal */}
-      {showEditTripForm && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>Edit Trip</h3>
-              <button onClick={handleCancelEdit} className="close-btn">
-                &times;
-              </button>
-            </div>
-            <form onSubmit={handleSubmitTrip} className="modal-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="editRoute">Route:</label>
-                                     <select
-                     id="editRoute"
-                     name="route"
-                     value={newTrip.route}
-                     onChange={handleInputChange}
-                     required
-                   >
-                     <option value="">Select Route</option>
-                     {routes && Array.isArray(routes) && routes.map(route => (
-                       <option key={route.id || route._id} value={route.name || route.routeName}>
-                         {route.name || route.routeName || 'Unknown Route'}
-                       </option>
-                     ))}
-                   </select>
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="editVehicle">Vehicle Plate:</label>
-                  <input
-                    type="text"
-                    id="editVehicle"
-                    name="vehicle"
-                    value={newTrip.vehicle}
-                    onChange={handleInputChange}
-                    placeholder="e.g., RAG 599 K"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="editDriver">Driver:</label>
-                  <input
-                    type="text"
-                    id="editDriver"
-                    name="driver"
-                    value={newTrip.driver}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="editCustomerCare">Customer Care:</label>
-                  <input
-                    type="text"
-                    id="editCustomerCare"
-                    name="customerCare"
-                    value={newTrip.customerCare}
-                    onChange={handleInputChange}
-                    placeholder="Optional"
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="editDeparture">Departure Time:</label>
-                  <input
-                    type="time"
-                    id="editDeparture"
-                    name="departure"
-                    value={newTrip.departure}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="editStatus">Status:</label>
-                  <select
-                    id="editStatus"
-                    name="status"
-                    value={newTrip.status}
-                    onChange={handleInputChange}
-                  >
-                    <option value="scheduled">Scheduled</option>
-                    <option value="ready">Ready</option>
-                    <option value="boarding">Boarding</option>
-                    <option value="departed">Departed</option>
-                    <option value="delayed">Delayed</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" onClick={handleCancelEdit} className="cancel-btn">
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  Update Trip
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Daily Schedule Form Modal */}
       {showDailyScheduleForm && (
@@ -1145,12 +573,12 @@ const Transport = () => {
                     onChange={handleDailyScheduleChange}
                     required
                   >
-                                         <option value="">Select Route</option>
-                     {routes && Array.isArray(routes) && routes.map(route => (
-                       <option key={route._id || route.id} value={route._id || route.id}>
-                         {route.routeName || route.name || 'Unknown Route'} ({route.origin || 'Unknown'} → {route.destination || 'Unknown'})
-                       </option>
-                     ))}
+                    <option value="">Select Route</option>
+                    {hardcodedRoutes.map(route => (
+                      <option key={route._id} value={route._id}>
+                        {route.routeName} (Departure: {route.departureTime})
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1165,7 +593,12 @@ const Transport = () => {
                     value={newDailySchedule.departureTime}
                     onChange={handleDailyScheduleChange}
                     required
+                    readOnly
+                    style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
                   />
+                  <small style={{ color: '#6b7280', fontSize: '12px' }}>
+                    Auto-filled based on selected route
+                  </small>
                 </div>
                 
                 <div className="form-group">
@@ -1177,9 +610,14 @@ const Transport = () => {
                     value={newDailySchedule.capacity}
                     onChange={handleDailyScheduleChange}
                     min="1"
-                    placeholder="Required capacity"
+                    placeholder="Auto-filled from vehicle"
                     required
+                    readOnly
+                    style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
                   />
+                  <small style={{ color: '#6b7280', fontSize: '12px' }}>
+                    Auto-filled based on selected vehicle
+                  </small>
                 </div>
               </div>
 
@@ -1193,12 +631,12 @@ const Transport = () => {
                     onChange={handleDailyScheduleChange}
                     required
                   >
-                                         <option value="">Select Vehicle</option>
-                     {availableVehicles && Array.isArray(availableVehicles) && availableVehicles.map(vehicle => (
-                       <option key={vehicle._id} value={vehicle._id}>
-                         {vehicle.plateNumber || 'Unknown'} - {vehicle.make || 'Unknown'} {vehicle.model || 'Unknown'} ({vehicle.seatingCapacity || vehicle.capacity || 'N/A'} seats)
-                       </option>
-                     ))}
+                    <option value="">Select Vehicle</option>
+                    {availableVehicles && Array.isArray(availableVehicles) && availableVehicles.map(vehicle => (
+                      <option key={vehicle._id} value={vehicle._id}>
+                        {vehicle.plateNumber || 'Unknown'} - {vehicle.make || 'Unknown'} {vehicle.model || 'Unknown'} ({vehicle.seatingCapacity || vehicle.capacity || 'N/A'} seats)
+                      </option>
+                    ))}
                   </select>
                 </div>
                 
@@ -1211,43 +649,42 @@ const Transport = () => {
                     onChange={handleDailyScheduleChange}
                     required
                   >
-                                         <option value="">Select Driver</option>
-                     {availableDrivers && Array.isArray(availableDrivers) && availableDrivers.map(driver => (
-                       <option key={driver._id} value={driver._id}>
-                         {driver.firstName || 'Unknown'} {driver.lastName || 'Unknown'} ({driver.employeeId || 'N/A'})
-                       </option>
-                     ))}
+                    <option value="">Select Driver</option>
+                    {availableDrivers && Array.isArray(availableDrivers) && availableDrivers.map(driver => (
+                      <option key={driver._id} value={driver._id}>
+                        {driver.firstName || 'Unknown'} {driver.lastName || 'Unknown'} ({driver.employeeId || 'N/A'})
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="customerCare">Customer Care (Optional):</label>
+                  <label htmlFor="customerCare">Customer Care:</label>
                   <select
                     id="customerCare"
                     name="customerCare"
                     value={newDailySchedule.customerCare}
                     onChange={handleDailyScheduleChange}
                   >
-                                         <option value="">Select Customer Care</option>
-                     {availableCustomerCare && Array.isArray(availableCustomerCare) && availableCustomerCare.map(cc => (
-                       <option key={cc._id} value={cc._id}>
-                         {cc.firstName || 'Unknown'} {cc.lastName || 'Unknown'} ({cc.employeeId || 'N/A'})
-                       </option>
-                     ))}
+                    <option value="">Select Customer Care</option>
+                    {availableCustomerCare && Array.isArray(availableCustomerCare) && availableCustomerCare.map(cc => (
+                      <option key={cc._id} value={cc._id}>
+                        {cc.firstName || 'Unknown'} {cc.lastName || 'Unknown'} ({cc.employeeId || 'N/A'})
+                      </option>
+                    ))}
                   </select>
                 </div>
                 
                 <div className="form-group">
                   <label htmlFor="notes">Notes:</label>
-                  <input
-                    type="text"
+                  <textarea
                     id="notes"
                     name="notes"
                     value={newDailySchedule.notes}
                     onChange={handleDailyScheduleChange}
-                    placeholder="Additional notes"
+                    placeholder="Additional notes or instructions"
                   />
                 </div>
               </div>

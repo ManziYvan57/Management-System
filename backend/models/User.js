@@ -51,11 +51,6 @@ const UserSchema = new mongoose.Schema({
     enum: ['super_admin', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff', 'driver', 'customer_care'],
     default: 'admin'
   },
-  terminal: {
-    type: String,
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
-    required: [true, 'Please specify terminal']
-  },
   route: {
     type: String,
     enum: ['kampala-nairobi', 'goma-kampala', 'nairobi-kigali', 'kampala-kigali', 'kampala-juba', 'juba-bor', 'none'],
@@ -162,7 +157,6 @@ UserSchema.virtual('fullName').get(function() {
 UserSchema.index({ email: 1 });
 UserSchema.index({ username: 1 });
 UserSchema.index({ role: 1 });
-UserSchema.index({ terminal: 1 });
 UserSchema.index({ department: 1 });
 UserSchema.index({ isActive: 1 });
 
