@@ -45,6 +45,10 @@ const Transport = () => {
   // Daily Schedules Display State
   const [dailySchedules, setDailySchedules] = useState([]);
   const [schedulesLoading, setSchedulesLoading] = useState(false);
+  
+  // Button Loading States
+  const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
+  const [isRefreshingSchedules, setIsRefreshingSchedules] = useState(false);
 
   // Live Display Mode - Keeping this as requested
   const [showLiveDisplay, setShowLiveDisplay] = useState(false);
@@ -190,6 +194,7 @@ const Transport = () => {
   // Refresh daily schedules manually
   const refreshDailySchedules = async () => {
     try {
+      setIsRefreshingSchedules(true);
       setSchedulesLoading(true);
       const response = await transportAPI.getDailySchedules();
       if (response.data && Array.isArray(response.data)) {
@@ -198,6 +203,7 @@ const Transport = () => {
     } catch (err) {
       console.error('Error refreshing daily schedules:', err);
     } finally {
+      setIsRefreshingSchedules(false);
       setSchedulesLoading(false);
     }
   };
@@ -207,6 +213,7 @@ const Transport = () => {
     e.preventDefault();
     
     try {
+      setIsCreatingSchedule(true);
       const scheduleData = {
         ...newDailySchedule,
         capacity: parseInt(newDailySchedule.capacity)
@@ -242,6 +249,8 @@ const Transport = () => {
     } catch (err) {
       console.error('Error creating daily schedule:', err);
       alert('Failed to create daily schedule: ' + err.message);
+    } finally {
+      setIsCreatingSchedule(false);
     }
   };
 
@@ -744,8 +753,8 @@ const Transport = () => {
                 <button type="button" onClick={() => setShowDailyScheduleForm(false)} className="cancel-btn">
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  Create Schedule
+                <button type="submit" className="submit-btn" disabled={isCreatingSchedule}>
+                  {isCreatingSchedule ? 'Creating...' : 'Create Schedule'}
                 </button>
               </div>
             </form>
@@ -761,9 +770,9 @@ const Transport = () => {
             <button 
               onClick={refreshDailySchedules} 
               className="refresh-btn"
-              disabled={schedulesLoading}
+              disabled={isRefreshingSchedules}
             >
-              {schedulesLoading ? 'Refreshing...' : '🔄 Refresh'}
+              {isRefreshingSchedules ? '🔄 Refreshing...' : '🔄 Refresh'}
             </button>
           </div>
         </div>
@@ -799,28 +808,34 @@ const Transport = () => {
               </thead>
               <tbody>
                 {dailySchedules.map((schedule) => {
-                  // Find route details
-                  const route = hardcodedRoutes.find(r => r._id === schedule.route);
-                  const routeName = route ? route.routeName : 'Unknown Route';
+                  // Debug logging to see what data we have
+                  console.log('🔍 Schedule data:', schedule);
+                  console.log('🔍 Available vehicles:', availableVehicles);
+                  console.log('🔍 Available drivers:', availableDrivers);
+                  console.log('🔍 Available customer care:', availableCustomerCare);
                   
-                  // Find vehicle details
-                  const vehicle = availableVehicles.find(v => v._id === schedule.assignedVehicle);
-                  const vehicleInfo = vehicle ? `${vehicle.plateNumber} - ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
+                  // Find route details - check both _id and route field
+                  const route = hardcodedRoutes.find(r => r._id === schedule.route || r._id === schedule.routeId);
+                  const routeName = route ? route.routeName : `Route ID: ${schedule.route || 'Unknown'}`;
                   
-                  // Find driver details
-                  const driver = availableDrivers.find(d => d._id === schedule.assignedDriver);
-                  const driverName = driver ? `${driver.firstName} ${driver.lastName}` : 'Unknown Driver';
+                  // Find vehicle details - check both _id and assignedVehicle field
+                  const vehicle = availableVehicles.find(v => v._id === schedule.assignedVehicle || v._id === schedule.vehicleId);
+                  const vehicleInfo = vehicle ? `${vehicle.plateNumber || 'N/A'} - ${vehicle.make || 'Unknown'} ${vehicle.model || 'Unknown'}` : `Vehicle ID: ${schedule.assignedVehicle || 'Unknown'}`;
                   
-                  // Find customer care details
-                  const customerCare = availableCustomerCare.find(cc => cc._id === schedule.customerCare);
-                  const customerCareName = customerCare ? `${customerCare.firstName} ${customerCare.lastName}` : 'Not Assigned';
+                  // Find driver details - check both _id and assignedDriver field
+                  const driver = availableDrivers.find(d => d._id === schedule.assignedDriver || d._id === schedule.driverId);
+                  const driverName = driver ? `${driver.firstName || 'Unknown'} ${driver.lastName || 'Unknown'}` : `Driver ID: ${schedule.assignedDriver || 'Unknown'}`;
+                  
+                  // Find customer care details - check both _id and customerCare field
+                  const customerCare = availableCustomerCare.find(cc => cc._id === schedule.customerCare || cc._id === schedule.customerCareId);
+                  const customerCareName = customerCare ? `${customerCare.firstName || 'Unknown'} ${customerCare.lastName || 'Unknown'}` : (schedule.customerCare ? `CC ID: ${schedule.customerCare}` : 'Not Assigned');
                   
                   return (
                     <tr key={schedule._id}>
                       <td>
                         <div className="date-cell">
                           <FaClock className="date-icon" />
-                          {new Date(schedule.date).toLocaleDateString()}
+                          {schedule.date ? new Date(schedule.date).toLocaleDateString() : 'No Date'}
                         </div>
                       </td>
                       <td>
@@ -832,7 +847,7 @@ const Transport = () => {
                       <td>
                         <div className="time-cell">
                           <FaClock className="time-icon" />
-                          {schedule.departureTime}
+                          {schedule.departureTime || 'No Time'}
                         </div>
                       </td>
                       <td>
@@ -854,7 +869,7 @@ const Transport = () => {
                         </div>
                       </td>
                       <td>
-                        <span className="capacity-badge">{schedule.capacity}</span>
+                        <span className="capacity-badge">{schedule.capacity || 'N/A'}</span>
                       </td>
                       <td>
                         <span className="notes-text">
