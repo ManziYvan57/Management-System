@@ -49,6 +49,10 @@ const Transport = () => {
   // Button Loading States
   const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
   const [isRefreshingSchedules, setIsRefreshingSchedules] = useState(false);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [schedulesPerPage] = useState(5);
 
   // Live Display Mode - Keeping this as requested
   const [showLiveDisplay, setShowLiveDisplay] = useState(false);
@@ -205,12 +209,36 @@ const Transport = () => {
       const response = await transportAPI.getDailySchedules();
       if (response.data && Array.isArray(response.data)) {
         setDailySchedules(response.data);
+        setCurrentPage(1); // Reset to first page when refreshing
       }
     } catch (err) {
       console.error('Error refreshing daily schedules:', err);
     } finally {
       setIsRefreshingSchedules(false);
       setSchedulesLoading(false);
+    }
+  };
+  
+  // Pagination logic
+  const indexOfLastSchedule = currentPage * schedulesPerPage;
+  const indexOfFirstSchedule = indexOfLastSchedule - schedulesPerPage;
+  const currentSchedules = dailySchedules.slice(indexOfFirstSchedule, indexOfLastSchedule);
+  const totalPages = Math.ceil(dailySchedules.length / schedulesPerPage);
+  
+  // Change page
+  const goToPage = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+  
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
   };
 
@@ -798,120 +826,158 @@ const Transport = () => {
           )}
           
           {!schedulesLoading && dailySchedules.length > 0 && (
-            <table className="schedules-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Route</th>
-                  <th>Departure Time</th>
-                  <th>Vehicle</th>
-                  <th>Driver</th>
-                  <th>Customer Care</th>
-                  <th>Capacity</th>
-                  <th>Notes</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dailySchedules.map((schedule) => {
-                  // Find route details - handle null route field
-                  const routeId = schedule.route || schedule.routeId;
-                  const route = routeId ? hardcodedRoutes.find(r => r._id === routeId) : null;
-                  const routeName = route ? route.routeName : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
-                  
-                  // Find vehicle details - handle both ID string and object
-                  const vehicleId = typeof schedule.assignedVehicle === 'string' ? schedule.assignedVehicle : 
-                                   (schedule.assignedVehicle && schedule.assignedVehicle._id) ? schedule.assignedVehicle._id : 
-                                   schedule.vehicleId;
-                  const vehicle = vehicleId ? availableVehicles.find(v => v._id === vehicleId) : null;
-                  const vehicleInfo = vehicle ? `${vehicle.plateNumber || 'N/A'} - ${vehicle.make || 'Unknown'} ${vehicle.model || 'Unknown'}` : 
-                                    (vehicleId ? `Vehicle ID: ${vehicleId}` : 'No Vehicle Assigned');
-                  
-                  // Find driver details - handle both ID string and object
-                  const driverId = typeof schedule.assignedDriver === 'string' ? schedule.assignedDriver : 
-                                 (schedule.assignedDriver && schedule.assignedDriver._id) ? schedule.assignedDriver._id : 
-                                 schedule.driverId;
-                  const driver = driverId ? availableDrivers.find(d => d._id === driverId) : null;
-                  const driverName = driver ? `${driver.firstName || 'Unknown'} ${driver.lastName || 'Unknown'}` : 
-                                   (driverId ? `Driver ID: ${driverId}` : 'No Driver Assigned');
-                  
-                  // Find customer care details - handle both ID string and object
-                  const customerCareId = typeof schedule.customerCare === 'string' ? schedule.customerCare : 
-                                       (schedule.customerCare && schedule.customerCare._id) ? schedule.customerCare._id : 
-                                       schedule.customerCareId;
-                  const customerCare = customerCareId ? availableCustomerCare.find(cc => cc._id === customerCareId) : null;
-                  const customerCareName = customerCare ? `${customerCare.firstName || 'Unknown'} ${customerCare.lastName || 'Unknown'}` : 
-                                         (customerCareId ? `CC ID: ${customerCareId}` : 'Not Assigned');
-                  
-                  return (
-                    <tr key={schedule._id}>
-                      <td>
-                        <div className="date-cell">
-                          <FaClock className="date-icon" />
-                          {schedule.date ? new Date(schedule.date).toLocaleDateString() : 'No Date'}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="route-cell">
-                          <FaRoute className="route-icon" />
-                          {routeName}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="time-cell">
-                          <FaClock className="time-icon" />
-                          {schedule.departureTime || 'No Time'}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="vehicle-cell">
-                          <FaBus className="vehicle-icon" />
-                          {vehicleInfo}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="driver-cell">
-                          <FaUserTie className="driver-icon" />
-                          {driverName}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="customer-care-cell">
-                          <FaUsers className="customer-care-icon" />
-                          {customerCareName}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="capacity-badge">{schedule.capacity || 'N/A'}</span>
-                      </td>
-                      <td>
-                        <span className="notes-text">
-                          {schedule.notes || 'No notes'}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="action-buttons">
-                          <button 
-                            className="edit-btn"
-                            onClick={() => alert('Edit functionality coming soon!')}
-                            title="Edit Schedule"
-                          >
-                            ✏️
-                          </button>
-                          <button 
-                            className="delete-btn"
-                            onClick={() => alert('Delete functionality coming soon!')}
-                            title="Delete Schedule"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <>
+              <table className="schedules-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Route</th>
+                    <th>Departure Time</th>
+                    <th>Vehicle</th>
+                    <th>Driver</th>
+                    <th>Customer Care</th>
+                    <th>Capacity</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentSchedules.map((schedule) => {
+                    // Find route details - handle null route field
+                    const routeId = schedule.route || schedule.routeId;
+                    const route = routeId ? hardcodedRoutes.find(r => r._id === routeId) : null;
+                    const routeName = route ? route.routeName : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
+                    
+                    // Find vehicle details - handle both ID string and object
+                    const vehicleId = typeof schedule.assignedVehicle === 'string' ? schedule.assignedVehicle : 
+                                     (schedule.assignedVehicle && schedule.assignedVehicle._id) ? schedule.assignedVehicle._id : 
+                                     schedule.vehicleId;
+                    const vehicle = vehicleId ? availableVehicles.find(v => v._id === vehicleId) : null;
+                    const vehicleInfo = vehicle ? `${vehicle.plateNumber || 'N/A'} - ${vehicle.make || 'Unknown'} ${vehicle.model || 'Unknown'}` : 
+                                      (vehicleId ? `Vehicle ID: ${vehicleId}` : 'No Vehicle Assigned');
+                    
+                    // Find driver details - handle both ID string and object
+                    const driverId = typeof schedule.assignedDriver === 'string' ? schedule.assignedDriver : 
+                                   (schedule.assignedDriver && schedule.assignedDriver._id) ? schedule.assignedDriver._id : 
+                                   schedule.driverId;
+                    const driver = driverId ? availableDrivers.find(d => d._id === driverId) : null;
+                    const driverName = driver ? `${driver.firstName || 'Unknown'} ${driver.lastName || 'Unknown'}` : 
+                                     (driverId ? `Driver ID: ${driverId}` : 'No Driver Assigned');
+                    
+                    // Find customer care details - handle both ID string and object
+                    const customerCareId = typeof schedule.customerCare === 'string' ? schedule.customerCare : 
+                                         (schedule.customerCare && schedule.customerCare._id) ? schedule.customerCare._id : 
+                                         schedule.customerCareId;
+                    const customerCare = customerCareId ? availableCustomerCare.find(cc => cc._id === customerCareId) : null;
+                    const customerCareName = customerCare ? `${customerCare.firstName || 'Unknown'} ${customerCare.lastName || 'Unknown'}` : 
+                                           (customerCareId ? `CC ID: ${customerCareId}` : 'Not Assigned');
+                    
+                    return (
+                      <tr key={schedule._id}>
+                        <td>
+                          <div className="date-cell">
+                            <FaClock className="date-icon" />
+                            {schedule.date ? new Date(schedule.date).toLocaleDateString() : 'No Date'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="route-cell">
+                            <FaRoute className="route-icon" />
+                            {routeName}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="time-cell">
+                            <FaClock className="time-icon" />
+                            {schedule.departureTime || 'No Time'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="vehicle-cell">
+                            <FaBus className="vehicle-icon" />
+                            {vehicleInfo}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="driver-cell">
+                            <FaUserTie className="driver-icon" />
+                            {driverName}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="customer-care-cell">
+                            <FaUsers className="customer-care-icon" />
+                            {customerCareName}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="capacity-badge">{schedule.capacity || 'N/A'}</span>
+                        </td>
+                        <td>
+                          <span className="notes-text">
+                            {schedule.notes || 'No notes'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button 
+                              className="edit-btn"
+                              onClick={() => alert('Edit functionality coming soon!')}
+                              title="Edit Schedule"
+                            >
+                              ✏️
+                            </button>
+                            <button 
+                              className="delete-btn"
+                              onClick={() => alert('Delete functionality coming soon!')}
+                              title="Delete Schedule"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="pagination-controls">
+                  <div className="pagination-info">
+                    Showing {indexOfFirstSchedule + 1} to {Math.min(indexOfLastSchedule, dailySchedules.length)} of {dailySchedules.length} schedules
+                  </div>
+                  <div className="pagination-buttons">
+                    <button 
+                      onClick={goToPrevPage} 
+                      disabled={currentPage === 1}
+                      className="pagination-btn prev-btn"
+                    >
+                      ← Previous
+                    </button>
+                    
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map(pageNumber => (
+                      <button
+                        key={pageNumber}
+                        onClick={() => goToPage(pageNumber)}
+                        className={`pagination-btn page-btn ${currentPage === pageNumber ? 'active' : ''}`}
+                      >
+                        {pageNumber}
+                      </button>
+                    ))}
+                    
+                    <button 
+                      onClick={goToNextPage} 
+                      disabled={currentPage === totalPages}
+                      className="pagination-btn next-btn"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -780,12 +780,18 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
       delete cleanData.customerCare;
     }
     
+    // Debug: Check route field specifically
+    console.log('🔍 Route field before cleanup:', cleanData.route);
+    console.log('🔍 Route field type:', typeof cleanData.route);
+    console.log('🔍 Route field validation:', mongoose.Types.ObjectId.isValid(cleanData.route));
+    
     const scheduleData = {
       ...cleanData,
       createdBy: req.user.id
     };
     
     console.log('📝 Final schedule data:', scheduleData);
+    console.log('📝 Route field in final data:', scheduleData.route);
 
     const schedule = await DailySchedule.create(scheduleData);
     
