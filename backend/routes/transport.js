@@ -3,7 +3,18 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const { protect, authorize } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
-const { Route, Trip, DailySchedule } = require('../models/Transport');
+const TransportModels = require('../models/Transport');
+const { Route, Trip, DailySchedule } = TransportModels;
+
+// Debug: Check what models were imported
+console.log('🔍 Transport models import check:', {
+  TransportModels: Object.keys(TransportModels),
+  Route: !!Route,
+  Trip: !!Trip,
+  DailySchedule: !!DailySchedule,
+  RouteModelName: Route ? Route.modelName : 'undefined',
+  RouteCollectionName: Route ? Route.collection.name : 'undefined'
+});
 const Vehicle = require('../models/Vehicle');
 const Personnel = require('../models/Personnel');
 const VehicleDocument = require('../models/VehicleDocument');
@@ -710,6 +721,30 @@ router.get('/daily-schedules', protect, async (req, res) => {
       RouteModelName: Route ? Route.modelName : 'undefined',
       RouteCollectionName: Route ? Route.collection.name : 'undefined'
     });
+    
+    // Debug: Check if Route documents exist in database
+    try {
+      const routeCount = await Route.countDocuments({});
+      console.log('🔍 Route collection check:', {
+        routeCount,
+        routeCollectionName: Route.collection.name
+      });
+      
+      // Check if the specific route ID exists
+      const specificRoute = await Route.findById('507f1f77bcf86cd799439011');
+      console.log('🔍 Specific route check:', {
+        routeId: '507f1f77bcf86cd799439011',
+        exists: !!specificRoute,
+        routeData: specificRoute ? {
+          _id: specificRoute._id,
+          routeName: specificRoute.routeName,
+          origin: specificRoute.origin,
+          destination: specificRoute.destination
+        } : null
+      });
+    } catch (error) {
+      console.log('❌ Error checking Route collection:', error.message);
+    }
     
     const schedules = await DailySchedule.find(query)
       .populate({
