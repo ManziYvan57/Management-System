@@ -1012,3 +1012,118 @@ tr:hover {
 .prev-btn, .next-btn {
   min-width: 80px;
 }
+
+/* Routes Management Section */
+.routes-management-section {
+  margin-top: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.routes-table-container {
+  overflow-x: auto;
+}
+
+.routes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.routes-table th {
+  background: #f8fafc;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.routes-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.routes-table .route-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.routes-table .route-icon {
+  color: #3b82f6;
+  font-size: 1rem;
+}
+
+.routes-table .route-name {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.routes-table .time-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.routes-table .time-icon {
+  color: #10b981;
+  font-size: 1rem;
+}
+
+.routes-table .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.routes-table .edit-btn,
+.routes-table .delete-btn {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.routes-table .edit-btn {
+  background: #fbbf24;
+  color: white;
+}
+
+.routes-table .edit-btn:hover {
+  background: #f59e0b;
+}
+
+.routes-table .delete-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.routes-table .delete-btn:hover {
+  background: #dc2626;
+}
+
+.add-route-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-route-btn:hover {
+  background: #059669;
+}
+
+.no-routes {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}

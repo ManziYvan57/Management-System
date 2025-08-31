@@ -43,6 +43,20 @@ const Transport = () => {
   const [currentDisplayIndex, setCurrentDisplayIndex] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Routes Management State
+  const [showAddRouteForm, setShowAddRouteForm] = useState(false);
+  const [editingRoute, setEditingRoute] = useState(null);
+  const [newRoute, setNewRoute] = useState({
+    routeName: '',
+    origin: '',
+    destination: '',
+    departureTime: '',
+    distance: '',
+    estimatedDuration: '',
+    fare: '',
+    description: ''
+  });
+
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
@@ -200,6 +214,77 @@ const Transport = () => {
     } finally {
       setIsRefreshingSchedules(false);
       setSchedulesLoading(false);
+    }
+  };
+
+  // Routes Management Functions
+  const refreshRoutes = async () => {
+    try {
+      setLoading(true);
+      const routesResponse = await transportAPI.getRoutes();
+      if (routesResponse.success && routesResponse.data) {
+        setRoutes(routesResponse.data);
+      }
+    } catch (err) {
+      console.error('Error refreshing routes:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddRoute = async (e) => {
+    e.preventDefault();
+    try {
+      const routeData = {
+        ...newRoute,
+        distance: parseInt(newRoute.distance),
+        estimatedDuration: parseInt(newRoute.estimatedDuration),
+        fare: parseInt(newRoute.fare)
+      };
+      
+      const response = await transportAPI.createRoute(routeData);
+      if (response.success) {
+        setShowAddRouteForm(false);
+        setNewRoute({
+          routeName: '',
+          origin: '',
+          destination: '',
+          departureTime: '',
+          distance: '',
+          estimatedDuration: '',
+          fare: '',
+          description: ''
+        });
+        refreshRoutes();
+      }
+    } catch (err) {
+      console.error('Error adding route:', err);
+    }
+  };
+
+  const handleEditRoute = (route) => {
+    setEditingRoute(route);
+    setNewRoute({
+      routeName: route.routeName,
+      origin: route.origin,
+      destination: route.destination,
+      departureTime: route.departureTime,
+      distance: route.distance.toString(),
+      estimatedDuration: route.estimatedDuration.toString(),
+      fare: route.fare.toString(),
+      description: route.description || ''
+    });
+    setShowAddRouteForm(true);
+  };
+
+  const handleDeleteRoute = async (routeId) => {
+    if (window.confirm('Are you sure you want to delete this route?')) {
+      try {
+        await transportAPI.deleteRoute(routeId);
+        refreshRoutes();
+      } catch (err) {
+        console.error('Error deleting route:', err);
+      }
     }
   };
   
@@ -431,6 +516,90 @@ const Transport = () => {
           <h3>{dashboardStats.totalPersonnel}</h3>
           <p>Total Personnel</p>
         </div>
+      </div>
+
+      {/* Routes Management Section */}
+      <div className="routes-management-section">
+        <div className="section-header">
+          <h3>🚌 Routes Management</h3>
+          <div className="header-actions">
+            <button 
+              onClick={() => setShowAddRouteForm(true)} 
+              className="add-route-btn"
+            >
+              ➕ Add New Route
+            </button>
+            <button 
+              onClick={refreshRoutes} 
+              className="refresh-btn"
+              disabled={loading}
+            >
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
+        
+        {loading ? (
+          <div className="loading-state">Loading routes...</div>
+        ) : routes.length > 0 ? (
+          <div className="routes-table-container">
+            <table className="routes-table">
+              <thead>
+                <tr>
+                  <th>Route</th>
+                  <th>Departure Time</th>
+                  <th>Distance</th>
+                  <th>Fare</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {routes.map(route => (
+                  <tr key={route._id}>
+                    <td className="route-cell">
+                      <FaRoute className="route-icon" />
+                      <span className="route-name">
+                        {route.origin} → {route.destination}
+                      </span>
+                    </td>
+                    <td className="time-cell">
+                      <FaClock className="time-icon" />
+                      {route.departureTime}
+                    </td>
+                    <td>{route.distance} km</td>
+                    <td>${route.fare?.toLocaleString() || 'N/A'}</td>
+                    <td>
+                      <span className={`status-badge ${route.status}`}>
+                        {route.status}
+                      </span>
+                    </td>
+                    <td className="action-buttons">
+                      <button 
+                        onClick={() => handleEditRoute(route)} 
+                        className="edit-btn"
+                        title="Edit Route"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteRoute(route._id)} 
+                        className="delete-btn"
+                        title="Delete Route"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="no-routes">
+            <p>No routes found. Add your first route to get started!</p>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions - Starting with just Plan Daily Schedule */}
@@ -773,6 +942,169 @@ const Transport = () => {
                 </button>
                 <button type="submit" className="submit-btn" disabled={isCreatingSchedule}>
                   {isCreatingSchedule ? 'Creating...' : 'Create Schedule'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Route Form Modal */}
+      {showAddRouteForm && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h3>{editingRoute ? 'Edit Route' : 'Add New Route'}</h3>
+              <button onClick={() => {
+                setShowAddRouteForm(false);
+                setEditingRoute(null);
+                setNewRoute({
+                  routeName: '',
+                  origin: '',
+                  destination: '',
+                  departureTime: '',
+                  distance: '',
+                  estimatedDuration: '',
+                  fare: '',
+                  description: ''
+                });
+              }} className="close-btn">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleAddRoute} className="modal-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="routeName">Route Name:</label>
+                  <input
+                    type="text"
+                    id="routeName"
+                    name="routeName"
+                    value={newRoute.routeName}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, routeName: e.target.value }))}
+                    placeholder="e.g., Kigali to Kampala"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="origin">Origin:</label>
+                  <input
+                    type="text"
+                    id="origin"
+                    name="origin"
+                    value={newRoute.origin}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, origin: e.target.value }))}
+                    placeholder="e.g., Kigali"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="destination">Destination:</label>
+                  <input
+                    type="text"
+                    id="destination"
+                    name="destination"
+                    value={newRoute.destination}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, destination: e.target.value }))}
+                    placeholder="e.g., Kampala"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="departureTime">Departure Time:</label>
+                  <input
+                    type="time"
+                    id="departureTime"
+                    name="departureTime"
+                    value={newRoute.departureTime}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, departureTime: e.target.value }))}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="distance">Distance (km):</label>
+                  <input
+                    type="number"
+                    id="distance"
+                    name="distance"
+                    value={newRoute.distance}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, distance: e.target.value }))}
+                    min="1"
+                    placeholder="450"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="estimatedDuration">Duration (hours):</label>
+                  <input
+                    type="number"
+                    id="estimatedDuration"
+                    name="estimatedDuration"
+                    value={newRoute.estimatedDuration}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, estimatedDuration: e.target.value }))}
+                    min="1"
+                    placeholder="8"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="fare">Fare ($):</label>
+                  <input
+                    type="number"
+                    id="fare"
+                    name="fare"
+                    value={newRoute.fare}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, fare: e.target.value }))}
+                    min="0"
+                    placeholder="25000"
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="description">Description:</label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={newRoute.description}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Optional route description..."
+                    rows="3"
+                  />
+                </div>
+              </div>
+              
+              <div className="form-actions">
+                <button type="button" onClick={() => {
+                  setShowAddRouteForm(false);
+                  setEditingRoute(null);
+                  setNewRoute({
+                    routeName: '',
+                    origin: '',
+                    destination: '',
+                    departureTime: '',
+                    distance: '',
+                    estimatedDuration: '',
+                    fare: '',
+                    description: ''
+                  });
+                }} className="cancel-btn">
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  {editingRoute ? 'Update Route' : 'Add Route'}
                 </button>
               </div>
             </form>

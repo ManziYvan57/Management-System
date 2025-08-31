@@ -441,6 +441,26 @@ export const transportAPI = {
     return apiRequest(`/transport/routes${queryString ? `?${queryString}` : ''}`);
   },
   
+  createRoute: async (routeData) => {
+    return apiRequest('/transport/routes', {
+      method: 'POST',
+      body: JSON.stringify(routeData)
+    });
+  },
+  
+  updateRoute: async (id, routeData) => {
+    return apiRequest(`/transport/routes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(routeData)
+    });
+  },
+  
+  deleteRoute: async (id) => {
+    return apiRequest(`/transport/routes/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
   getTrips: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/transport/trips${queryString ? `?${queryString}` : ''}`);
