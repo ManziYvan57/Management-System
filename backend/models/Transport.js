@@ -306,14 +306,30 @@ dailyScheduleSchema.pre('save', async function(next) {
     route: this.route,
     routeType: typeof this.route,
     isModified: this.isModified('route'),
+    routeValue: this.route,
+    routeId: this.route ? this.route.toString() : 'null',
     assignedVehicle: this.assignedVehicle,
     assignedDriver: this.assignedDriver,
     date: this.date,
     departureTime: this.departureTime
   });
   
-  if (this.isModified('assignedVehicle') || this.isModified('assignedDriver') || this.isModified('date') || this.isModified('departureTime')) {
+  if (this.isModified('route') || this.isModified('assignedVehicle') || this.isModified('assignedDriver') || this.isModified('date') || this.isModified('departureTime')) {
     try {
+      // Check if route is already assigned for this date and time
+      if (this.route) {
+        const conflictingRouteSchedule = await this.constructor.findOne({
+          _id: { $ne: this._id },
+          date: this.date,
+          route: this.route,
+          status: { $in: ['planned', 'confirmed', 'in_progress'] }
+        });
+        
+        if (conflictingRouteSchedule) {
+          return next(new Error('Route is already assigned to another schedule on this date'));
+        }
+      }
+      
       // Check if vehicle is available for this date and time
       const conflictingSchedule = await this.constructor.findOne({
         _id: { $ne: this._id },
