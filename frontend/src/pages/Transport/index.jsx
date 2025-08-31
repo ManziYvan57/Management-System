@@ -816,7 +816,10 @@ const Transport = () => {
                 {dailySchedules.map((schedule) => {
                   // Find route details - handle null route field
                   const routeId = schedule.route || schedule.routeId;
+                  console.log('🔍 Looking for route with ID:', routeId);
+                  console.log('🔍 Available hardcoded routes:', hardcodedRoutes.map(r => ({ id: r._id, name: r.routeName })));
                   const route = routeId ? hardcodedRoutes.find(r => r._id === routeId) : null;
+                  console.log('🔍 Found route:', route);
                   const routeName = route ? route.routeName : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
                   
                   // Find vehicle details - handle both ID string and object
