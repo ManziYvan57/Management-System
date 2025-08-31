@@ -301,6 +301,17 @@ const dailyScheduleSchema = new mongoose.Schema({
 
 // Pre-save middleware to validate vehicle and driver availability
 dailyScheduleSchema.pre('save', async function(next) {
+  // Debug: Log the document before saving
+  console.log('🔍 Pre-save hook - Document data:', {
+    route: this.route,
+    routeType: typeof this.route,
+    isModified: this.isModified('route'),
+    assignedVehicle: this.assignedVehicle,
+    assignedDriver: this.assignedDriver,
+    date: this.date,
+    departureTime: this.departureTime
+  });
+  
   if (this.isModified('assignedVehicle') || this.isModified('assignedDriver') || this.isModified('date') || this.isModified('departureTime')) {
     try {
       // Check if vehicle is available for this date and time
@@ -331,6 +342,17 @@ dailyScheduleSchema.pre('save', async function(next) {
     }
   }
   next();
+});
+
+// Post-save middleware to log what was actually saved
+dailyScheduleSchema.post('save', function(doc) {
+  console.log('🔍 Post-save hook - Saved document:', {
+    id: doc._id,
+    route: doc.route,
+    routeType: typeof doc.route,
+    date: doc.date,
+    departureTime: doc.departureTime
+  });
 });
 
 // Indexes for daily schedule

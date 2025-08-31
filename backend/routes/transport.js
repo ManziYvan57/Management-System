@@ -718,11 +718,17 @@ router.get('/daily-schedules', protect, async (req, res) => {
     
     console.log('📊 Found schedules:', schedules.length, 'out of total:', total);
     
-    // Debug: Log the first schedule to see the structure
+    // Debug: Log all schedules to see the structure
     if (schedules.length > 0) {
-      console.log('🔍 First schedule raw data:', JSON.stringify(schedules[0].toObject(), null, 2));
-      console.log('🔍 Route field type:', typeof schedules[0].route);
-      console.log('🔍 Route field value:', schedules[0].route);
+      console.log('🔍 Total schedules found:', schedules.length);
+      schedules.forEach((schedule, index) => {
+        console.log(`🔍 Schedule ${index + 1}:`);
+        console.log(`  - ID: ${schedule._id}`);
+        console.log(`  - Date: ${schedule.date}`);
+        console.log(`  - Route: ${schedule.route}`);
+        console.log(`  - Route type: ${typeof schedule.route}`);
+        console.log(`  - Created: ${schedule.createdAt}`);
+      });
     }
     
     res.status(200).json({
