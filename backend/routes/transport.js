@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { protect, authorize } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 const { Route, Trip, DailySchedule } = require('../models/Transport');
@@ -784,6 +785,17 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
     console.log('🔍 Route field before cleanup:', cleanData.route);
     console.log('🔍 Route field type:', typeof cleanData.route);
     console.log('🔍 Route field validation:', mongoose.Types.ObjectId.isValid(cleanData.route));
+    console.log('🔍 Route field length:', cleanData.route ? cleanData.route.length : 'undefined');
+    console.log('🔍 Route field trimmed:', cleanData.route ? cleanData.route.trim() : 'undefined');
+    
+    // Ensure route field is properly set
+    if (!cleanData.route || cleanData.route === '') {
+      console.log('❌ Route field is empty or undefined!');
+      return res.status(400).json({
+        success: false,
+        message: 'Route field is required and cannot be empty'
+      });
+    }
     
     const scheduleData = {
       ...cleanData,
@@ -792,6 +804,7 @@ router.post('/daily-schedules', protect, authorize('transport', 'create'), [
     
     console.log('📝 Final schedule data:', scheduleData);
     console.log('📝 Route field in final data:', scheduleData.route);
+    console.log('📝 Route field type in final data:', typeof scheduleData.route);
 
     const schedule = await DailySchedule.create(scheduleData);
     
