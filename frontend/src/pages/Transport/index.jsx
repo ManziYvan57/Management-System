@@ -653,7 +653,7 @@ const Transport = () => {
                     <option value="">Select Route</option>
                     {routes.map(route => (
                                               <option key={route._id} value={route._id}>
-                          {route.origin} → {route.destination}
+                          {route.origin} → {route.destination} (Departure: {route.departureTime})
                         </option>
                     ))}
                   </select>
@@ -829,7 +829,7 @@ const Transport = () => {
                     // Find route details - handle null route field
                     const routeId = schedule.route || schedule.routeId;
                     const route = routeId ? routes.find(r => r._id === routeId) : null;
-                    const routeName = route ? `${route.origin} → ${route.destination}` : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
+                    const routeName = route ? `${route.origin} → ${route.destination} (${route.departureTime})` : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
                     
                     // Find vehicle details - handle both ID string and object
                     const vehicleId = typeof schedule.assignedVehicle === 'string' ? schedule.assignedVehicle : 

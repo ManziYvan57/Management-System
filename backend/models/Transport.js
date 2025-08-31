@@ -21,6 +21,17 @@ const routeSchema = new mongoose.Schema({
     trim: true
   },
   
+  departureTime: {
+    type: String, // Format: "HH:MM" (e.g., "09:00")
+    required: [true, 'Departure time is required'],
+    validate: {
+      validator: function(v) {
+        return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+      },
+      message: 'Invalid time format. Use HH:MM format'
+    }
+  },
+  
   distance: {
     type: Number,
     required: [true, 'Distance is required'],
