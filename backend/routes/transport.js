@@ -704,8 +704,19 @@ router.get('/daily-schedules', protect, async (req, res) => {
     
     console.log('🔍 Final query:', JSON.stringify(query, null, 2));
     
+    // Debug: Check if Route model exists
+    console.log('🔍 Route model check:', {
+      RouteModel: !!Route,
+      RouteModelName: Route ? Route.modelName : 'undefined',
+      RouteCollectionName: Route ? Route.collection.name : 'undefined'
+    });
+    
     const schedules = await DailySchedule.find(query)
-      .populate('route', 'routeName origin destination')
+      .populate({
+        path: 'route',
+        select: 'routeName origin destination',
+        model: 'Route'
+      })
       .populate('assignedVehicle', 'plateNumber make model seatingCapacity')
       .populate('assignedDriver', 'firstName lastName employeeId')
       .populate('customerCare', 'firstName lastName employeeId')
@@ -727,6 +738,8 @@ router.get('/daily-schedules', protect, async (req, res) => {
         console.log(`  - Date: ${schedule.date}`);
         console.log(`  - Route: ${schedule.route}`);
         console.log(`  - Route type: ${typeof schedule.route}`);
+        console.log(`  - Route ID: ${schedule.route ? schedule.route._id : 'null'}`);
+        console.log(`  - Route Name: ${schedule.route ? schedule.route.routeName : 'null'}`);
         console.log(`  - Created: ${schedule.createdAt}`);
       });
     }
