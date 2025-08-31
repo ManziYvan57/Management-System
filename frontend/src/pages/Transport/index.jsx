@@ -41,6 +41,10 @@ const Transport = () => {
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [availableDrivers, setAvailableDrivers] = useState([]);
   const [availableCustomerCare, setAvailableCustomerCare] = useState([]);
+  
+  // Daily Schedules Display State
+  const [dailySchedules, setDailySchedules] = useState([]);
+  const [schedulesLoading, setSchedulesLoading] = useState(false);
 
   // Live Display Mode - Keeping this as requested
   const [showLiveDisplay, setShowLiveDisplay] = useState(false);
@@ -115,6 +119,32 @@ const Transport = () => {
     fetchAvailableResources();
   }, []);
 
+  // Fetch daily schedules
+  useEffect(() => {
+    const fetchDailySchedules = async () => {
+      try {
+        setSchedulesLoading(true);
+        console.log('🔍 Fetching daily schedules...');
+        
+        const response = await transportAPI.getDailySchedules();
+        console.log('📅 Daily schedules response:', response);
+        
+        if (response.data && Array.isArray(response.data)) {
+          setDailySchedules(response.data);
+        } else {
+          setDailySchedules([]);
+        }
+      } catch (err) {
+        console.error('Error fetching daily schedules:', err);
+        setDailySchedules([]);
+      } finally {
+        setSchedulesLoading(false);
+      }
+    };
+
+    fetchDailySchedules();
+  }, []);
+
   // Handle daily schedule input changes
   const handleDailyScheduleChange = (e) => {
     const { name, value } = e.target;
@@ -157,6 +187,21 @@ const Transport = () => {
     }
   };
 
+  // Refresh daily schedules manually
+  const refreshDailySchedules = async () => {
+    try {
+      setSchedulesLoading(true);
+      const response = await transportAPI.getDailySchedules();
+      if (response.data && Array.isArray(response.data)) {
+        setDailySchedules(response.data);
+      }
+    } catch (err) {
+      console.error('Error refreshing daily schedules:', err);
+    } finally {
+      setSchedulesLoading(false);
+    }
+  };
+
   // Handle daily schedule submission
   const handleDailyScheduleSubmit = async (e) => {
     e.preventDefault();
@@ -186,6 +231,12 @@ const Transport = () => {
         notes: ''
       });
       setShowDailyScheduleForm(false);
+      
+      // Refresh daily schedules
+      const refreshResponse = await transportAPI.getDailySchedules();
+      if (refreshResponse.data && Array.isArray(refreshResponse.data)) {
+        setDailySchedules(refreshResponse.data);
+      }
       
       alert('Daily schedule created successfully!');
     } catch (err) {
@@ -701,6 +752,141 @@ const Transport = () => {
           </div>
         </div>
       )}
+
+      {/* Daily Schedules Display */}
+      <div className="daily-schedules-section">
+        <div className="section-header">
+          <h3>Daily Schedules</h3>
+          <div className="header-actions">
+            <button 
+              onClick={refreshDailySchedules} 
+              className="refresh-btn"
+              disabled={schedulesLoading}
+            >
+              {schedulesLoading ? 'Refreshing...' : '🔄 Refresh'}
+            </button>
+          </div>
+        </div>
+        
+        <div className="table-container">
+          {schedulesLoading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading daily schedules...</p>
+            </div>
+          )}
+          
+          {!schedulesLoading && dailySchedules.length === 0 && (
+            <div className="empty-state">
+              <p>No daily schedules found. Create one using the "Plan Daily Schedule" button above.</p>
+            </div>
+          )}
+          
+          {!schedulesLoading && dailySchedules.length > 0 && (
+            <table className="schedules-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Route</th>
+                  <th>Departure Time</th>
+                  <th>Vehicle</th>
+                  <th>Driver</th>
+                  <th>Customer Care</th>
+                  <th>Capacity</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dailySchedules.map((schedule) => {
+                  // Find route details
+                  const route = hardcodedRoutes.find(r => r._id === schedule.route);
+                  const routeName = route ? route.routeName : 'Unknown Route';
+                  
+                  // Find vehicle details
+                  const vehicle = availableVehicles.find(v => v._id === schedule.assignedVehicle);
+                  const vehicleInfo = vehicle ? `${vehicle.plateNumber} - ${vehicle.make} ${vehicle.model}` : 'Unknown Vehicle';
+                  
+                  // Find driver details
+                  const driver = availableDrivers.find(d => d._id === schedule.assignedDriver);
+                  const driverName = driver ? `${driver.firstName} ${driver.lastName}` : 'Unknown Driver';
+                  
+                  // Find customer care details
+                  const customerCare = availableCustomerCare.find(cc => cc._id === schedule.customerCare);
+                  const customerCareName = customerCare ? `${customerCare.firstName} ${customerCare.lastName}` : 'Not Assigned';
+                  
+                  return (
+                    <tr key={schedule._id}>
+                      <td>
+                        <div className="date-cell">
+                          <FaClock className="date-icon" />
+                          {new Date(schedule.date).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="route-cell">
+                          <FaRoute className="route-icon" />
+                          {routeName}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="time-cell">
+                          <FaClock className="time-icon" />
+                          {schedule.departureTime}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="vehicle-cell">
+                          <FaBus className="vehicle-icon" />
+                          {vehicleInfo}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="driver-cell">
+                          <FaUserTie className="driver-icon" />
+                          {driverName}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="customer-care-cell">
+                          <FaUsers className="customer-care-icon" />
+                          {customerCareName}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="capacity-badge">{schedule.capacity}</span>
+                      </td>
+                      <td>
+                        <span className="notes-text">
+                          {schedule.notes || 'No notes'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button 
+                            className="edit-btn"
+                            onClick={() => alert('Edit functionality coming soon!')}
+                            title="Edit Schedule"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            className="delete-btn"
+                            onClick={() => alert('Delete functionality coming soon!')}
+                            title="Delete Schedule"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
