@@ -742,6 +742,15 @@ router.get('/daily-schedules', protect, async (req, res) => {
           destination: specificRoute.destination
         } : null
       });
+      
+      // List all existing routes to see what we actually have
+      const allRoutes = await Route.find({}).select('_id routeName origin destination');
+      console.log('🔍 All existing routes:', allRoutes.map(route => ({
+        _id: route._id.toString(),
+        routeName: route.routeName,
+        origin: route.origin,
+        destination: route.destination
+      })));
     } catch (error) {
       console.log('❌ Error checking Route collection:', error.message);
     }
