@@ -4,24 +4,7 @@ import { vehiclesAPI, personnelAPI, transportAPI } from '../../services/api';
 import './Transport.css';
 
 const Transport = () => {
-  // Hardcoded routes for testing
-  const hardcodedRoutes = [
-    {
-      _id: '507f1f77bcf86cd799439011',
-      routeName: 'Kigali -> Kampala',
-      origin: 'Kigali',
-      destination: 'Kampala',
-      departureTime: '09:00'
-    },
-    {
-      _id: '507f1f77bcf86cd799439012',
-      routeName: 'Kigali -> Nairobi',
-      origin: 'Kigali',
-      destination: 'Nairobi',
-      departureTime: '07:00'
-    }
-  ];
-
+  // Routes will be fetched dynamically from database
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -66,19 +49,19 @@ const Transport = () => {
       try {
         setLoading(true);
         
-        // Fetch routes using test endpoint
+        // Fetch routes from the main routes endpoint
         try {
-          console.log('🔍 Fetching routes...');
-          const response = await fetch('https://trinity-management-system.onrender.com/api/transport/test-routes');
-          console.log('📡 Routes response status:', response.status);
+          console.log('🔍 Fetching routes from database...');
+          const routesResponse = await transportAPI.getRoutes();
+          console.log('📡 Routes response:', routesResponse);
           
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          if (routesResponse.success && routesResponse.data) {
+            setRoutes(routesResponse.data);
+            console.log('✅ Routes loaded:', routesResponse.data.length);
+          } else {
+            console.warn('⚠️ No routes data received');
+            setRoutes([]);
           }
-          
-          const routesData = await response.json();
-          console.log('📊 Routes data:', routesData);
-          setRoutes(routesData.data || []);
         } catch (routeErr) {
           console.error('❌ Error fetching routes:', routeErr);
           setRoutes([]);
@@ -142,7 +125,7 @@ const Transport = () => {
           if (response.data.length > 0) {
             console.log('🔍 Schedule data structure:', response.data[0]);
             console.log('🔍 Route field:', response.data[0].route);
-            console.log('🔍 Hardcoded route IDs:', hardcodedRoutes.map(r => r._id));
+            console.log('🔍 Available route IDs:', routes.map(r => r._id));
           }
           setDailySchedules(response.data);
         } else {
@@ -165,7 +148,7 @@ const Transport = () => {
     
     if (name === 'route') {
       // Auto-fill departure time when route is selected
-      const selectedRoute = hardcodedRoutes.find(route => route._id === value);
+      const selectedRoute = routes.find(route => route._id === value);
       if (selectedRoute) {
         setNewDailySchedule(prev => ({
           ...prev,
@@ -668,10 +651,10 @@ const Transport = () => {
                     required
                   >
                     <option value="">Select Route</option>
-                    {hardcodedRoutes.map(route => (
-                      <option key={route._id} value={route._id}>
-                        {route.routeName} (Departure: {route.departureTime})
-                      </option>
+                    {routes.map(route => (
+                                              <option key={route._id} value={route._id}>
+                          {route.origin} → {route.destination}
+                        </option>
                     ))}
                   </select>
                 </div>
@@ -845,8 +828,8 @@ const Transport = () => {
                   {currentSchedules.map((schedule) => {
                     // Find route details - handle null route field
                     const routeId = schedule.route || schedule.routeId;
-                    const route = routeId ? hardcodedRoutes.find(r => r._id === routeId) : null;
-                    const routeName = route ? route.routeName : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
+                    const route = routeId ? routes.find(r => r._id === routeId) : null;
+                    const routeName = route ? `${route.origin} → ${route.destination}` : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
                     
                     // Find vehicle details - handle both ID string and object
                     const vehicleId = typeof schedule.assignedVehicle === 'string' ? schedule.assignedVehicle : 
