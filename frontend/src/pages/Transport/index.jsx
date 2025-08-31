@@ -4,7 +4,28 @@ import { vehiclesAPI, personnelAPI, transportAPI } from '../../services/api';
 import './Transport.css';
 
 const Transport = () => {
+  const [activeTab, setActiveTab] = useState('routes');
 
+  const tabs = [
+    {
+      id: 'routes',
+      label: 'Routes',
+      icon: <FaRoute />,
+      description: 'Manage transport routes and schedules'
+    },
+    {
+      id: 'schedules',
+      label: 'Daily Schedules',
+      icon: <FaClock />,
+      description: 'Plan and manage daily transport schedules'
+    },
+    {
+      id: 'live',
+      label: 'Live Display',
+      icon: <FaBus />,
+      description: 'Real-time departure board and status'
+    }
+  ];
 
   // Routes will be fetched dynamically from database
   const [routes, setRoutes] = useState([]);
@@ -477,6 +498,398 @@ const Transport = () => {
     return () => clearInterval(timeInterval);
   }, []);
 
+  // Tab Components
+  const RoutesTab = ({ routes, loading, error, onRefresh, onAddRoute, onEditRoute, onDeleteRoute }) => {
+    if (loading) {
+      return (
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading routes...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="error-state">
+          <p>Error: {error}</p>
+          <button onClick={onRefresh} className="retry-btn">Retry</button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="routes-tab">
+        {/* Header with Add Button */}
+        <div className="tab-header">
+          <div className="header-left">
+            <h2>Transport Routes</h2>
+            <span className="route-count">{routes.length} routes</span>
+          </div>
+          
+          <div className="header-right">
+            <button 
+              className="add-button"
+              onClick={onAddRoute}
+            >
+              <FaPlus />
+              Add Route
+            </button>
+          </div>
+        </div>
+
+        {/* Routes Table */}
+        <div className="table-container">
+          {routes.length === 0 ? (
+            <div className="empty-state">
+              <FaRoute className="empty-icon" />
+              <h3>No routes found</h3>
+              <p>Add your first route to get started</p>
+              <button 
+                className="add-button"
+                onClick={onAddRoute}
+              >
+                <FaPlus />
+                Add Route
+              </button>
+            </div>
+          ) : (
+            <table className="routes-table">
+              <thead>
+                <tr>
+                  <th>Route</th>
+                  <th>Departure Time</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {routes.map(route => (
+                  <tr key={route._id}>
+                    <td>
+                      <div className="route-info">
+                        <FaRoute className="route-icon" />
+                        <span className="route-name">
+                          {route.origin} → {route.destination}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="time-info">
+                        <FaClock className="time-icon" />
+                        {route.departureTime}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="action-btn edit-btn"
+                          title="Edit Route"
+                          onClick={() => onEditRoute(route)}
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="action-btn delete-btn"
+                          title="Delete Route"
+                          onClick={() => onDeleteRoute(route._id)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const SchedulesTab = ({ dailySchedules, schedulesLoading, routes, availableVehicles, availableDrivers, availableCustomerCare, onRefresh, onCreateSchedule, currentPage, totalPages, onPageChange, onNextPage, onPrevPage }) => {
+    return (
+      <div className="schedules-tab">
+        {/* Header */}
+        <div className="tab-header">
+          <div className="header-left">
+            <h2>Daily Schedules</h2>
+            <span className="schedule-count">{dailySchedules.length} schedules</span>
+          </div>
+          
+          <div className="header-right">
+            <button 
+              className="add-button"
+              onClick={onCreateSchedule}
+            >
+              <FaPlus />
+              Create Schedule
+            </button>
+          </div>
+        </div>
+
+        {/* Schedules Table */}
+        <div className="table-container">
+          {schedulesLoading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading daily schedules...</p>
+            </div>
+          )}
+          
+          {!schedulesLoading && dailySchedules.length === 0 && (
+            <div className="empty-state">
+              <FaClock className="empty-icon" />
+              <h3>No daily schedules found</h3>
+              <p>Create your first schedule to get started</p>
+              <button 
+                className="add-button"
+                onClick={onCreateSchedule}
+              >
+                <FaPlus />
+                Create Schedule
+              </button>
+            </div>
+          )}
+          
+          {!schedulesLoading && dailySchedules.length > 0 && (
+            <>
+              <table className="schedules-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Route</th>
+                    <th>Departure Time</th>
+                    <th>Vehicle</th>
+                    <th>Driver</th>
+                    <th>Customer Care</th>
+                    <th>Capacity</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dailySchedules.map((schedule) => {
+                    // Find route details - handle null route field
+                    const routeId = schedule.route || schedule.routeId;
+                    const route = routeId ? routes.find(r => r._id === routeId) : null;
+                    const routeName = route ? `${route.origin} → ${route.destination} (${route.departureTime})` : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
+                    
+                    // Find vehicle details - handle both ID string and object
+                    const vehicleId = typeof schedule.assignedVehicle === 'string' ? schedule.assignedVehicle : 
+                                     (schedule.assignedVehicle && schedule.assignedVehicle._id) ? schedule.assignedVehicle._id : 
+                                     schedule.vehicleId;
+                    const vehicle = vehicleId ? availableVehicles.find(v => v._id === vehicleId) : null;
+                    const vehicleInfo = vehicle ? `${vehicle.plateNumber || 'N/A'} - ${vehicle.make || 'Unknown'} ${vehicle.model || 'Unknown'}` : 
+                                      (vehicleId ? `Vehicle ID: ${vehicleId}` : 'No Vehicle Assigned');
+                    
+                    // Find driver details - handle both ID string and object
+                    const driverId = typeof schedule.assignedDriver === 'string' ? schedule.assignedDriver : 
+                                   (schedule.assignedDriver && schedule.assignedDriver._id) ? schedule.assignedDriver._id : 
+                                   schedule.driverId;
+                    const driver = driverId ? availableDrivers.find(d => d._id === driverId) : null;
+                    const driverName = driver ? `${driver.firstName || 'Unknown'} ${driver.lastName || 'Unknown'}` : 
+                                     (driverId ? `Driver ID: ${driverId}` : 'No Driver Assigned');
+                    
+                    // Find customer care details - handle both ID string and object
+                    const customerCareId = typeof schedule.customerCare === 'string' ? schedule.customerCare : 
+                                         (schedule.customerCare && schedule.customerCare._id) ? schedule.customerCare._id : 
+                                         schedule.customerCareId;
+                    const customerCare = customerCareId ? availableCustomerCare.find(cc => cc._id === customerCareId) : null;
+                    const customerCareName = customerCare ? `${customerCare.firstName || 'Unknown'} ${customerCare.lastName || 'Unknown'}` : 
+                                           (customerCareId ? `CC ID: ${customerCareId}` : 'Not Assigned');
+                    
+                    return (
+                      <tr key={schedule._id}>
+                        <td>
+                          <div className="date-cell">
+                            <FaClock className="date-icon" />
+                            {schedule.date ? new Date(schedule.date).toLocaleDateString() : 'No Date'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="route-cell">
+                            <FaRoute className="route-icon" />
+                            {routeName}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="time-cell">
+                            <FaClock className="time-icon" />
+                            {schedule.departureTime || 'N/A'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="vehicle-cell">
+                            <FaBus className="vehicle-icon" />
+                            {vehicleInfo}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="driver-cell">
+                            <FaUserTie className="driver-icon" />
+                            {driverName}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="vehicle-cell">
+                            <FaUsers className="customer-care-icon" />
+                            {customerCareName}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="capacity-badge">
+                            {schedule.capacity || 'N/A'}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="notes-text">
+                            {schedule.notes || 'No notes'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="action-buttons">
+                            <button className="action-btn edit-btn" title="Edit Schedule">
+                              <FaEdit />
+                            </button>
+                            <button className="action-btn delete-btn" title="Delete Schedule">
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="pagination-controls">
+                  <div className="pagination-info">
+                    Showing {((currentPage - 1) * 5) + 1} to {Math.min(currentPage * 5, dailySchedules.length)} of {dailySchedules.length} schedules
+                  </div>
+                  <div className="pagination-buttons">
+                    <button 
+                      onClick={onNextPage} 
+                      disabled={currentPage === 1}
+                      className="pagination-btn prev-btn"
+                    >
+                      ← Previous
+                    </button>
+                    
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map(pageNumber => (
+                      <button
+                        key={pageNumber}
+                        onClick={() => onPageChange(pageNumber)}
+                        className={`pagination-btn page-btn ${currentPage === pageNumber ? 'active' : ''}`}
+                      >
+                        {pageNumber}
+                      </button>
+                    ))}
+                    
+                    <button 
+                      onClick={onNextPage} 
+                      disabled={currentPage === totalPages}
+                      className="pagination-btn next-btn"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const LiveDisplayTab = ({ routes, showLiveDisplay, setShowLiveDisplay, autoUpdate, setAutoUpdate, currentDisplayIndex, setCurrentDisplayIndex, currentTime }) => {
+    return (
+      <div className="live-display-tab">
+        {/* Header */}
+        <div className="tab-header">
+          <div className="header-left">
+            <h2>Live Departure Board</h2>
+            <span className="live-time">{currentTime.toLocaleTimeString()}</span>
+          </div>
+          
+          <div className="header-right">
+            <button 
+              className={`toggle-button ${showLiveDisplay ? 'active' : ''}`}
+              onClick={() => setShowLiveDisplay(!showLiveDisplay)}
+            >
+              {showLiveDisplay ? 'Hide Display' : 'Show Display'}
+            </button>
+          </div>
+        </div>
+
+        {/* Live Display Content */}
+        {showLiveDisplay && (
+          <div className="live-display">
+            <div className="live-header">
+              <h3>Live Departure Board</h3>
+              <span className="live-time">{currentTime.toLocaleTimeString()}</span>
+            </div>
+            <div className="live-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>BUS PLATE</th>
+                    <th>ROUTE</th>
+                    <th>DEPARTURE TIME</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {routes && Array.isArray(routes) && routes.slice(currentDisplayIndex, currentDisplayIndex + 8).map((route) => (
+                    route.vehicles && Array.isArray(route.vehicles) && route.vehicles.map((vehicle) => (
+                      <tr key={vehicle.id || vehicle._id || Math.random()} className={`live-row ${vehicle.status || 'scheduled'}`}>
+                        <td>
+                          <div className="plate-cell">
+                            <FaBus className="vehicle-icon" />
+                            <strong>{vehicle.plate || 'N/A'}</strong>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="route-cell">
+                            <FaRoute className="route-icon" />
+                            {route.name || 'Unknown Route'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="time-cell">
+                            <FaClock className="time-icon" />
+                            <strong>{vehicle.departure || 'N/A'}</strong>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="status-cell">
+                            <span className={`live-status ${vehicle.status || 'scheduled'}`}>
+                              {(vehicle.status || 'scheduled').toUpperCase()}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ))}
+                  {(!routes || !Array.isArray(routes) || routes.length === 0) && (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                        No upcoming departures at this time
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="transport-container">
       <div className="page-header">
@@ -507,106 +920,69 @@ const Transport = () => {
         </div>
       </div>
 
-      {/* Routes Management Section */}
-      <div className="routes-management-section">
-        <div className="section-header">
-          <h3>🚌 Routes Management</h3>
-          <div className="header-actions">
-            <button 
-              onClick={() => setShowAddRouteForm(true)} 
-              className="add-route-btn"
+      {/* Tab Navigation */}
+      <div className="tabs-container">
+        <div className="tabs-header">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
             >
-              ➕ Add New Route
+              {tab.icon}
+              {tab.label}
             </button>
-            <button 
-              onClick={refreshRoutes} 
-              className="refresh-btn"
-              disabled={loading}
-            >
-              🔄 Refresh
-            </button>
-          </div>
+          ))}
         </div>
-        
-        {loading ? (
-          <div className="loading-state">Loading routes...</div>
-        ) : routes.length > 0 ? (
-          <div className="routes-table-container">
-            <table className="routes-table">
-              <thead>
-                <tr>
-                  <th>Route</th>
-                  <th>Departure Time</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {routes.map(route => (
-                  <tr key={route._id}>
-                    <td className="route-cell">
-                      <FaRoute className="route-icon" />
-                      <span className="route-name">
-                        {route.origin} → {route.destination}
-                      </span>
-                    </td>
-                    <td className="time-cell">
-                      <FaClock className="time-icon" />
-                      {route.departureTime}
-                    </td>
-                    <td className="action-buttons">
-                      <button 
-                        onClick={() => handleEditRoute(route)} 
-                        className="edit-btn"
-                        title="Edit Route"
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteRoute(route._id)} 
-                        className="delete-btn"
-                        title="Delete Route"
-                      >
-                        🗑️
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="no-routes">
-            <p>No routes found. Add your first route to get started!</p>
-          </div>
-        )}
+
+        {/* Tab Content */}
+        <div className="tab-content">
+          {activeTab === 'routes' && (
+            <RoutesTab 
+              routes={routes}
+              loading={loading}
+              error={error}
+              onRefresh={refreshRoutes}
+              onAddRoute={() => setShowAddRouteForm(true)}
+              onEditRoute={handleEditRoute}
+              onDeleteRoute={handleDeleteRoute}
+            />
+          )}
+          
+          {activeTab === 'schedules' && (
+            <SchedulesTab 
+              dailySchedules={dailySchedules}
+              schedulesLoading={schedulesLoading}
+              routes={routes}
+              availableVehicles={availableVehicles}
+              availableDrivers={availableDrivers}
+              availableCustomerCare={availableCustomerCare}
+              onRefresh={refreshDailySchedules}
+              onCreateSchedule={() => setShowDailyScheduleForm(true)}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              onNextPage={goToNextPage}
+              onPrevPage={goToPrevPage}
+            />
+          )}
+          
+          {activeTab === 'live' && (
+            <LiveDisplayTab 
+              routes={routes}
+              showLiveDisplay={showLiveDisplay}
+              setShowLiveDisplay={setShowLiveDisplay}
+              autoUpdate={autoUpdate}
+              setAutoUpdate={setAutoUpdate}
+              currentDisplayIndex={currentDisplayIndex}
+              setCurrentDisplayIndex={setCurrentDisplayIndex}
+              currentTime={currentTime}
+            />
+          )}
+        </div>
       </div>
 
 
-
-      {/* Quick Actions - Starting with just Plan Daily Schedule */}
-      <div className="quick-actions">
-        <button onClick={() => setShowDailyScheduleForm(true)} className="action-btn">
-          📅 Plan Daily Schedule
-        </button>
-        <p style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
-          🚧 More actions coming soon! 🚧
-        </p>
-      </div>
-
-      {/* Debug Info */}
-      <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '4px' }}>
-        <h4>Debug Info:</h4>
-        <p><strong>Available Vehicles:</strong> {availableVehicles && Array.isArray(availableVehicles) ? availableVehicles.length : 0}</p>
-        <p><strong>Available Drivers:</strong> {availableDrivers && Array.isArray(availableDrivers) ? availableDrivers.length : 0}</p>
-        <details>
-          <summary>Vehicles Data</summary>
-          <pre>{JSON.stringify((availableVehicles && Array.isArray(availableVehicles)) ? availableVehicles.slice(0, 3) : [], null, 2)}</pre>
-        </details>
-        <details>
-          <summary>Drivers Data</summary>
-          <pre>{JSON.stringify((availableDrivers && Array.isArray(availableDrivers)) ? availableDrivers.slice(0, 3) : [], null, 2)}</pre>
-        </details>
-      </div>
 
       {/* Live Display */}
       {showLiveDisplay && (
