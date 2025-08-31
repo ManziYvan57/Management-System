@@ -146,22 +146,23 @@ const Transport = () => {
   const handleDailyScheduleChange = (e) => {
     const { name, value } = e.target;
     
-    if (name === 'route') {
-      // Auto-fill departure time when route is selected
-      const selectedRoute = routes.find(route => route._id === value);
-      if (selectedRoute) {
-        setNewDailySchedule(prev => ({
-          ...prev,
-          route: value,
-          departureTime: selectedRoute.departureTime // Auto-fill departure time
-        }));
-      } else {
-        setNewDailySchedule(prev => ({
-          ...prev,
-          route: value
-        }));
-      }
-    } else if (name === 'assignedVehicle') {
+          if (name === 'route') {
+        // Auto-fill departure time when route is selected
+        const selectedRoute = routes.find(route => route._id === value);
+        if (selectedRoute && selectedRoute.departureTime) {
+          setNewDailySchedule(prev => ({
+            ...prev,
+            route: value,
+            departureTime: selectedRoute.departureTime // Auto-fill departure time
+          }));
+        } else {
+          setNewDailySchedule(prev => ({
+            ...prev,
+            route: value,
+            departureTime: '' // Keep as empty string, not undefined
+          }));
+        }
+      } else if (name === 'assignedVehicle') {
       // Auto-fill capacity when vehicle is selected
       const selectedVehicle = availableVehicles.find(vehicle => vehicle._id === value);
       if (selectedVehicle) {
