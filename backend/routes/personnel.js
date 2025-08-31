@@ -16,7 +16,7 @@ const validatePersonnel = [
 
   body('role').isIn(['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff']).withMessage('Please select a valid role'),
   body('department').isIn(['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'other']).withMessage('Please select a valid department'),
-  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Please select a valid terminal'),
+
   body('employmentStatus').optional().isIn(['active', 'inactive', 'suspended', 'terminated', 'on_leave']).withMessage('Please select a valid employment status'),
   body('licenseNumber').optional().trim(),
   body('licenseType').optional().custom((value) => {
@@ -70,7 +70,6 @@ router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
       search,
       role,
       department,
-      terminal,
       employmentStatus,
       page = 1,
       limit = 10,
@@ -93,7 +92,7 @@ router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
     
     if (role && role !== 'all') query.role = role;
     if (department && department !== 'all') query.department = department;
-    if (terminal && terminal !== 'all') query.terminal = terminal;
+
     if (employmentStatus && employmentStatus !== 'all') query.employmentStatus = employmentStatus;
 
     // Build sort object
@@ -327,8 +326,7 @@ router.delete('/:id', protect, authorize('personnel', 'delete'), async (req, res
 // @access  Private
 router.get('/stats/overview', protect, authorize('personnel', 'read'), async (req, res) => {
   try {
-    const { terminal } = req.query;
-    const query = terminal ? { terminal } : {};
+    const query = {};
 
     const [
       totalPersonnel,
@@ -341,7 +339,7 @@ router.get('/stats/overview', protect, authorize('personnel', 'read'), async (re
       managers,
       admins,
       otherRoles,
-      personnelByTerminal,
+      
       personnelByDepartment,
       personnelByStatus,
       recentHires,
@@ -357,11 +355,7 @@ router.get('/stats/overview', protect, authorize('personnel', 'read'), async (re
       Personnel.countDocuments({ ...query, role: 'manager' }),
       Personnel.countDocuments({ ...query, role: 'admin' }),
       Personnel.countDocuments({ ...query, role: 'other' }),
-      Personnel.aggregate([
-        { $match: query },
-        { $group: { _id: '$terminal', count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
-      ]),
+
       Personnel.aggregate([
         { $match: query },
         { $group: { _id: '$department', count: { $sum: 1 } } },
@@ -404,7 +398,7 @@ router.get('/stats/overview', protect, authorize('personnel', 'read'), async (re
           admins,
           otherRoles
         },
-        personnelByTerminal,
+
         personnelByDepartment,
         personnelByStatus,
         recentHires,
@@ -424,7 +418,6 @@ router.get('/drivers', protect, authorize('personnel', 'read'), async (req, res)
   try {
     const {
       search,
-      terminal,
       employmentStatus,
       licenseStatus,
       page = 1,
@@ -441,7 +434,7 @@ router.get('/drivers', protect, authorize('personnel', 'read'), async (req, res)
       ];
     }
     
-    if (terminal && terminal !== 'all') query.terminal = terminal;
+
     if (employmentStatus && employmentStatus !== 'all') query.employmentStatus = employmentStatus;
 
     // Filter by license status

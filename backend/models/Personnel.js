@@ -67,7 +67,8 @@ const personnelSchema = new mongoose.Schema({
   },
   employmentStatus: {
     type: String,
-    enum: ['active', 'inactive', 'suspended', 'terminated', 'on_leave']
+    enum: ['active', 'inactive', 'suspended', 'terminated', 'on_leave'],
+    default: 'active'
   },
   salary: {
     type: Number,
