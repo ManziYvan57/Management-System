@@ -134,6 +134,12 @@ const Transport = () => {
         console.log('📅 Daily schedules response:', response);
         
         if (response.data && Array.isArray(response.data)) {
+          // Debug: Log the first schedule to see the structure
+          if (response.data.length > 0) {
+            console.log('🔍 First schedule structure:', response.data[0]);
+            console.log('🔍 Available vehicles:', availableVehicles);
+            console.log('🔍 Available drivers:', availableDrivers);
+          }
           setDailySchedules(response.data);
         } else {
           setDailySchedules([]);
@@ -147,7 +153,7 @@ const Transport = () => {
     };
 
     fetchDailySchedules();
-  }, []);
+  }, [availableVehicles, availableDrivers, availableCustomerCare]);
 
   // Handle daily schedule input changes
   const handleDailyScheduleChange = (e) => {
@@ -808,27 +814,34 @@ const Transport = () => {
               </thead>
               <tbody>
                 {dailySchedules.map((schedule) => {
-                  // Debug logging to see what data we have
-                  console.log('🔍 Schedule data:', schedule);
-                  console.log('🔍 Available vehicles:', availableVehicles);
-                  console.log('🔍 Available drivers:', availableDrivers);
-                  console.log('🔍 Available customer care:', availableCustomerCare);
+                  // Find route details - handle null route field
+                  const routeId = schedule.route || schedule.routeId;
+                  const route = routeId ? hardcodedRoutes.find(r => r._id === routeId) : null;
+                  const routeName = route ? route.routeName : (routeId ? `Route ID: ${routeId}` : 'No Route Assigned');
                   
-                  // Find route details - check both _id and route field
-                  const route = hardcodedRoutes.find(r => r._id === schedule.route || r._id === schedule.routeId);
-                  const routeName = route ? route.routeName : `Route ID: ${schedule.route || 'Unknown'}`;
+                  // Find vehicle details - handle both ID string and object
+                  const vehicleId = typeof schedule.assignedVehicle === 'string' ? schedule.assignedVehicle : 
+                                   (schedule.assignedVehicle && schedule.assignedVehicle._id) ? schedule.assignedVehicle._id : 
+                                   schedule.vehicleId;
+                  const vehicle = vehicleId ? availableVehicles.find(v => v._id === vehicleId) : null;
+                  const vehicleInfo = vehicle ? `${vehicle.plateNumber || 'N/A'} - ${vehicle.make || 'Unknown'} ${vehicle.model || 'Unknown'}` : 
+                                    (vehicleId ? `Vehicle ID: ${vehicleId}` : 'No Vehicle Assigned');
                   
-                  // Find vehicle details - check both _id and assignedVehicle field
-                  const vehicle = availableVehicles.find(v => v._id === schedule.assignedVehicle || v._id === schedule.vehicleId);
-                  const vehicleInfo = vehicle ? `${vehicle.plateNumber || 'N/A'} - ${vehicle.make || 'Unknown'} ${vehicle.model || 'Unknown'}` : `Vehicle ID: ${schedule.assignedVehicle || 'Unknown'}`;
+                  // Find driver details - handle both ID string and object
+                  const driverId = typeof schedule.assignedDriver === 'string' ? schedule.assignedDriver : 
+                                 (schedule.assignedDriver && schedule.assignedDriver._id) ? schedule.assignedDriver._id : 
+                                 schedule.driverId;
+                  const driver = driverId ? availableDrivers.find(d => d._id === driverId) : null;
+                  const driverName = driver ? `${driver.firstName || 'Unknown'} ${driver.lastName || 'Unknown'}` : 
+                                   (driverId ? `Driver ID: ${driverId}` : 'No Driver Assigned');
                   
-                  // Find driver details - check both _id and assignedDriver field
-                  const driver = availableDrivers.find(d => d._id === schedule.assignedDriver || d._id === schedule.driverId);
-                  const driverName = driver ? `${driver.firstName || 'Unknown'} ${driver.lastName || 'Unknown'}` : `Driver ID: ${schedule.assignedDriver || 'Unknown'}`;
-                  
-                  // Find customer care details - check both _id and customerCare field
-                  const customerCare = availableCustomerCare.find(cc => cc._id === schedule.customerCare || cc._id === schedule.customerCareId);
-                  const customerCareName = customerCare ? `${customerCare.firstName || 'Unknown'} ${customerCare.lastName || 'Unknown'}` : (schedule.customerCare ? `CC ID: ${schedule.customerCare}` : 'Not Assigned');
+                  // Find customer care details - handle both ID string and object
+                  const customerCareId = typeof schedule.customerCare === 'string' ? schedule.customerCare : 
+                                       (schedule.customerCare && schedule.customerCare._id) ? schedule.customerCare._id : 
+                                       schedule.customerCareId;
+                  const customerCare = customerCareId ? availableCustomerCare.find(cc => cc._id === customerCareId) : null;
+                  const customerCareName = customerCare ? `${customerCare.firstName || 'Unknown'} ${customerCare.lastName || 'Unknown'}` : 
+                                         (customerCareId ? `CC ID: ${customerCareId}` : 'Not Assigned');
                   
                   return (
                     <tr key={schedule._id}>
