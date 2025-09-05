@@ -37,6 +37,7 @@ const Garage = () => {
     title: '',
     description: '',
     scheduledDate: '',
+    terminal: '',
     partsUsed: []
   });
 
@@ -521,7 +522,7 @@ const Garage = () => {
                    <td>{workOrder.workOrderNumber}</td>
                    <td>
                      {workOrder.vehicle ? 
-                       `${workOrder.vehicle.plateNumber} - ${workOrder.vehicle.make} ${workOrder.vehicle.model}` : 
+                       workOrder.vehicle.plateNumber : 
                        'N/A'
                      }
                    </td>
@@ -619,7 +620,7 @@ const Garage = () => {
                    <tr key={maintenance._id}>
                      <td>
                        {maintenance.vehicle ? 
-                         `${maintenance.vehicle.plateNumber} - ${maintenance.vehicle.make} ${maintenance.vehicle.model}` : 
+                         maintenance.vehicle.plateNumber : 
                          'N/A'
                        }
                      </td>
@@ -628,9 +629,13 @@ const Garage = () => {
                      <td>{maintenance.frequency.replace('_', ' ')}</td>
                      <td>{formatDate(maintenance.nextDue)}</td>
                      <td>
-                       <span className={`days-until-due ${getDaysUntilDueClass(daysUntilDue)}`}>
-                         {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : `${daysUntilDue} days`}
-                       </span>
+                       {maintenance.status === 'completed' ? (
+                         <span className="completed-status">Completed</span>
+                       ) : (
+                         <span className={`days-until-due ${getDaysUntilDueClass(daysUntilDue)}`}>
+                           {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)} days overdue` : `${daysUntilDue} days`}
+                         </span>
+                       )}
                      </td>
                      <td>
                        <span className={`status ${getMaintenanceStatus(maintenance)}`}>
@@ -717,7 +722,7 @@ const Garage = () => {
                     <option value="">Select Vehicle ({vehicles.length} available)</option>
                     {vehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model}
+                        {vehicle.plateNumber}
                       </option>
                     ))}
                   </select>
@@ -737,6 +742,38 @@ const Garage = () => {
                     <option value="emergency">Emergency</option>
                     <option value="preventive">Preventive</option>
                     <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="terminal">Terminal *</label>
+                  <select
+                    id="terminal"
+                    name="terminal"
+                    value={newWorkOrder.terminal}
+                    onChange={(e) => handleInputChange(e, 'workOrder')}
+                    required
+                  >
+                    <option value="">Select Terminal</option>
+                    <option value="Kigali">Kigali</option>
+                    <option value="Kampala">Kampala</option>
+                    <option value="Nairobi">Nairobi</option>
+                    <option value="Juba">Juba</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="terminal">Terminal *</label>
+                  <select
+                    id="terminal"
+                    name="terminal"
+                    value={newMaintenance.terminal}
+                    onChange={(e) => handleInputChange(e, 'maintenance')}
+                    required
+                  >
+                    <option value="">Select Terminal</option>
+                    <option value="Kigali">Kigali</option>
+                    <option value="Kampala">Kampala</option>
+                    <option value="Nairobi">Nairobi</option>
+                    <option value="Juba">Juba</option>
                   </select>
                 </div>
               </div>
@@ -885,7 +922,7 @@ const Garage = () => {
                     <option value="">Select Vehicle ({vehicles.length} available)</option>
                     {vehicles.map(vehicle => (
                       <option key={vehicle._id} value={vehicle._id}>
-                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model}
+                        {vehicle.plateNumber}
                       </option>
                     ))}
                   </select>
@@ -911,6 +948,22 @@ const Garage = () => {
                     <option value="battery_check">Battery Check</option>
                     <option value="coolant_check">Coolant Check</option>
                     <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="maintenanceTerminal">Terminal *</label>
+                  <select
+                    id="maintenanceTerminal"
+                    name="terminal"
+                    value={newMaintenance.terminal}
+                    onChange={(e) => handleInputChange(e, 'maintenance')}
+                    required
+                  >
+                    <option value="">Select Terminal</option>
+                    <option value="Kigali">Kigali</option>
+                    <option value="Kampala">Kampala</option>
+                    <option value="Nairobi">Nairobi</option>
+                    <option value="Juba">Juba</option>
                   </select>
                 </div>
               </div>

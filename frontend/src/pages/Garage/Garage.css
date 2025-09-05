@@ -249,6 +249,16 @@
   color: white;
 }
 
+.completed-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
 /* Parts List */
 .parts-list {
   list-style: none;
