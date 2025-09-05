@@ -8,15 +8,13 @@
 
 .assets-header {
   margin-bottom: 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+  text-align: center;
+  position: relative;
+  color: #6b7280;
 }
 
 .assets-title {
-  text-align: left;
+  text-align: center;
 }
 
 .assets-title h1 {
@@ -33,6 +31,9 @@
 }
 
 .assets-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
   display: flex;
   gap: 1rem;
   align-items: center;
