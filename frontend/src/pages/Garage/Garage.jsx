@@ -760,22 +760,6 @@ const Garage = () => {
                     <option value="Juba">Juba</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="terminal">Terminal *</label>
-                  <select
-                    id="terminal"
-                    name="terminal"
-                    value={newMaintenance.terminal}
-                    onChange={(e) => handleInputChange(e, 'maintenance')}
-                    required
-                  >
-                    <option value="">Select Terminal</option>
-                    <option value="Kigali">Kigali</option>
-                    <option value="Kampala">Kampala</option>
-                    <option value="Nairobi">Nairobi</option>
-                    <option value="Juba">Juba</option>
-                  </select>
-                </div>
               </div>
 
               <div className="form-row">
