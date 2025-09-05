@@ -112,7 +112,11 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
     <div className="vehicle-document-form-overlay">
       <div className="vehicle-document-form-modal">
         <div className="vehicle-document-form-header">
-          <h2>{mode === 'edit' ? 'Edit Vehicle Document' : 'Add Vehicle Document'}</h2>
+          <h2>
+            {mode === 'view' ? 'View Vehicle Document' : 
+             mode === 'edit' ? 'Edit Vehicle Document' : 
+             'Add Vehicle Document'}
+          </h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
 
@@ -126,6 +130,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 value={formData.vehicle}
                 onChange={handleInputChange}
                 className={errors.vehicle ? 'error' : ''}
+                disabled={mode === 'view'}
               >
                 <option value="">Select Vehicle</option>
                 {vehicles.map(vehicle => (
@@ -145,6 +150,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 value={formData.documentType}
                 onChange={handleInputChange}
                 className={errors.documentType ? 'error' : ''}
+                disabled={mode === 'view'}
               >
                 <option value="">Select Document Type</option>
                 {documentTypeOptions.map(option => (
@@ -168,6 +174,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 onChange={handleInputChange}
                 className={errors.title ? 'error' : ''}
                 placeholder="Enter document title"
+                disabled={mode === 'view'}
               />
               {errors.title && <span className="error-message">{errors.title}</span>}
             </div>
@@ -184,6 +191,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 onChange={handleInputChange}
                 className={errors.issuingAuthority ? 'error' : ''}
                 placeholder="Enter issuing authority"
+                disabled={mode === 'view'}
               />
               {errors.issuingAuthority && <span className="error-message">{errors.issuingAuthority}</span>}
             </div>
@@ -198,6 +206,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 onChange={handleInputChange}
                 className={errors.documentNumber ? 'error' : ''}
                 placeholder="Enter document number"
+                disabled={mode === 'view'}
               />
               {errors.documentNumber && <span className="error-message">{errors.documentNumber}</span>}
             </div>
@@ -213,6 +222,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 value={formData.issueDate}
                 onChange={handleInputChange}
                 className={errors.issueDate ? 'error' : ''}
+                disabled={mode === 'view'}
               />
               {errors.issueDate && <span className="error-message">{errors.issueDate}</span>}
             </div>
@@ -226,6 +236,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 value={formData.expiryDate}
                 onChange={handleInputChange}
                 className={errors.expiryDate ? 'error' : ''}
+                disabled={mode === 'view'}
               />
               {errors.expiryDate && <span className="error-message">{errors.expiryDate}</span>}
             </div>
@@ -239,6 +250,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
+                disabled={mode === 'view'}
               >
                 {statusOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -255,6 +267,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 name="complianceStatus"
                 value={formData.complianceStatus}
                 onChange={handleInputChange}
+                disabled={mode === 'view'}
               >
                 {complianceStatusOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -274,16 +287,19 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
               onChange={handleInputChange}
               placeholder="Enter additional notes"
               rows="3"
+              disabled={mode === 'view'}
             />
           </div>
 
           <div className="form-actions">
             <button type="button" onClick={onClose} className="btn-secondary">
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </button>
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Saving...' : (mode === 'edit' ? 'Update Document' : 'Add Document')}
-            </button>
+            {mode !== 'view' && (
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Saving...' : (mode === 'edit' ? 'Update Document' : 'Add Document')}
+              </button>
+            )}
           </div>
         </form>
       </div>

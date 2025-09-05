@@ -209,8 +209,9 @@
 .document-details {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .document-type,

@@ -11,6 +11,7 @@ const VehicleDocumentsTab = () => {
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showViewForm, setShowViewForm] = useState(false);
   const [editingDocument, setEditingDocument] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [documentTypeFilter, setDocumentTypeFilter] = useState('');
@@ -395,7 +396,7 @@ const VehicleDocumentsTab = () => {
                             className="action-btn view-btn"
                             onClick={() => {
                               setEditingDocument(doc);
-                              setShowEditForm(true);
+                              setShowViewForm(true);
                             }}
                             title="View Document"
                           >
@@ -450,6 +451,21 @@ const VehicleDocumentsTab = () => {
           }}
           onSubmit={(data) => handleEditDocument(editingDocument._id, data)}
           mode="edit"
+          document={editingDocument}
+          vehicles={vehicles}
+        />
+      )}
+
+      {/* View Document Modal */}
+      {showViewForm && editingDocument && (
+        <VehicleDocumentForm
+          isOpen={showViewForm}
+          onClose={() => {
+            setShowViewForm(false);
+            setEditingDocument(null);
+          }}
+          onSubmit={() => {}}
+          mode="view"
           document={editingDocument}
           vehicles={vehicles}
         />
