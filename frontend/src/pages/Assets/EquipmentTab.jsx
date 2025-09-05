@@ -220,7 +220,6 @@ const EquipmentTab = () => {
                   <td>
                     <div className="vehicle-info">
                       <strong>{item.name}</strong>
-                      <span>{item.type}</span>
                     </div>
                   </td>
                   <td>{item.category}</td>

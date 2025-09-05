@@ -101,7 +101,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
   ];
 
   useEffect(() => {
-    if (mode === 'edit' && personnel) {
+    if ((mode === 'edit' || mode === 'view') && personnel) {
       setFormData({
         firstName: personnel.firstName || '',
         lastName: personnel.lastName || '',
@@ -262,7 +262,8 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
         <div className="modal-header">
           <h3>
             <FaUser />
-            {mode === 'add' ? 'Add New Personnel' : 'Edit Personnel'}
+            {mode === 'view' ? 'View Personnel' : 
+             mode === 'add' ? 'Add New Personnel' : 'Edit Personnel'}
           </h3>
           <button onClick={onClose} className="close-button">
             <FaTimes />
@@ -284,6 +285,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   value={formData.firstName}
                   onChange={handleInputChange}
                   className={errors.firstName ? 'error' : ''}
+                  disabled={mode === 'view'}
                 />
                 {errors.firstName && <span className="error-message">{errors.firstName}</span>}
               </div>

@@ -21,7 +21,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (mode === 'edit' && equipment) {
+    if ((mode === 'edit' || mode === 'view') && equipment) {
       setFormData({
         name: equipment.name || '',
         category: equipment.category || '',

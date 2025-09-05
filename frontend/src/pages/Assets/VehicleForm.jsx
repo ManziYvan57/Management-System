@@ -25,7 +25,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (mode === 'edit' && vehicle) {
+    if ((mode === 'edit' || mode === 'view') && vehicle) {
       setFormData({
         plateNumber: vehicle.plateNumber || '',
         make: vehicle.make || '',
