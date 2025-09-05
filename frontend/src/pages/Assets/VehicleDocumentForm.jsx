@@ -46,6 +46,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
       if (document) {
         setFormData({
           ...document,
+          vehicle: document.vehicle?._id || document.vehicle || '',
           issueDate: document.issueDate ? new Date(document.issueDate).toISOString().split('T')[0] : '',
           expiryDate: document.expiryDate ? new Date(document.expiryDate).toISOString().split('T')[0] : ''
         });
