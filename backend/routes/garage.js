@@ -290,7 +290,7 @@ router.get('/stats', protect, async (req, res) => {
       status: { $ne: 'completed' }
     });
 
-    const vehiclesInMaintenance = await Vehicle.countDocuments({ status: 'maintenance' });
+    const vehiclesInMaintenance = await Vehicle.countDocuments({ status: 'maintenance', isActive: true });
 
     res.json({
       success: true,
