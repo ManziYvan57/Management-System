@@ -152,7 +152,27 @@ const VehicleDocumentsTab = () => {
 
   const getVehicleDisplay = (vehicle) => {
     if (!vehicle) return 'N/A';
-    return `${vehicle.plateNumber} - ${vehicle.make} ${vehicle.model} (${vehicle.year})`;
+    return vehicle.plateNumber;
+  };
+
+  // Group documents by vehicle
+  const groupDocumentsByVehicle = (documents) => {
+    const grouped = {};
+    documents.forEach(doc => {
+      const vehicleId = doc.vehicle?._id || doc.vehicle;
+      const vehiclePlate = getVehicleDisplay(doc.vehicle);
+      
+      if (!grouped[vehicleId]) {
+        grouped[vehicleId] = {
+          vehicle: doc.vehicle,
+          vehiclePlate: vehiclePlate,
+          documents: []
+        };
+      }
+      grouped[vehicleId].documents.push(doc);
+    });
+    
+    return Object.values(grouped);
   };
 
   if (loading) {
@@ -302,109 +322,110 @@ const VehicleDocumentsTab = () => {
             </button>
           </div>
         ) : (
-          <table className="documents-table">
-            <thead>
-              <tr>
-                <th>Vehicle</th>
-                <th>Document</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Compliance</th>
-                <th>Expiry</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map((doc) => (
-                <tr key={doc._id}>
-                  <td>
-                    <div className="vehicle-info">
-                      <FaFileAlt className="vehicle-icon" />
-                      <div className="vehicle-details">
-                        <strong>{getVehicleDisplay(doc.vehicle)}</strong>
-                        <span className="document-number">{doc.documentNumber}</span>
-                      </div>
+          <div className="documents-container">
+            {groupDocumentsByVehicle(documents).map((vehicleGroup) => (
+              <div key={vehicleGroup.vehicle?._id || vehicleGroup.vehicle} className="vehicle-document-group">
+                <div className="vehicle-header">
+                  <div className="vehicle-info">
+                    <FaFileAlt className="vehicle-icon" />
+                    <div className="vehicle-details">
+                      <strong className="vehicle-plate">{vehicleGroup.vehiclePlate}</strong>
+                      <span className="document-count">{vehicleGroup.documents.length} document(s)</span>
                     </div>
-                  </td>
-                  <td>
-                    <div className="document-info">
-                      <div className="document-title">
-                        <strong>{doc.title}</strong>
-                      </div>
-                      <div className="document-authority">
-                        <span className="issuing-authority">{doc.issuingAuthority}</span>
-                      </div>
-                      {doc.description && (
-                        <div className="document-description">
-                          <span className="description">{doc.description}</span>
+                  </div>
+                </div>
+                
+                <div className="documents-list">
+                  {vehicleGroup.documents.map((doc) => (
+                    <div key={doc._id} className="document-item">
+                      <div className="document-main-info">
+                        <div className="document-title">
+                          <strong>{doc.title}</strong>
+                          <span className="document-number">#{doc.documentNumber}</span>
                         </div>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`document-type-badge ${getDocumentTypeBadgeClass(doc.documentType)}`}>
-                      {doc.documentType.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${getStatusBadgeClass(doc.status)}`}>
-                      {doc.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`compliance-badge ${getComplianceBadgeClass(doc.complianceStatus)}`}>
-                      {doc.complianceStatus.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td>
-                    <div className={`expiry-info ${getExpiryStatusClass(doc.daysUntilExpiry)}`}>
-                      <div className="expiry-date">
-                        <FaCalendar />
-                        <span>{formatDate(doc.expiryDate)}</span>
-                      </div>
-                      {doc.daysUntilExpiry !== null && (
-                        <div className="days-remaining">
-                          {doc.daysUntilExpiry < 0 ? (
-                            <span className="expired">Expired {Math.abs(doc.daysUntilExpiry)} days ago</span>
-                          ) : (
-                            <span>{doc.daysUntilExpiry} days remaining</span>
-                          )}
+                        <div className="document-authority">
+                          <span className="issuing-authority">{doc.issuingAuthority}</span>
                         </div>
-                      )}
+                        {doc.description && (
+                          <div className="document-description">
+                            <span className="description">{doc.description}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="document-details">
+                        <div className="document-type">
+                          <span className={`document-type-badge ${getDocumentTypeBadgeClass(doc.documentType)}`}>
+                            {doc.documentType.replace('_', ' ')}
+                          </span>
+                        </div>
+                        
+                        <div className="document-status">
+                          <span className={`status-badge ${getStatusBadgeClass(doc.status)}`}>
+                            {doc.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                        
+                        <div className="document-compliance">
+                          <span className={`compliance-badge ${getComplianceBadgeClass(doc.complianceStatus)}`}>
+                            {doc.complianceStatus.replace('_', ' ')}
+                          </span>
+                        </div>
+                        
+                        <div className="document-expiry">
+                          <div className={`expiry-info ${getExpiryStatusClass(doc.daysUntilExpiry)}`}>
+                            <div className="expiry-date">
+                              <FaCalendar />
+                              <span>{formatDate(doc.expiryDate)}</span>
+                            </div>
+                            {doc.daysUntilExpiry !== null && (
+                              <div className="days-remaining">
+                                {doc.daysUntilExpiry < 0 ? (
+                                  <span className="expired">Expired {Math.abs(doc.daysUntilExpiry)} days ago</span>
+                                ) : (
+                                  <span>{doc.daysUntilExpiry} days remaining</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="document-actions">
+                          <button
+                            className="action-btn view-btn"
+                            onClick={() => {
+                              setEditingDocument(doc);
+                              setShowEditForm(true);
+                            }}
+                            title="View Document"
+                          >
+                            <FaEye />
+                          </button>
+                          <button
+                            className="action-btn edit-btn"
+                            onClick={() => {
+                              setEditingDocument(doc);
+                              setShowEditForm(true);
+                            }}
+                            title="Edit Document"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            className="action-btn delete-btn"
+                            onClick={() => handleDeleteDocument(doc._id)}
+                            title="Delete Document"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="action-btn view-btn"
-                        onClick={() => {
-                          setEditingDocument(doc);
-                          setShowEditForm(true);
-                        }}
-                      >
-                        View
-                      </button>
-                      <button
-                        className="action-btn edit-btn"
-                        onClick={() => {
-                          setEditingDocument(doc);
-                          setShowEditForm(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="action-btn delete-btn"
-                        onClick={() => handleDeleteDocument(doc._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

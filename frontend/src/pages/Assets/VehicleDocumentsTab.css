@@ -95,6 +95,150 @@
   background-color: #4b5563;
 }
 
+/* New grouped layout styles */
+.documents-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vehicle-document-group {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.vehicle-header {
+  background-color: #f8fafc;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.vehicle-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vehicle-icon {
+  color: #3b82f6;
+  font-size: 1.25rem;
+}
+
+.vehicle-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vehicle-plate {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.document-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.documents-list {
+  padding: 0;
+}
+
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 20px;
+}
+
+.document-item:last-child {
+  border-bottom: none;
+}
+
+.document-main-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.document-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.document-title strong {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.document-number {
+  font-size: 0.875rem;
+  color: #6b7280;
+  background-color: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.document-authority {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.document-description {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.document-details {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.document-type,
+.document-status,
+.document-compliance {
+  display: flex;
+  align-items: center;
+}
+
+.document-expiry {
+  display: flex;
+  align-items: center;
+}
+
+.document-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.document-actions .action-btn {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+/* Legacy table styles for fallback */
 .documents-table {
   width: 100%;
   border-collapse: collapse;
@@ -348,6 +492,30 @@
     align-items: stretch;
   }
   
+  /* New grouped layout mobile styles */
+  .document-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .document-details {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .document-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .document-actions .action-btn {
+    flex: 1;
+    min-width: 80px;
+  }
+  
+  /* Legacy table mobile styles */
   .documents-table {
     font-size: 0.75rem;
   }
