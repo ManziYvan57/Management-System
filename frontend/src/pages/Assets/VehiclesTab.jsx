@@ -3,6 +3,7 @@ import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaBus, FaUser, FaRo
 import { vehiclesAPI } from '../../services/api';
 import VehicleForm from './VehicleForm';
 import './Assets.css';
+import './VehiclesTab.css';
 
 const VehiclesTab = () => {
   const [vehicles, setVehicles] = useState([]);

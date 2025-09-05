@@ -3,6 +3,7 @@ import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaTools } from 'rea
 import { equipmentAPI } from '../../services/api';
 import EquipmentForm from './EquipmentForm';
 import './Assets.css';
+import './EquipmentTab.css';
 
 const EquipmentTab = () => {
   const [equipment, setEquipment] = useState([]);
@@ -113,7 +114,7 @@ const EquipmentTab = () => {
   }
 
   return (
-    <div className="vehicles-tab">
+    <div className="vehicles-tab equipment-tab">
       {/* Header */}
       <div className="tab-header">
         <div className="header-left">

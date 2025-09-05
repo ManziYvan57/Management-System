@@ -1,0 +1,56 @@
+/* Equipment Tab Specific Styles - Compact Button Overrides */
+
+.equipment-tab .action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.equipment-tab .action-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+}
+
+.equipment-tab .action-btn svg {
+  width: 12px !important;
+  height: 12px !important;
+  display: block !important;
+  color: inherit !important;
+}
+
+.equipment-tab .view-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.equipment-tab .view-btn:hover {
+  background-color: #2563eb;
+}
+
+.equipment-tab .edit-btn {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.equipment-tab .edit-btn:hover {
+  background-color: #d97706;
+}
+
+.equipment-tab .delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.equipment-tab .delete-btn:hover {
+  background-color: #dc2626;
+}
