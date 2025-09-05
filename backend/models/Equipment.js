@@ -35,6 +35,11 @@ const EquipmentSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    required: [true, 'Terminal is required']
+  },
 
   
   // Financial information

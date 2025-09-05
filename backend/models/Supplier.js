@@ -17,6 +17,11 @@ const SupplierSchema = new mongoose.Schema({
     trim: true,
     maxlength: [200, 'Supplies description cannot exceed 200 characters']
   },
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    required: [true, 'Terminal is required']
+  },
   phone: {
     type: String,
     trim: true,

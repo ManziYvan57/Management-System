@@ -48,6 +48,12 @@ const InventorySchema = new mongoose.Schema({
     maxlength: [50, 'Subcategory cannot exceed 50 characters']
   },
   
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    required: [true, 'Terminal is required']
+  },
+  
   // Stock Information
   quantity: {
     type: Number,

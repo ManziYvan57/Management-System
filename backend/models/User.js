@@ -66,6 +66,11 @@ const UserSchema = new mongoose.Schema({
     enum: ['management', 'garage', 'transport', 'inventory', 'drivers', 'customer_care'],
     required: [true, 'Please specify department']
   },
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    required: [true, 'Terminal is required']
+  },
   phone: {
     type: String,
     trim: true,

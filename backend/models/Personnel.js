@@ -60,6 +60,11 @@ const personnelSchema = new mongoose.Schema({
     enum: ['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'compliance', 'other'],
     required: [true, 'Department is required']
   },
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    required: [true, 'Terminal is required']
+  },
 
   hireDate: {
     type: Date,

@@ -62,6 +62,11 @@ const AssetSchema = new mongoose.Schema({
     required: [true, 'Please provide asset location'],
     trim: true
   },
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    required: [true, 'Terminal is required']
+  },
   insuranceExpiry: {
     type: Date
   },

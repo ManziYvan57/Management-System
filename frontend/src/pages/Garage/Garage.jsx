@@ -508,10 +508,11 @@ const Garage = () => {
                 <th>Type</th>
                 <th>Title</th>
                 <th>Priority</th>
-                                 <th>Status</th>
-                 <th>Scheduled Date</th>
-                 <th>Parts Used</th>
-                 <th>Actions</th>
+                <th>Status</th>
+                <th>Scheduled Date</th>
+                <th>Terminal</th>
+                <th>Parts Used</th>
+                <th>Actions</th>
                </tr>
              </thead>
              <tbody>
@@ -537,6 +538,11 @@ const Garage = () => {
                      </span>
                    </td>
                    <td>{formatDate(workOrder.scheduledDate)}</td>
+                   <td>
+                     <span className="terminal-badge">
+                       {workOrder.terminal || 'N/A'}
+                     </span>
+                   </td>
                    <td>
                      {workOrder.partsUsed && workOrder.partsUsed.length > 0 ? (
                        <ul className="parts-list">
@@ -599,10 +605,11 @@ const Garage = () => {
                 <th>Title</th>
                 <th>Frequency</th>
                 <th>Next Due</th>
-                                 <th>Days Until Due</th>
-                 <th>Status</th>
-                 <th>Required Parts</th>
-                 <th>Actions</th>
+                <th>Days Until Due</th>
+                <th>Status</th>
+                <th>Terminal</th>
+                <th>Required Parts</th>
+                <th>Actions</th>
                </tr>
              </thead>
              <tbody>
@@ -628,6 +635,11 @@ const Garage = () => {
                      <td>
                        <span className={`status ${getMaintenanceStatus(maintenance)}`}>
                          {maintenance.status.replace('_', ' ')}
+                       </span>
+                     </td>
+                     <td>
+                       <span className="terminal-badge">
+                         {maintenance.terminal || 'N/A'}
                        </span>
                      </td>
                      <td>

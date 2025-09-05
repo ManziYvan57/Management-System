@@ -686,6 +686,7 @@ const Inventory = () => {
                     <th>Unit Cost</th>
                     <th>Total Value</th>
                     <th>Supplier</th>
+                    <th>Terminal</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -701,6 +702,11 @@ const Inventory = () => {
                     <td>RWF {item.unitCost?.toLocaleString() || '0'}</td>
                     <td>RWF {item.totalValue?.toLocaleString() || '0'}</td>
                     <td>{item.supplier?.name || 'N/A'}</td>
+                    <td>
+                      <span className="terminal-badge">
+                        {item.terminal || 'N/A'}
+                      </span>
+                    </td>
                    <td>
                      <span className={`status ${getStockStatus(item)}`}>
                        {getStockStatus(item) === 'out-of-stock' && 'Out of Stock'}
@@ -925,6 +931,7 @@ const Inventory = () => {
                  <th>Phone</th>
                  <th>Email</th>
                  <th>What They Supply</th>
+                 <th>Terminal</th>
                  <th>Actions</th>
                </tr>
              </thead>
@@ -935,6 +942,11 @@ const Inventory = () => {
                    <td>{supplier.phone || 'N/A'}</td>
                    <td>{supplier.email || 'N/A'}</td>
                    <td>{supplier.supplies || 'N/A'}</td>
+                   <td>
+                     <span className="terminal-badge">
+                       {supplier.terminal || 'N/A'}
+                     </span>
+                   </td>
                                        <td>
                       <div className="action-controls">
                         <button 

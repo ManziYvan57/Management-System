@@ -16,6 +16,12 @@ const workOrderSchema = new mongoose.Schema({
     required: [true, 'Vehicle is required']
   },
   
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    required: [true, 'Terminal is required']
+  },
+  
   // Work order details
   workType: {
     type: String,

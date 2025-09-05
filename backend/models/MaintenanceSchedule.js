@@ -8,6 +8,12 @@ const maintenanceScheduleSchema = new mongoose.Schema({
     required: [true, 'Vehicle is required']
   },
   
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    required: [true, 'Terminal is required']
+  },
+  
   // Maintenance type and details
   maintenanceType: {
     type: String,
