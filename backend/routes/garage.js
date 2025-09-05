@@ -90,6 +90,15 @@ router.post('/work-orders', protect, [
     const workOrder = new WorkOrder(workOrderData);
     await workOrder.save();
 
+    // Set vehicle status to maintenance when work order is created
+    if (workOrder.vehicle) {
+      await Vehicle.findByIdAndUpdate(
+        workOrder.vehicle,
+        { status: 'maintenance' },
+        { new: true }
+      );
+    }
+
     await workOrder.populate([
       { path: 'vehicle', select: 'plateNumber make model assignedRoute' }
     ]);
@@ -168,6 +177,15 @@ router.post('/maintenance-schedules', protect, [
     const maintenanceSchedule = new MaintenanceSchedule(maintenanceData);
     await maintenanceSchedule.save();
 
+    // Set vehicle status to maintenance when maintenance schedule is created
+    if (maintenanceSchedule.vehicle) {
+      await Vehicle.findByIdAndUpdate(
+        maintenanceSchedule.vehicle,
+        { status: 'maintenance' },
+        { new: true }
+      );
+    }
+
     await maintenanceSchedule.populate([
       { path: 'vehicle', select: 'plateNumber make model assignedRoute' }
     ]);
@@ -199,6 +217,15 @@ router.put('/work-orders/:id', protect, async (req, res) => {
       });
     }
 
+    // If work order is completed, update vehicle status to active
+    if (req.body.status === 'completed' && workOrder.vehicle) {
+      await Vehicle.findByIdAndUpdate(
+        workOrder.vehicle._id,
+        { status: 'active' },
+        { new: true }
+      );
+    }
+
     res.json({
       success: true,
       message: 'Work order updated successfully',
@@ -224,6 +251,15 @@ router.put('/maintenance-schedules/:id', protect, async (req, res) => {
         success: false,
         message: 'Maintenance schedule not found'
       });
+    }
+
+    // If maintenance is completed, update vehicle status to active
+    if (req.body.status === 'completed' && maintenanceSchedule.vehicle) {
+      await Vehicle.findByIdAndUpdate(
+        maintenanceSchedule.vehicle._id,
+        { status: 'active' },
+        { new: true }
+      );
     }
 
     res.json({
