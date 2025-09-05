@@ -82,7 +82,8 @@ router.post('/', protect, authorize('inventory', 'create'), [
   body('unit').isIn(['pieces', 'liters', 'sets', 'pairs', 'boxes', 'meters', 'kg', 'other']).withMessage('Invalid unit'),
   body('minQuantity').isNumeric().withMessage('Minimum quantity must be a number'),
   body('unitCost').isNumeric().withMessage('Unit cost must be a number'),
-  body('supplier.name').notEmpty().withMessage('Supplier name is required')
+  body('supplier.name').notEmpty().withMessage('Supplier name is required'),
+  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
 ], async (req, res) => {
   try {
     // Check for validation errors

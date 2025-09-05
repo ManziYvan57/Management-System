@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const Vehicle = require('../models/Vehicle');
+const { body, validationResult } = require('express-validator');
 
 // @desc    Get all vehicles
 // @route   GET /api/vehicles
@@ -99,8 +100,24 @@ router.get('/:id', protect, async (req, res) => {
 // @desc    Create new vehicle
 // @route   POST /api/vehicles
 // @access  Private
-router.post('/', protect, authorize('vehicles', 'create'), async (req, res) => {
+router.post('/', protect, authorize('vehicles', 'create'), [
+  body('plateNumber').notEmpty().withMessage('Plate number is required'),
+  body('make').notEmpty().withMessage('Make is required'),
+  body('model').notEmpty().withMessage('Model is required'),
+  body('year').isInt({ min: 1900, max: new Date().getFullYear() + 1 }).withMessage('Valid year is required'),
+  body('seatingCapacity').isInt({ min: 1 }).withMessage('Seating capacity must be at least 1'),
+  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
     // Check if plate number already exists
     const existingVehicle = await Vehicle.findOne({ 
       plateNumber: req.body.plateNumber,

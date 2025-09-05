@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const Equipment = require('../models/Equipment');
+const { body, validationResult } = require('express-validator');
 
 // @desc    Get all equipment
 // @route   GET /api/equipment
@@ -170,8 +171,22 @@ router.get('/:id', protect, authorize('equipment', 'read'), async (req, res) => 
 // @desc    Create new equipment
 // @route   POST /api/equipment
 // @access  Private
-router.post('/', protect, authorize('equipment', 'create'), async (req, res) => {
+router.post('/', protect, authorize('equipment', 'create'), [
+  body('name').notEmpty().withMessage('Equipment name is required'),
+  body('category').isIn(['tools', 'electronics', 'safety', 'office', 'maintenance']).withMessage('Valid category is required'),
+  body('status').isIn(['available', 'in_use', 'maintenance', 'retired']).withMessage('Valid status is required'),
+  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
     // Check if serial number already exists (if provided)
     if (req.body.serialNumber) {
       const existingEquipment = await Equipment.findOne({ 

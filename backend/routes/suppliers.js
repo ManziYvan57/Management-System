@@ -79,7 +79,8 @@ router.post('/', protect, authorize('inventory', 'create'), [
   body('creditLimit').optional().isNumeric().withMessage('Credit limit must be a number'),
   body('rating').optional().isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('status').optional().isIn(['active', 'inactive', 'suspended']).withMessage('Invalid status'),
-  body('notes').optional().trim()
+  body('notes').optional().trim(),
+  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
 ], async (req, res) => {
   try {
     // Check for validation errors
@@ -162,7 +163,8 @@ router.put('/:id', protect, authorize('inventory', 'edit'), [
   body('creditLimit').optional().isNumeric().withMessage('Credit limit must be a number'),
   body('rating').optional().isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('status').optional().isIn(['active', 'inactive', 'suspended']).withMessage('Invalid status'),
-  body('notes').optional().trim()
+  body('notes').optional().trim(),
+  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
 ], async (req, res) => {
   try {
     // Check for validation errors
