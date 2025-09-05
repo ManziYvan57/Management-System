@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
-import { FaBus, FaTools, FaCogs, FaPlus, FaSearch, FaFilter } from 'react-icons/fa';
+import { FaBus, FaTools, FaCogs, FaPlus, FaSearch, FaFilter, FaSync } from 'react-icons/fa';
 import { vehiclesAPI, equipmentAPI } from '../../services/api';
 import VehiclesTab from './VehiclesTab';
 import EquipmentTab from './EquipmentTab';
@@ -27,31 +27,44 @@ const Assets = () => {
     }
   });
 
-  // Fetch statistics on component mount
+  // Fetch statistics function
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [vehiclesStats, equipmentStats] = await Promise.all([
+        vehiclesAPI.getStats(),
+        equipmentAPI.getStats()
+      ]);
+      
+      setStats({
+        vehicles: vehiclesStats.data || {},
+        equipment: equipmentStats.data || {}
+      });
+    } catch (err) {
+      console.error('Error fetching assets stats:', err);
+      setError(err.message || 'Failed to fetch assets statistics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch statistics on component mount and when tab changes
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const [vehiclesStats, equipmentStats] = await Promise.all([
-          vehiclesAPI.getStats(),
-          equipmentAPI.getStats()
-        ]);
-        
-        setStats({
-          vehicles: vehiclesStats.data || {},
-          equipment: equipmentStats.data || {}
-        });
-      } catch (err) {
-        console.error('Error fetching assets stats:', err);
-        setError(err.message || 'Failed to fetch assets statistics');
-      } finally {
-        setLoading(false);
+    fetchStats();
+  }, [activeTab]);
+
+  // Refresh stats when component becomes visible (user navigates back to this page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchStats();
       }
     };
 
-    fetchStats();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const handleTabChange = (tab) => {
@@ -93,6 +106,17 @@ const Assets = () => {
           <div className="assets-title">
             <h1>Asset Management</h1>
             <p>Manage vehicles and equipment across all terminals</p>
+          </div>
+          <div className="assets-actions">
+            <button 
+              className="refresh-button"
+              onClick={fetchStats}
+              disabled={loading}
+              title="Refresh data"
+            >
+              <FaSync className={loading ? 'spinning' : ''} />
+              Refresh
+            </button>
           </div>
         </div>
 
