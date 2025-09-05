@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { inventoryAPI, suppliersAPI, purchaseOrdersAPI, stockMovementsAPI } from '../../services/api';
+import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
 import './Inventory.css';
 
 const Inventory = () => {

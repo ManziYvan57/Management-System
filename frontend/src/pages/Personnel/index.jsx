@@ -433,38 +433,42 @@ const Personnel = () => {
                     <div className="action-buttons">
                       <button
                         className="action-btn view-btn"
+                        title="View Details"
                         onClick={() => {
                           setEditingPersonnel(person);
                           setShowEditForm(true);
                         }}
                       >
-                        View
+                        <FaEye />
                       </button>
                       <button
                         className="action-btn edit-btn"
+                        title="Edit Personnel"
                         onClick={() => {
                           setEditingPersonnel(person);
                           setShowEditForm(true);
                         }}
                       >
-                        Edit
+                        <FaEdit />
                       </button>
                       {person.role === 'driver' && (
-                        <button
-                          className="action-btn infraction-btn"
-                          onClick={() => {
-                            setSelectedPersonnel(person);
-                            setShowInfractionForm(true);
-                          }}
-                        >
-                          Infraction
-                        </button>
+                                              <button
+                        className="action-btn infraction-btn"
+                        title="Add Infraction"
+                        onClick={() => {
+                          setSelectedPersonnel(person);
+                          setShowInfractionForm(true);
+                        }}
+                      >
+                        <FaExclamationTriangle />
+                      </button>
                       )}
                       <button
                         className="action-btn delete-btn"
+                        title="Delete Personnel"
                         onClick={() => handleDeletePersonnel(person._id)}
                       >
-                        Delete
+                        <FaTrash />
                       </button>
                     </div>
                   </td>

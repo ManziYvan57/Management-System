@@ -228,24 +228,31 @@
 
 .document-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
   align-items: center;
-  min-width: 120px;
 }
 
 .document-actions .action-btn {
-  padding: 6px 8px;
+  padding: 4px 8px;
   border: none;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 32px;
+  min-width: 28px;
+  height: 28px;
+}
+
+.document-actions .action-btn svg {
+  width: 12px !important;
+  height: 12px !important;
+  display: block !important;
+  color: inherit !important;
 }
 
 /* Legacy table styles for fallback */
@@ -440,30 +447,30 @@
   transition: all 0.2s;
 }
 
-.view-btn {
+.document-actions .view-btn {
   background-color: #3b82f6;
   color: white;
 }
 
-.view-btn:hover {
+.document-actions .view-btn:hover {
   background-color: #2563eb;
 }
 
-.edit-btn {
+.document-actions .edit-btn {
   background-color: #f59e0b;
   color: white;
 }
 
-.edit-btn:hover {
+.document-actions .edit-btn:hover {
   background-color: #d97706;
 }
 
-.delete-btn {
+.document-actions .delete-btn {
   background-color: #ef4444;
   color: white;
 }
 
-.delete-btn:hover {
+.document-actions .delete-btn:hover {
   background-color: #dc2626;
 }
 
