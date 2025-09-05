@@ -130,7 +130,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
                 <option value="">Select Vehicle</option>
                 {vehicles.map(vehicle => (
                   <option key={vehicle._id} value={vehicle._id}>
-                    {vehicle.licensePlate} - {vehicle.make} {vehicle.model}
+                    {vehicle.plateNumber || vehicle.licensePlate}
                   </option>
                 ))}
               </select>
