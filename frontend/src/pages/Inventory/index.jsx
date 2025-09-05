@@ -54,7 +54,8 @@ const Inventory = () => {
     minQuantity: '',
     reorderPoint: '',
     unitCost: '',
-    supplier: ''
+    supplier: '',
+    terminal: ''
   });
 
   const [newPurchaseOrder, setNewPurchaseOrder] = useState({
@@ -244,7 +245,8 @@ const Inventory = () => {
         minQuantity: '',
         reorderPoint: '',
         unitCost: '',
-        supplier: ''
+        supplier: '',
+        terminal: ''
       });
       
       setShowAddItemForm(false);
@@ -264,7 +266,8 @@ const Inventory = () => {
       quantity: item.quantity.toString(),
       minQuantity: item.minQuantity.toString(),
       unitCost: item.unitCost.toString(),
-      supplier: item.supplier?.name || item.supplier || ''
+      supplier: item.supplier?.name || item.supplier || '',
+      terminal: item.terminal || ''
     });
     setShowEditItemForm(true);
   };
@@ -297,7 +300,8 @@ const Inventory = () => {
         quantity: '',
         minQuantity: '',
         unitCost: '',
-        supplier: ''
+        supplier: '',
+        terminal: ''
       });
       setEditingItem(null);
       setShowEditItemForm(false);
@@ -646,13 +650,13 @@ const Inventory = () => {
           Add Item
         </button>
         <button onClick={() => setShowPurchaseOrderForm(true)} className="action-btn">
-          Create Purchase Order
+          Purchase Order
         </button>
         <button onClick={() => setShowSupplierForm(true)} className="action-btn">
           Add Supplier
         </button>
         <button onClick={() => setShowStockMovementForm(true)} className="action-btn">
-          Record Stock Usage
+           Stock Usage
         </button>
       </div>
 
@@ -1080,11 +1084,31 @@ const Inventory = () => {
                    required
                  >
                    <option value="">Select Supplier</option>
+                   <option value="General Store">General Store</option>
+                   <option value="Road Vendor">Road Vendor</option>
+                   <option value="Direct Purchase">Direct Purchase</option>
                    {suppliers.map(supplier => (
                      <option key={supplier._id} value={supplier.name}>
                        {supplier.name}
                      </option>
                    ))}
+                 </select>
+               </div>
+
+               <div className="form-group">
+                 <label htmlFor="terminal">Terminal *</label>
+                 <select
+                   id="terminal"
+                   name="terminal"
+                   value={newItem.terminal}
+                   onChange={(e) => handleInputChange(e, 'item')}
+                   required
+                 >
+                   <option value="">Select Terminal</option>
+                   <option value="Kigali">Kigali</option>
+                   <option value="Kampala">Kampala</option>
+                   <option value="Nairobi">Nairobi</option>
+                   <option value="Juba">Juba</option>
                  </select>
                </div>
 
@@ -1218,11 +1242,31 @@ const Inventory = () => {
                    required
                  >
                    <option value="">Select Supplier</option>
+                   <option value="General Store">General Store</option>
+                   <option value="Road Vendor">Road Vendor</option>
+                   <option value="Direct Purchase">Direct Purchase</option>
                    {suppliers.map(supplier => (
                      <option key={supplier._id} value={supplier.name}>
                        {supplier.name}
                      </option>
                    ))}
+                 </select>
+               </div>
+
+               <div className="form-group">
+                 <label htmlFor="editTerminal">Terminal *</label>
+                 <select
+                   id="editTerminal"
+                   name="terminal"
+                   value={newItem.terminal}
+                   onChange={(e) => handleInputChange(e, 'item')}
+                   required
+                 >
+                   <option value="">Select Terminal</option>
+                   <option value="Kigali">Kigali</option>
+                   <option value="Kampala">Kampala</option>
+                   <option value="Nairobi">Nairobi</option>
+                   <option value="Juba">Juba</option>
                  </select>
                </div>
 
