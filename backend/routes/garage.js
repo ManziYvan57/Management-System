@@ -66,7 +66,6 @@ router.post('/work-orders', protect, [
 
     const workOrderData = {
       ...req.body,
-      terminal: req.user.terminal,
       createdBy: req.user._id
     };
 
@@ -163,7 +162,6 @@ router.post('/maintenance-schedules', protect, [
 
     const maintenanceData = {
       ...req.body,
-      terminal: req.user.terminal,
       createdBy: req.user._id
     };
 

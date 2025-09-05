@@ -202,10 +202,9 @@ router.post('/', protect, authorize('equipment', 'create'), [
       }
     }
     
-    // Set terminal based on user role
+    // Use terminal from request body (form data)
     const equipmentData = {
       ...req.body,
-      terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id
     };
     
@@ -268,10 +267,7 @@ router.put('/:id', protect, authorize('equipment', 'edit'), async (req, res) => 
       }
     }
     
-    // Prevent terminal change for non-super admins
-    if (req.user.role !== 'super_admin') {
-      delete req.body.terminal;
-    }
+    // Allow terminal changes for all users (terminal is validated by the model)
     
     // Remove createdBy from update data to prevent modification
     delete req.body.createdBy;

@@ -115,7 +115,6 @@ router.post('/', protect, authorize('assets', 'create'), async (req, res) => {
     // Set terminal based on user role
     const assetData = {
       ...req.body,
-      terminal: req.user.role === 'super_admin' ? req.body.terminal : req.user.terminal,
       createdBy: req.user.id
     };
     
