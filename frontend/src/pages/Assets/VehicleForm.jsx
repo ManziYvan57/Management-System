@@ -107,7 +107,8 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                  <div className="modal-header">
            <h2>
              <FaBus />
-             {mode === 'add' ? 'Add New Vehicle' : 'Edit Vehicle'}
+             {mode === 'view' ? 'View Vehicle' : 
+              mode === 'add' ? 'Add New Vehicle' : 'Edit Vehicle'}
            </h2>
           <button className="close-button" onClick={onClose}>
             <FaTimes />
@@ -126,6 +127,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 onChange={handleInputChange}
                 className={errors.plateNumber ? 'error' : ''}
                 placeholder="e.g., RAA 123A"
+                disabled={mode === 'view'}
               />
               {errors.plateNumber && <span className="error-message">{errors.plateNumber}</span>}
             </div>
@@ -140,6 +142,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 onChange={handleInputChange}
                 className={errors.make ? 'error' : ''}
                 placeholder="e.g., Toyota"
+                disabled={mode === 'view'}
               />
               {errors.make && <span className="error-message">{errors.make}</span>}
             </div>
@@ -156,6 +159,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 onChange={handleInputChange}
                 className={errors.model ? 'error' : ''}
                 placeholder="e.g., Coaster"
+                disabled={mode === 'view'}
               />
               {errors.model && <span className="error-message">{errors.model}</span>}
             </div>
@@ -170,6 +174,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 onChange={handleInputChange}
                 min="1900"
                 max={new Date().getFullYear() + 1}
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -182,6 +187,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
+                disabled={mode === 'view'}
               >
                 <option value="active">Active</option>
                 <option value="maintenance">Maintenance</option>
@@ -199,6 +205,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 value={formData.terminal}
                 onChange={handleInputChange}
                 className={errors.terminal ? 'error' : ''}
+                disabled={mode === 'view'}
               >
                 <option value="">Select Terminal</option>
                 <option value="Kigali">Kigali</option>
@@ -222,6 +229,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 className={errors.seatingCapacity ? 'error' : ''}
                 min="1"
                 max="100"
+                disabled={mode === 'view'}
               />
               {errors.seatingCapacity && <span className="error-message">{errors.seatingCapacity}</span>}
             </div>
@@ -233,6 +241,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 name="fuelType"
                 value={formData.fuelType}
                 onChange={handleInputChange}
+                disabled={mode === 'view'}
               >
                 <option value="Diesel">Diesel</option>
                 <option value="Petrol">Petrol</option>
@@ -253,6 +262,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 value={formData.mileage}
                 onChange={handleInputChange}
                 min="0"
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -266,6 +276,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 onChange={handleInputChange}
                 min="0"
                 step="0.1"
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -281,6 +292,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                  onChange={handleInputChange}
                  min="0"
                  step="1000"
+                 disabled={mode === 'view'}
                />
              </div>
 
@@ -294,6 +306,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                  onChange={handleInputChange}
                  min="0"
                  step="1000"
+                 disabled={mode === 'view'}
                />
              </div>
            </div>
@@ -307,6 +320,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                  name="purchaseDate"
                  value={formData.purchaseDate}
                  onChange={handleInputChange}
+                 disabled={mode === 'view'}
                />
              </div>
 
@@ -319,6 +333,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                  value={formData.assignedDriver}
                  onChange={handleInputChange}
                  placeholder="Driver ID or name"
+                 disabled={mode === 'view'}
                />
              </div>
            </div>
@@ -333,27 +348,30 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                  value={formData.assignedRoute}
                  onChange={handleInputChange}
                  placeholder="Route name or ID"
+                 disabled={mode === 'view'}
                />
              </div>
            </div>
 
           <div className="form-actions">
             <button type="button" className="cancel-button" onClick={onClose}>
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
-              {loading ? (
-                <>
-                  <div className="spinner-small"></div>
-                  {mode === 'add' ? 'Adding...' : 'Updating...'}
-                </>
-              ) : (
-                <>
-                  <FaSave />
-                  {mode === 'add' ? 'Add Vehicle' : 'Update Vehicle'}
-                </>
-              )}
-            </button>
+            {mode !== 'view' && (
+              <button type="submit" className="submit-button" disabled={loading}>
+                {loading ? (
+                  <>
+                    <div className="spinner-small"></div>
+                    {mode === 'add' ? 'Adding...' : 'Updating...'}
+                  </>
+                ) : (
+                  <>
+                    <FaSave />
+                    {mode === 'add' ? 'Add Vehicle' : 'Update Vehicle'}
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </form>
       </div>

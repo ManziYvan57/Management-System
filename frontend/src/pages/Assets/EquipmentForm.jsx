@@ -91,7 +91,8 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
         <div className="modal-header">
           <h2>
             <FaTools />
-            {mode === 'add' ? 'Add New Equipment' : 'Edit Equipment'}
+            {mode === 'view' ? 'View Equipment' : 
+             mode === 'add' ? 'Add New Equipment' : 'Edit Equipment'}
           </h2>
           <button className="close-button" onClick={onClose}>
             <FaTimes />
@@ -110,6 +111,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 onChange={handleInputChange}
                 className={errors.name ? 'error' : ''}
                 placeholder="e.g., Diagnostic Scanner"
+                disabled={mode === 'view'}
               />
               {errors.name && <span className="error-message">{errors.name}</span>}
             </div>
@@ -122,6 +124,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 value={formData.category}
                 onChange={handleInputChange}
                 className={errors.category ? 'error' : ''}
+                disabled={mode === 'view'}
               >
                 <option value="">Select Category</option>
                 <option value="tools">Tools</option>
@@ -144,6 +147,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 value={formData.type}
                 onChange={handleInputChange}
                 placeholder="e.g., OBD Scanner"
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -156,6 +160,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 value={formData.serialNumber}
                 onChange={handleInputChange}
                 placeholder="e.g., SN123456789"
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -168,6 +173,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
+                disabled={mode === 'view'}
               >
                 <option value="available">Available</option>
                 <option value="in_use">In Use</option>
@@ -184,6 +190,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 value={formData.terminal}
                 onChange={handleInputChange}
                 className={errors.terminal ? 'error' : ''}
+                disabled={mode === 'view'}
               >
                 <option value="">Select Terminal</option>
                 <option value="Kigali">Kigali</option>
@@ -205,6 +212,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 value={formData.location}
                 onChange={handleInputChange}
                 placeholder="e.g., Garage A, Shelf 3"
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -218,6 +226,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 onChange={handleInputChange}
                 min="0"
                 step="1000"
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -233,6 +242,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 onChange={handleInputChange}
                 min="0"
                 step="1000"
+                disabled={mode === 'view'}
               />
             </div>
 
@@ -244,6 +254,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 name="purchaseDate"
                 value={formData.purchaseDate}
                 onChange={handleInputChange}
+                disabled={mode === 'view'}
               />
             </div>
           </div>
@@ -258,6 +269,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 onChange={handleInputChange}
                 placeholder="Equipment description and specifications..."
                 rows="3"
+                disabled={mode === 'view'}
                 style={{
                   padding: '0.75rem',
                   border: '1px solid #d1d5db',
@@ -271,21 +283,23 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
 
           <div className="form-actions">
             <button type="button" className="cancel-button" onClick={onClose}>
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
-              {loading ? (
-                <>
-                  <div className="spinner-small"></div>
-                  {mode === 'add' ? 'Adding...' : 'Updating...'}
-                </>
-              ) : (
-                <>
-                  <FaSave />
-                  {mode === 'add' ? 'Add Equipment' : 'Update Equipment'}
-                </>
-              )}
-            </button>
+            {mode !== 'view' && (
+              <button type="submit" className="submit-button" disabled={loading}>
+                {loading ? (
+                  <>
+                    <div className="spinner-small"></div>
+                    {mode === 'add' ? 'Adding...' : 'Updating...'}
+                  </>
+                ) : (
+                  <>
+                    <FaSave />
+                    {mode === 'add' ? 'Add Equipment' : 'Update Equipment'}
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </form>
       </div>

@@ -10,6 +10,7 @@ const VehiclesTab = () => {
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showViewForm, setShowViewForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -289,7 +290,7 @@ const VehiclesTab = () => {
                          title="View Details"
                          onClick={() => {
                            setEditingVehicle(vehicle);
-                           setShowEditForm(true);
+                           setShowViewForm(true);
                          }}
                        >
                          <FaEye />
@@ -340,6 +341,20 @@ const VehiclesTab = () => {
           }}
           onSubmit={(data) => handleEditVehicle(editingVehicle._id, data)}
           mode="edit"
+          vehicle={editingVehicle}
+        />
+      )}
+
+      {/* View Vehicle Modal */}
+      {showViewForm && editingVehicle && (
+        <VehicleForm
+          isOpen={showViewForm}
+          onClose={() => {
+            setShowViewForm(false);
+            setEditingVehicle(null);
+          }}
+          onSubmit={() => {}}
+          mode="view"
           vehicle={editingVehicle}
         />
       )}

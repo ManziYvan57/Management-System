@@ -149,9 +149,9 @@
 }
 
 .document-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
   padding: 20px;
   border-bottom: 2px solid #e2e8f0;
   gap: 20px;
@@ -207,10 +207,10 @@
 }
 
 .document-details {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
   align-items: center;
   gap: 20px;
-  flex-wrap: wrap;
   min-width: 0;
 }
 
@@ -228,8 +228,10 @@
 
 .document-actions {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   align-items: center;
+  min-width: 120px;
 }
 
 .document-actions .action-btn {

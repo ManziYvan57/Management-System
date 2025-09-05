@@ -10,6 +10,7 @@ const EquipmentTab = () => {
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showViewForm, setShowViewForm] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -242,7 +243,7 @@ const EquipmentTab = () => {
                           title="View Details"
                           onClick={() => {
                             setEditingEquipment(item);
-                            setShowEditForm(true);
+                            setShowViewForm(true);
                           }}
                         >
                           <FaEye />
@@ -293,6 +294,20 @@ const EquipmentTab = () => {
           }}
           onSubmit={(data) => handleEditEquipment(editingEquipment._id, data)}
           mode="edit"
+          equipment={editingEquipment}
+        />
+      )}
+
+      {/* View Equipment Modal */}
+      {showViewForm && editingEquipment && (
+        <EquipmentForm
+          isOpen={showViewForm}
+          onClose={() => {
+            setShowViewForm(false);
+            setEditingEquipment(null);
+          }}
+          onSubmit={() => {}}
+          mode="view"
           equipment={editingEquipment}
         />
       )}
