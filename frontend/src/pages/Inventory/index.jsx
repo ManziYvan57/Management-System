@@ -54,7 +54,6 @@ const Inventory = () => {
     minQuantity: '',
     reorderPoint: '',
     unitCost: '',
-    supplier: '',
     terminal: ''
   });
 
@@ -1074,26 +1073,6 @@ const Inventory = () => {
                  />
                </div>
 
-               <div className="form-group">
-                 <label htmlFor="supplier">Supplier *</label>
-                 <select
-                   id="supplier"
-                   name="supplier"
-                   value={newItem.supplier}
-                   onChange={(e) => handleInputChange(e, 'item')}
-                   required
-                 >
-                   <option value="">Select Supplier</option>
-                   <option value="General Store">General Store</option>
-                   <option value="Road Vendor">Road Vendor</option>
-                   <option value="Direct Purchase">Direct Purchase</option>
-                   {suppliers.map(supplier => (
-                     <option key={supplier._id} value={supplier.name}>
-                       {supplier.name}
-                     </option>
-                   ))}
-                 </select>
-               </div>
 
                <div className="form-group">
                  <label htmlFor="terminal">Terminal *</label>
@@ -1505,6 +1484,7 @@ const Inventory = () => {
                     required
                   >
                     <option value="">Select Supplier</option>
+                    <option value="Direct Purchase">Direct Purchase</option>
                     {suppliers.map(supplier => (
                       <option key={supplier._id} value={supplier.name}>
                         {supplier.name}
