@@ -13,10 +13,8 @@ router.get('/', protect, async (req, res) => {
     // Build query based on user role and terminal
     let query = { isActive: true };
     
-    // Terminal-based filtering
-    if (req.user.role !== 'super_admin') {
-      query.terminal = req.user.terminal;
-    } else if (terminal) {
+    // Terminal filtering - show all terminals for all users, filter by query param if provided
+    if (terminal) {
       query.terminal = terminal;
     }
     
