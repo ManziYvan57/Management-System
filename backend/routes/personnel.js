@@ -562,8 +562,11 @@ router.put('/:id/infractions/:infractionId', protect, authorize('personnel', 'ed
   body('notes').optional().trim()
 ], async (req, res) => {
   try {
+    console.log('Updating infraction:', req.params.infractionId, 'with data:', req.body);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
@@ -604,7 +607,12 @@ router.put('/:id/infractions/:infractionId', protect, authorize('personnel', 'ed
     res.json({ success: true, data: updatedPersonnel });
   } catch (error) {
     console.error('Error updating infraction:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 

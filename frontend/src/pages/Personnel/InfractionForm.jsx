@@ -104,10 +104,21 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel, editingInfractio
     console.log('Loading set to true');
     
     try {
-      const submitData = {
-        ...formData,
-        points: parseInt(formData.points) || 0
-      };
+      let submitData;
+      
+      if (editingInfraction) {
+        // For editing, only send status and notes (what the backend expects)
+        submitData = {
+          status: formData.status,
+          notes: formData.notes || ''
+        };
+      } else {
+        // For creating, send all the data
+        submitData = {
+          ...formData,
+          points: parseInt(formData.points) || 0
+        };
+      }
 
       console.log('Submitting infraction data:', submitData);
       await onSubmit(submitData);
