@@ -17,6 +17,9 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel, editingInfractio
 
   // Populate form when editing
   useEffect(() => {
+    // Reset loading state when form opens
+    setLoading(false);
+    
     if (editingInfraction) {
       setFormData({
         date: editingInfraction.date ? new Date(editingInfraction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -96,23 +99,31 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel, editingInfractio
       return;
     }
 
+    console.log('Starting infraction submission, loading:', loading);
     setLoading(true);
+    console.log('Loading set to true');
+    
     try {
       const submitData = {
         ...formData,
         points: parseInt(formData.points) || 0
       };
 
+      console.log('Submitting infraction data:', submitData);
       await onSubmit(submitData);
+      console.log('Infraction submitted successfully');
       // Don't close here - let parent component handle closing after successful API call
     } catch (error) {
       console.error('Error submitting infraction:', error);
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
 
   if (!isOpen) return null;
+
+  console.log('InfractionForm render - loading:', loading, 'editingInfraction:', editingInfraction);
 
   return (
     <div className="modal-overlay">
@@ -264,7 +275,7 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel, editingInfractio
               {loading ? (
                 <>
                   <div className="spinner-small"></div>
-                  Adding...
+                  {editingInfraction ? 'Updating...' : 'Adding...'}
                 </>
               ) : (
                 <>
