@@ -174,8 +174,8 @@ const personnelSchema = new mongoose.Schema({
     },
     status: {
       type: String,
-      enum: ['pending', 'resolved', 'appealed'],
-      default: 'pending'
+      enum: ['active', 'appealed'],
+      default: 'active'
     },
     notes: String
   }],
