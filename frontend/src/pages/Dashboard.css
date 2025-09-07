@@ -953,14 +953,29 @@
   color: #2563eb;
 }
 
-.role-icon.admin {
+.role-icon.customer-service {
   background: #fef3c7;
   color: #d97706;
+}
+
+.role-icon.team-leaders {
+  background: #e0e7ff;
+  color: #6366f1;
+}
+
+.role-icon.managers {
+  background: #fce7f3;
+  color: #be185d;
 }
 
 .role-icon.maintenance {
   background: #dcfce7;
   color: #16a34a;
+}
+
+.role-icon.supervisors {
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .role-info {

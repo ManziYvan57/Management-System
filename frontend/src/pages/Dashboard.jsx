@@ -72,13 +72,30 @@ const Dashboard = () => {
           ...assetsRes.data
         };
 
-        // Personnel data
+        // Personnel data - map from API response
         const personnelData = {
           totalPersonnel: personnelRes.data?.totalPersonnel || 0,
           activePersonnel: personnelRes.data?.activePersonnel || 0,
-          drivers: personnelRes.data?.drivers || 0,
-          administrative: personnelRes.data?.administrative || 0,
-          maintenance: personnelRes.data?.maintenance || 0,
+          
+          // Role breakdown from API
+          drivers: personnelRes.data?.roleBreakdown?.drivers || 0,
+          teamLeaders: personnelRes.data?.roleBreakdown?.teamLeaders || 0,
+          customerCare: personnelRes.data?.roleBreakdown?.customerCare || 0,
+          mechanics: personnelRes.data?.roleBreakdown?.mechanics || 0,
+          supervisors: personnelRes.data?.roleBreakdown?.supervisors || 0,
+          managers: personnelRes.data?.roleBreakdown?.managers || 0,
+          admins: personnelRes.data?.roleBreakdown?.admins || 0,
+          otherRoles: personnelRes.data?.roleBreakdown?.otherRoles || 0,
+          
+          // Administrative staff (combine multiple roles)
+          administrative: (personnelRes.data?.roleBreakdown?.managers || 0) + 
+                        (personnelRes.data?.roleBreakdown?.admins || 0) + 
+                        (personnelRes.data?.roleBreakdown?.supervisors || 0),
+          
+          // Maintenance staff
+          maintenance: personnelRes.data?.roleBreakdown?.mechanics || 0,
+          
+          // Driver-specific data
           activeDrivers: personnelRes.data?.activeDrivers || 0,
           driversWithInfractions: personnelRes.data?.driversWithInfractions || 0,
           averagePoints: personnelRes.data?.averagePoints || 0,
@@ -589,8 +606,8 @@ const Dashboard = () => {
                     <strong className="info">{dashboardData.personnel?.drivers || 0}</strong>
                   </div>
                   <div className="personnel-stat">
-                    <span>Administrative</span>
-                    <strong className="warning">{dashboardData.personnel?.administrative || 0}</strong>
+                    <span>Customer Service</span>
+                    <strong className="warning">{dashboardData.personnel?.customerCare || 0}</strong>
                   </div>
                 </div>
               </div>
@@ -719,14 +736,38 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="role-item">
-                  <div className="role-icon admin">
+                  <div className="role-icon customer-service">
                     <FaUserTie />
                   </div>
                   <div className="role-info">
-                    <span className="role-label">Administrative</span>
-                    <span className="role-count">{dashboardData.personnel?.administrative || 0}</span>
+                    <span className="role-label">Customer Service</span>
+                    <span className="role-count">{dashboardData.personnel?.customerCare || 0}</span>
                     <span className="role-percentage">
-                      {Math.round(((dashboardData.personnel?.administrative || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
+                      {Math.round(((dashboardData.personnel?.customerCare || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="role-item">
+                  <div className="role-icon team-leaders">
+                    <FaUsers />
+                  </div>
+                  <div className="role-info">
+                    <span className="role-label">Team Leaders</span>
+                    <span className="role-count">{dashboardData.personnel?.teamLeaders || 0}</span>
+                    <span className="role-percentage">
+                      {Math.round(((dashboardData.personnel?.teamLeaders || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="role-item">
+                  <div className="role-icon managers">
+                    <FaUserCog />
+                  </div>
+                  <div className="role-info">
+                    <span className="role-label">Managers</span>
+                    <span className="role-count">{dashboardData.personnel?.managers || 0}</span>
+                    <span className="role-percentage">
+                      {Math.round(((dashboardData.personnel?.managers || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
                     </span>
                   </div>
                 </div>
@@ -735,10 +776,22 @@ const Dashboard = () => {
                     <FaWrench />
                   </div>
                   <div className="role-info">
-                    <span className="role-label">Maintenance</span>
-                    <span className="role-count">{dashboardData.personnel?.maintenance || 0}</span>
+                    <span className="role-label">Mechanics</span>
+                    <span className="role-count">{dashboardData.personnel?.mechanics || 0}</span>
                     <span className="role-percentage">
-                      {Math.round(((dashboardData.personnel?.maintenance || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
+                      {Math.round(((dashboardData.personnel?.mechanics || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="role-item">
+                  <div className="role-icon supervisors">
+                    <FaShieldAlt />
+                  </div>
+                  <div className="role-info">
+                    <span className="role-label">Supervisors</span>
+                    <span className="role-count">{dashboardData.personnel?.supervisors || 0}</span>
+                    <span className="role-percentage">
+                      {Math.round(((dashboardData.personnel?.supervisors || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
                     </span>
                   </div>
                 </div>
