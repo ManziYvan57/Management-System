@@ -32,6 +32,12 @@ const Dashboard = () => {
         setLoading(true);
         setError(null);
         
+        // Check if user is authenticated
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        console.log('Dashboard: Token exists:', !!token);
+        console.log('Dashboard: User:', user);
+        
         const [overviewRes, financialRes, operationsRes, maintenanceRes] = await Promise.all([
           dashboardAPI.getOverview(),
           dashboardAPI.getFinancials(),
@@ -52,6 +58,11 @@ const Dashboard = () => {
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
+        console.error('Error details:', {
+          message: err.message,
+          status: err.status,
+          response: err.response?.data
+        });
         // Set fallback data instead of showing error
         setDashboardData({
           overview: {},
@@ -64,7 +75,7 @@ const Dashboard = () => {
           personnel: {},
           users: {}
         });
-        setError('Using fallback data - API connection failed');
+        setError(`Using fallback data - ${err.message || 'API connection failed'}`);
       } finally {
         setLoading(false);
       }
