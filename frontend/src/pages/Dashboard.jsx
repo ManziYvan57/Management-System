@@ -7,7 +7,7 @@ import {
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
   FaCog, FaWarehouse, FaUserShield
 } from 'react-icons/fa';
-import { assetsAPI, vehiclesAPI, equipmentAPI } from '../services/api';
+import { assetsAPI, vehiclesAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -40,20 +40,17 @@ const Dashboard = () => {
         
         // Fetch data from individual APIs instead of dashboard API
         console.log('Fetching assets data from individual APIs...');
-        const [assetsRes, vehiclesRes, equipmentRes] = await Promise.all([
+        const [assetsRes, vehiclesRes] = await Promise.all([
           assetsAPI.getStats(),
-          vehiclesAPI.getStats(),
-          equipmentAPI.getStats()
+          vehiclesAPI.getStats()
         ]);
         console.log('Assets response:', assetsRes);
         console.log('Vehicles response:', vehiclesRes);
-        console.log('Equipment response:', equipmentRes);
         
         // Combine data from individual APIs
         const combinedData = {
           ...assetsRes.data,
-          ...vehiclesRes.data,
-          ...equipmentRes.data
+          ...vehiclesRes.data
         };
         
         setDashboardData({
@@ -79,45 +76,19 @@ const Dashboard = () => {
           status: err.status,
           response: err.response?.data
         });
-        // Set fallback data with some mock data for testing
+        // Set empty data on error
         setDashboardData({
-          overview: {
-            totalVehicles: 12,
-            activeVehicles: 8,
-            vehiclesInMaintenance: 3,
-            outOfServiceVehicles: 1,
-            totalEquipment: 25,
-            operationalEquipment: 20,
-            underRepairEquipment: 4,
-            retiredEquipment: 1,
-            totalAssetValue: 15000000,
-            depreciation: 2000000,
-            totalPersonnel: 45,
-            activePersonnel: 42,
-            totalDrivers: 15,
-            averagePoints: 85
-          },
+          overview: {},
           financial: {},
           operations: {},
           maintenance: {},
           garage: {},
           inventory: {},
-          assets: {
-            totalVehicles: 12,
-            activeVehicles: 8,
-            vehiclesInMaintenance: 3,
-            outOfServiceVehicles: 1,
-            totalEquipment: 25,
-            operationalEquipment: 20,
-            underRepairEquipment: 4,
-            retiredEquipment: 1,
-            totalAssetValue: 15000000,
-            depreciation: 2000000
-          },
+          assets: {},
           personnel: {},
           users: {}
         });
-        setError(`Using fallback data - ${err.message || 'API connection failed'}`);
+        setError(`Failed to load data - ${err.message || 'API connection failed'}`);
       } finally {
         setLoading(false);
       }
@@ -201,7 +172,7 @@ const Dashboard = () => {
           <div className="date-display">
             <FaCalendarAlt className="date-icon" />
             <span>{currentTime.toLocaleDateString()}</span>
-          </div>
+        </div>
         </div>
       </div>
 
