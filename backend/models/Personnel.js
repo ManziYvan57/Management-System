@@ -333,7 +333,7 @@ personnelSchema.pre('save', async function(next) {
 
 // Indexes
 personnelSchema.index({ employeeId: 1 });
-personnelSchema.index({ email: 1 });
+personnelSchema.index({ email: 1 }, { sparse: true });
 personnelSchema.index({ role: 1 });
 
 personnelSchema.index({ employmentStatus: 1 });

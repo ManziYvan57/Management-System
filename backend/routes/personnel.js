@@ -225,6 +225,22 @@ router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, a
     res.status(201).json({ success: true, data: populatedPersonnel });
   } catch (error) {
     console.error('Error creating personnel:', error);
+    
+    // Handle duplicate key error specifically
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      if (field === 'email') {
+        return res.status(400).json({
+          success: false,
+          message: 'Email already exists. Please use a different email or leave it empty.'
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: `${field} already exists`
+      });
+    }
+    
     if (error.name === 'ValidationError') {
       return res.status(400).json({ success: false, message: error.message });
     }
