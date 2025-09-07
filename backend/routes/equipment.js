@@ -65,8 +65,8 @@ router.get('/stats/overview', protect, authorize('equipment', 'read'), async (re
   try {
     const query = { isActive: true };
     
-    // Terminal filtering
-    if (req.user.role !== 'super_admin') {
+    // Terminal filtering - allow both super_admin and admin to see all terminals
+    if (req.user.role !== 'super_admin' && req.user.role !== 'admin') {
       query.terminal = req.user.terminal;
     }
     
@@ -124,8 +124,8 @@ router.get('/stats', protect, authorize('equipment', 'read'), async (req, res) =
   try {
     const query = { isActive: true };
     
-    // Terminal filtering
-    if (req.user.role !== 'super_admin') {
+    // Terminal filtering - allow both super_admin and admin to see all terminals
+    if (req.user.role !== 'super_admin' && req.user.role !== 'admin') {
       query.terminal = req.user.terminal;
     }
     
@@ -203,8 +203,8 @@ router.get('/:id', protect, authorize('equipment', 'read'), async (req, res) => 
       });
     }
     
-    // Check terminal access
-    if (req.user.role !== 'super_admin' && equipment.terminal !== req.user.terminal) {
+    // Check terminal access - allow both super_admin and admin to access any terminal
+    if (req.user.role !== 'super_admin' && req.user.role !== 'admin' && equipment.terminal !== req.user.terminal) {
       return res.status(403).json({
         success: false,
         message: 'Access denied to this equipment'
@@ -300,8 +300,8 @@ router.put('/:id', protect, authorize('equipment', 'edit'), async (req, res) => 
       });
     }
     
-    // Check terminal access
-    if (req.user.role !== 'super_admin' && equipment.terminal !== req.user.terminal) {
+    // Check terminal access - allow both super_admin and admin to access any terminal
+    if (req.user.role !== 'super_admin' && req.user.role !== 'admin' && equipment.terminal !== req.user.terminal) {
       return res.status(403).json({
         success: false,
         message: 'Access denied to this equipment'
@@ -374,8 +374,8 @@ router.delete('/:id', protect, authorize('equipment', 'delete'), async (req, res
       isSuperAdmin: req.user.role === 'super_admin'
     });
     
-    // Check terminal access
-    if (req.user.role !== 'super_admin' && equipment.terminal !== req.user.terminal) {
+    // Check terminal access - allow both super_admin and admin to delete from any terminal
+    if (req.user.role !== 'super_admin' && req.user.role !== 'admin' && equipment.terminal !== req.user.terminal) {
       console.log('Access denied: User terminal does not match equipment terminal');
       return res.status(403).json({
         success: false,
@@ -411,8 +411,8 @@ router.get('/available', protect, authorize('equipment', 'read'), async (req, re
       status: 'active'
     };
     
-    // Terminal filtering
-    if (req.user.role !== 'super_admin') {
+    // Terminal filtering - allow both super_admin and admin to see all terminals
+    if (req.user.role !== 'super_admin' && req.user.role !== 'admin') {
       query.terminal = req.user.terminal;
     }
     
