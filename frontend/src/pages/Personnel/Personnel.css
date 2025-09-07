@@ -890,8 +890,10 @@ tr:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
+  width: 28px;
   height: 28px;
+  min-width: 28px;
+  min-height: 28px;
   color: inherit;
 }
 

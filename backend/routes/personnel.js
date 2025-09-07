@@ -193,6 +193,11 @@ router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, a
     // Clean up empty strings to prevent validation errors
     const cleanData = { ...req.body };
     
+    // Handle email field - convert empty/undefined to undefined for sparse unique index
+    if (cleanData.email === '' || cleanData.email === null || cleanData.email === undefined) {
+      cleanData.email = undefined;
+    }
+    
     // Convert empty strings to null for ObjectId fields
     if (cleanData.supervisor === '') cleanData.supervisor = null;
     if (cleanData.assignedVehicle === '') cleanData.assignedVehicle = null;
@@ -270,6 +275,11 @@ router.put('/:id', protect, authorize('personnel', 'edit'), validatePersonnel, a
 
     // Clean up empty strings to prevent validation errors
     const cleanData = { ...req.body };
+    
+    // Handle email field - convert empty/undefined to undefined for sparse unique index
+    if (cleanData.email === '' || cleanData.email === null || cleanData.email === undefined) {
+      cleanData.email = undefined;
+    }
     
     // Convert empty strings to null for ObjectId fields
     if (cleanData.supervisor === '') cleanData.supervisor = null;

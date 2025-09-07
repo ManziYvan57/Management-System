@@ -443,18 +443,6 @@ const Personnel = () => {
                       >
                         <FaEdit />
                       </button>
-                      {person.role === 'driver' && (
-                        <button
-                          className="action-btn infraction-btn"
-                          title="Add Infraction"
-                          onClick={() => {
-                            setSelectedPersonnel(person);
-                            setShowInfractionForm(true);
-                          }}
-                        >
-                          <FaExclamationTriangle />
-                        </button>
-                      )}
                       <button
                         className="action-btn delete-btn"
                         title="Delete Personnel"
