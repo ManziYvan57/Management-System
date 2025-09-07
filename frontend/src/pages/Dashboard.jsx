@@ -535,52 +535,183 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Personnel Management Tab - Temporarily disabled for development */}
-      {false && activeTab === 'personnel' && (
+      {/* Personnel Management Tab */}
+      {activeTab === 'personnel' && (
         <div className="tab-content">
           <div className="personnel-overview">
-            <h3>Personnel Management</h3>
+            <div className="personnel-header">
+              <h3>Personnel Management</h3>
+            </div>
+
+            {/* Key Metrics Row */}
             <div className="personnel-grid">
               <div className="personnel-card">
-                <h4>Employee Overview</h4>
+                <h4>Staff Overview</h4>
                 <div className="personnel-stats">
                   <div className="personnel-stat">
                     <span>Total Personnel</span>
-                    <strong>{dashboardData.personnel.totalPersonnel || 0}</strong>
+                    <strong>{dashboardData.personnel?.totalPersonnel || 0}</strong>
                   </div>
                   <div className="personnel-stat">
-                    <span>Active</span>
-                    <strong className="success">{dashboardData.personnel.activePersonnel || 0}</strong>
+                    <span>Active Staff</span>
+                    <strong className="success">{dashboardData.personnel?.activePersonnel || 0}</strong>
                   </div>
                   <div className="personnel-stat">
-                    <span>On Leave</span>
-                    <strong className="warning">{dashboardData.personnel.onLeavePersonnel || 0}</strong>
+                    <span>Drivers</span>
+                    <strong className="info">{dashboardData.personnel?.drivers || 0}</strong>
                   </div>
                   <div className="personnel-stat">
-                    <span>Terminated</span>
-                    <strong className="danger">{dashboardData.personnel.terminatedPersonnel || 0}</strong>
-        </div>
-      </div>
-    </div>
+                    <span>Administrative</span>
+                    <strong className="warning">{dashboardData.personnel?.administrative || 0}</strong>
+                  </div>
+                </div>
+              </div>
 
               <div className="personnel-card">
-                <h4>Driver Performance</h4>
+                <h4>Driver Management</h4>
                 <div className="personnel-stats">
                   <div className="personnel-stat">
-                    <span>Total Drivers</span>
-                    <strong>{dashboardData.personnel.totalDrivers || 0}</strong>
-                  </div>
-                  <div className="personnel-stat">
-                    <span>High Performers</span>
-                    <strong className="success">{dashboardData.personnel.highPerformers || 0}</strong>
+                    <span>Active Drivers</span>
+                    <strong className="success">{dashboardData.personnel?.activeDrivers || 0}</strong>
                   </div>
                   <div className="personnel-stat">
                     <span>Drivers with Infractions</span>
-                    <strong className="warning">{dashboardData.personnel.driversWithInfractions || 0}</strong>
+                    <strong className="warning">{dashboardData.personnel?.driversWithInfractions || 0}</strong>
                   </div>
                   <div className="personnel-stat">
                     <span>Average Points</span>
-                    <strong>{dashboardData.personnel.averagePoints || 0}</strong>
+                    <strong className="info">{dashboardData.personnel?.averagePoints || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Critical Drivers</span>
+                    <strong className="danger">{dashboardData.personnel?.criticalDrivers || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="personnel-card">
+                <h4>Performance Metrics</h4>
+                <div className="personnel-stats">
+                  <div className="personnel-stat">
+                    <span>Personnel Utilization</span>
+                    <strong className="success">{insights.personnelUtilization || 0}%</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Driver Efficiency</span>
+                    <strong className="info">{dashboardData.personnel?.driverEfficiency || 0}%</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Training Completion</span>
+                    <strong className="warning">{dashboardData.personnel?.trainingCompletion || 0}%</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Personnel Health & Performance */}
+            <div className="personnel-details">
+              <div className="personnel-health">
+                <h4>Personnel Health Status</h4>
+                <div className="health-grid">
+                  <div className="health-item">
+                    <div className="health-icon success">
+                      <FaCheckCircle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Fully Active</span>
+                      <span className="health-count">{dashboardData.personnel?.activePersonnel || 0}</span>
+                    </div>
+                  </div>
+                  <div className="health-item">
+                    <div className="health-icon warning">
+                      <FaExclamationTriangle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Needs Attention</span>
+                      <span className="health-count">{dashboardData.personnel?.driversWithInfractions || 0}</span>
+                    </div>
+                  </div>
+                  <div className="health-item">
+                    <div className="health-icon danger">
+                      <FaTimesCircle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Critical Status</span>
+                      <span className="health-count">{dashboardData.personnel?.criticalDrivers || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="personnel-performance">
+                <h4>Performance Metrics</h4>
+                <div className="performance-grid">
+                  <div className="performance-item">
+                    <span className="performance-label">Personnel Utilization</span>
+                    <div className="performance-bar">
+                      <div 
+                        className="performance-fill" 
+                        style={{ width: `${Math.min(100, insights.personnelUtilization || 0)}%` }}
+                      ></div>
+                    </div>
+                    <span className="performance-value">
+                      {insights.personnelUtilization || 0}%
+                    </span>
+                  </div>
+                  <div className="performance-item">
+                    <span className="performance-label">Driver Efficiency</span>
+                    <div className="performance-bar">
+                      <div 
+                        className="performance-fill" 
+                        style={{ width: `${Math.min(100, dashboardData.personnel?.driverEfficiency || 0)}%` }}
+                      ></div>
+                    </div>
+                    <span className="performance-value">
+                      {dashboardData.personnel?.driverEfficiency || 0}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Role Distribution */}
+            <div className="role-distribution">
+              <h4>Role Distribution</h4>
+              <div className="role-grid">
+                <div className="role-item">
+                  <div className="role-icon drivers">
+                    <FaBus />
+                  </div>
+                  <div className="role-info">
+                    <span className="role-label">Drivers</span>
+                    <span className="role-count">{dashboardData.personnel?.drivers || 0}</span>
+                    <span className="role-percentage">
+                      {Math.round(((dashboardData.personnel?.drivers || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="role-item">
+                  <div className="role-icon admin">
+                    <FaUserTie />
+                  </div>
+                  <div className="role-info">
+                    <span className="role-label">Administrative</span>
+                    <span className="role-count">{dashboardData.personnel?.administrative || 0}</span>
+                    <span className="role-percentage">
+                      {Math.round(((dashboardData.personnel?.administrative || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="role-item">
+                  <div className="role-icon maintenance">
+                    <FaWrench />
+                  </div>
+                  <div className="role-info">
+                    <span className="role-label">Maintenance</span>
+                    <span className="role-count">{dashboardData.personnel?.maintenance || 0}</span>
+                    <span className="role-percentage">
+                      {Math.round(((dashboardData.personnel?.maintenance || 0) / Math.max(1, dashboardData.personnel?.totalPersonnel || 1)) * 100)}%
+                    </span>
                   </div>
                 </div>
               </div>
