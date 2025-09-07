@@ -3,7 +3,9 @@ import {
   FaTools, FaBoxes, FaBus, FaUsers, FaRoute, 
   FaExclamationTriangle, FaCheckCircle, FaClock,
   FaChartLine, FaChartBar, FaChartPie, FaCalendarAlt,
-  FaDollarSign, FaWrench, FaTruck, FaUserTie
+  FaDollarSign, FaWrench, FaTruck, FaUserTie, FaUserCog,
+  FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
+  FaCog, FaWarehouse, FaTruckLoading, FaUserShield
 } from 'react-icons/fa';
 import { dashboardAPI } from '../../services/api';
 import './Dashboard.css';
@@ -17,7 +19,8 @@ const Dashboard = () => {
     inventory: {},
     assets: {},
     personnel: {},
-    transport: {}
+    transport: {},
+    users: {}
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -45,7 +48,8 @@ const Dashboard = () => {
           inventory: operationsRes.data || {},
           assets: financialRes.data || {},
           personnel: operationsRes.data || {},
-          transport: operationsRes.data || {}
+          transport: operationsRes.data || {},
+          users: overviewRes.data || {}
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -144,25 +148,46 @@ const Dashboard = () => {
           Overview
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'financial' ? 'active' : ''}`}
-          onClick={() => setActiveTab('financial')}
+          className={`tab-btn ${activeTab === 'assets' ? 'active' : ''}`}
+          onClick={() => setActiveTab('assets')}
         >
-          <FaDollarSign className="tab-icon" />
-          Financial
+          <FaBus className="tab-icon" />
+          Assets
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'operations' ? 'active' : ''}`}
-          onClick={() => setActiveTab('operations')}
+          className={`tab-btn ${activeTab === 'personnel' ? 'active' : ''}`}
+          onClick={() => setActiveTab('personnel')}
         >
-          <FaTruck className="tab-icon" />
-          Operations
+          <FaUsers className="tab-icon" />
+          Personnel
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'maintenance' ? 'active' : ''}`}
-          onClick={() => setActiveTab('maintenance')}
+          className={`tab-btn ${activeTab === 'garage' ? 'active' : ''}`}
+          onClick={() => setActiveTab('garage')}
         >
           <FaWrench className="tab-icon" />
-          Maintenance
+          Garage
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'inventory' ? 'active' : ''}`}
+          onClick={() => setActiveTab('inventory')}
+        >
+          <FaBoxes className="tab-icon" />
+          Inventory
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'transport' ? 'active' : ''}`}
+          onClick={() => setActiveTab('transport')}
+        >
+          <FaTruck className="tab-icon" />
+          Transport
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          <FaUserCog className="tab-icon" />
+          Users
         </button>
       </div>
 
@@ -303,124 +328,580 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Financial Tab */}
-      {activeTab === 'financial' && (
+      {/* Assets Management Tab */}
+      {activeTab === 'assets' && (
         <div className="tab-content">
-          <div className="financial-overview">
-            <h3>Financial Overview</h3>
-            <div className="financial-grid">
-              <div className="financial-card">
-                <h4>Total Asset Value</h4>
-                <div className="financial-amount">{formatCurrency(dashboardData.assets.totalValue)}</div>
-                <p>All company assets</p>
-              </div>
-
-              <div className="financial-card">
-                <h4>Net Asset Value</h4>
-                <div className="financial-amount">{formatCurrency(insights.netAssetValue)}</div>
-                <p>After depreciation</p>
-              </div>
-
-              <div className="financial-card">
-                <h4>Monthly Spending</h4>
-                <div className="financial-amount">{formatCurrency(insights.totalMonthlySpending)}</div>
-                <p>Garage + Inventory</p>
-              </div>
-
-              <div className="financial-card">
-                <h4>Inventory Value</h4>
-                <div className="financial-amount">{formatCurrency(dashboardData.inventory.totalValue)}</div>
-                <p>Current stock value</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Operations Tab */}
-      {activeTab === 'operations' && (
-        <div className="tab-content">
-          <div className="operations-overview">
-            <h3>Transport Operations</h3>
-            <div className="operations-grid">
-              <div className="operation-card">
-                <h4>Today's Performance</h4>
-                <div className="operation-stats">
-                  <div className="operation-stat">
-                    <span>Trips Completed</span>
-                    <strong>{dashboardData.transport.completedToday}</strong>
+          <div className="assets-overview">
+            <h3>Assets Management</h3>
+            <div className="assets-grid">
+              <div className="asset-card">
+                <h4>Vehicle Fleet</h4>
+                <div className="asset-stats">
+                  <div className="asset-stat">
+                    <span>Total Vehicles</span>
+                    <strong>{dashboardData.assets.totalVehicles || 0}</strong>
                   </div>
-                  <div className="operation-stat">
-                    <span>In Transit</span>
-                    <strong>{dashboardData.transport.inTransit}</strong>
+                  <div className="asset-stat">
+                    <span>Active</span>
+                    <strong className="success">{dashboardData.assets.activeVehicles || 0}</strong>
                   </div>
-                  <div className="operation-stat">
-                    <span>On Time Rate</span>
-                    <strong>{dashboardData.transport.onTimePercentage}%</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="operation-card">
-                <h4>Personnel Status</h4>
-                <div className="operation-stats">
-                  <div className="operation-stat">
-                    <span>Active Personnel</span>
-                    <strong>{dashboardData.personnel.activePersonnel}</strong>
-                  </div>
-                  <div className="operation-stat">
-                    <span>On Leave</span>
-                    <strong>{dashboardData.personnel.onLeave}</strong>
-                  </div>
-                  <div className="operation-stat">
-                    <span>Performance Score</span>
-                    <strong>{dashboardData.personnel.performanceScore}%</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Maintenance Tab */}
-      {activeTab === 'maintenance' && (
-        <div className="tab-content">
-          <div className="maintenance-overview">
-            <h3>Maintenance Status</h3>
-            <div className="maintenance-grid">
-              <div className="maintenance-card">
-                <h4>Work Orders</h4>
-                <div className="maintenance-stats">
-                  <div className="maintenance-stat">
-                    <span>Total</span>
-                    <strong>{dashboardData.garage.totalWorkOrders}</strong>
-                  </div>
-                  <div className="maintenance-stat">
-                    <span>Pending</span>
-                    <strong className="warning">{dashboardData.garage.pendingWorkOrders}</strong>
-                  </div>
-                  <div className="maintenance-stat">
-                    <span>Completed</span>
-                    <strong className="success">{dashboardData.garage.completedWorkOrders}</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="maintenance-card">
-                <h4>Vehicle Status</h4>
-                <div className="maintenance-stats">
-                  <div className="maintenance-stat">
+                  <div className="asset-stat">
                     <span>In Maintenance</span>
-                    <strong className="warning">{dashboardData.garage.vehiclesInMaintenance}</strong>
+                    <strong className="warning">{dashboardData.assets.inMaintenance || 0}</strong>
                   </div>
-                  <div className="maintenance-stat">
+                  <div className="asset-stat">
+                    <span>Out of Service</span>
+                    <strong className="danger">{dashboardData.assets.outOfService || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="asset-card">
+                <h4>Equipment</h4>
+                <div className="asset-stats">
+                  <div className="asset-stat">
+                    <span>Total Equipment</span>
+                    <strong>{dashboardData.assets.totalEquipment || 0}</strong>
+                  </div>
+                  <div className="asset-stat">
+                    <span>Operational</span>
+                    <strong className="success">{dashboardData.assets.operationalEquipment || 0}</strong>
+                  </div>
+                  <div className="asset-stat">
+                    <span>Under Repair</span>
+                    <strong className="warning">{dashboardData.assets.underRepair || 0}</strong>
+                  </div>
+                  <div className="asset-stat">
+                    <span>Retired</span>
+                    <strong className="info">{dashboardData.assets.retiredEquipment || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="asset-card">
+                <h4>Financial Overview</h4>
+                <div className="asset-stats">
+                  <div className="asset-stat">
+                    <span>Total Asset Value</span>
+                    <strong>{formatCurrency(dashboardData.assets.totalValue || 0)}</strong>
+                  </div>
+                  <div className="asset-stat">
+                    <span>Depreciation</span>
+                    <strong className="warning">{formatCurrency(dashboardData.assets.depreciation || 0)}</strong>
+                  </div>
+                  <div className="asset-stat">
+                    <span>Net Value</span>
+                    <strong className="success">{formatCurrency(insights.netAssetValue || 0)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="asset-card">
+                <h4>Document Status</h4>
+                <div className="asset-stats">
+                  <div className="asset-stat">
+                    <span>Valid Documents</span>
+                    <strong className="success">{dashboardData.assets.validDocuments || 0}</strong>
+                  </div>
+                  <div className="asset-stat">
+                    <span>Expiring Soon</span>
+                    <strong className="warning">{dashboardData.assets.expiringSoon || 0}</strong>
+                  </div>
+                  <div className="asset-stat">
+                    <span>Expired</span>
+                    <strong className="danger">{dashboardData.assets.expiredDocuments || 0}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Personnel Management Tab */}
+      {activeTab === 'personnel' && (
+        <div className="tab-content">
+          <div className="personnel-overview">
+            <h3>Personnel Management</h3>
+            <div className="personnel-grid">
+              <div className="personnel-card">
+                <h4>Employee Overview</h4>
+                <div className="personnel-stats">
+                  <div className="personnel-stat">
+                    <span>Total Personnel</span>
+                    <strong>{dashboardData.personnel.totalPersonnel || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Active</span>
+                    <strong className="success">{dashboardData.personnel.activePersonnel || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>On Leave</span>
+                    <strong className="warning">{dashboardData.personnel.onLeave || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Terminated</span>
+                    <strong className="danger">{dashboardData.personnel.terminated || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="personnel-card">
+                <h4>Driver Performance</h4>
+                <div className="personnel-stats">
+                  <div className="personnel-stat">
+                    <span>Total Drivers</span>
+                    <strong>{dashboardData.personnel.totalDrivers || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>High Performers</span>
+                    <strong className="success">{dashboardData.personnel.highPerformers || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Drivers with Infractions</span>
+                    <strong className="warning">{dashboardData.personnel.driversWithInfractions || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Average Points</span>
+                    <strong>{dashboardData.personnel.averagePoints || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="personnel-card">
+                <h4>Infractions Management</h4>
+                <div className="personnel-stats">
+                  <div className="personnel-stat">
+                    <span>Active Infractions</span>
+                    <strong className="warning">{dashboardData.personnel.activeInfractions || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Appealed Infractions</span>
+                    <strong className="info">{dashboardData.personnel.appealedInfractions || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>This Month</span>
+                    <strong>{dashboardData.personnel.infractionsThisMonth || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Resolved This Month</span>
+                    <strong className="success">{dashboardData.personnel.resolvedThisMonth || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="personnel-card">
+                <h4>Department Breakdown</h4>
+                <div className="personnel-stats">
+                  <div className="personnel-stat">
+                    <span>Drivers</span>
+                    <strong>{dashboardData.personnel.drivers || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Mechanics</span>
+                    <strong>{dashboardData.personnel.mechanics || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Administrative</span>
+                    <strong>{dashboardData.personnel.administrative || 0}</strong>
+                  </div>
+                  <div className="personnel-stat">
+                    <span>Management</span>
+                    <strong>{dashboardData.personnel.management || 0}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Garage Management Tab */}
+      {activeTab === 'garage' && (
+        <div className="tab-content">
+          <div className="garage-overview">
+            <h3>Garage Management</h3>
+            <div className="garage-grid">
+              <div className="garage-card">
+                <h4>Work Orders</h4>
+                <div className="garage-stats">
+                  <div className="garage-stat">
+                    <span>Total Work Orders</span>
+                    <strong>{dashboardData.garage.totalWorkOrders || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Pending</span>
+                    <strong className="warning">{dashboardData.garage.pendingWorkOrders || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>In Progress</span>
+                    <strong className="info">{dashboardData.garage.inProgressWorkOrders || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Completed</span>
+                    <strong className="success">{dashboardData.garage.completedWorkOrders || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="garage-card">
+                <h4>Maintenance Schedules</h4>
+                <div className="garage-stats">
+                  <div className="garage-stat">
+                    <span>Total Schedules</span>
+                    <strong>{dashboardData.garage.totalSchedules || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Due This Week</span>
+                    <strong className="warning">{dashboardData.garage.dueThisWeek || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Overdue</span>
+                    <strong className="danger">{dashboardData.garage.overdueSchedules || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Completed</span>
+                    <strong className="success">{dashboardData.garage.completedSchedules || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="garage-card">
+                <h4>Vehicle Status</h4>
+                <div className="garage-stats">
+                  <div className="garage-stat">
+                    <span>In Maintenance</span>
+                    <strong className="warning">{dashboardData.garage.vehiclesInMaintenance || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
                     <span>Critical Alerts</span>
-                    <strong className="danger">{dashboardData.garage.criticalAlerts}</strong>
+                    <strong className="danger">{dashboardData.garage.criticalAlerts || 0}</strong>
                   </div>
-                  <div className="maintenance-stat">
+                  <div className="garage-stat">
                     <span>Available</span>
-                    <strong className="success">{dashboardData.transport.totalVehicles - dashboardData.garage.vehiclesInMaintenance}</strong>
+                    <strong className="success">{dashboardData.garage.availableVehicles || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Out of Service</span>
+                    <strong className="danger">{dashboardData.garage.outOfService || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="garage-card">
+                <h4>Cost Analysis</h4>
+                <div className="garage-stats">
+                  <div className="garage-stat">
+                    <span>Monthly Spending</span>
+                    <strong>{formatCurrency(dashboardData.garage.monthlySpending || 0)}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Average Cost per Order</span>
+                    <strong>{formatCurrency(dashboardData.garage.avgCostPerOrder || 0)}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Parts Cost</span>
+                    <strong>{formatCurrency(dashboardData.garage.partsCost || 0)}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Labor Cost</span>
+                    <strong>{formatCurrency(dashboardData.garage.laborCost || 0)}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inventory Management Tab */}
+      {activeTab === 'inventory' && (
+        <div className="tab-content">
+          <div className="inventory-overview">
+            <h3>Inventory Management</h3>
+            <div className="inventory-grid">
+              <div className="inventory-card">
+                <h4>Stock Overview</h4>
+                <div className="inventory-stats">
+                  <div className="inventory-stat">
+                    <span>Total Items</span>
+                    <strong>{dashboardData.inventory.totalItems || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>In Stock</span>
+                    <strong className="success">{dashboardData.inventory.inStock || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Low Stock</span>
+                    <strong className="warning">{dashboardData.inventory.lowStockItems || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Out of Stock</span>
+                    <strong className="danger">{dashboardData.inventory.outOfStockItems || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="inventory-card">
+                <h4>Financial Overview</h4>
+                <div className="inventory-stats">
+                  <div className="inventory-stat">
+                    <span>Total Value</span>
+                    <strong>{formatCurrency(dashboardData.inventory.totalValue || 0)}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Monthly Spending</span>
+                    <strong>{formatCurrency(dashboardData.inventory.monthlySpending || 0)}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Average Item Cost</span>
+                    <strong>{formatCurrency(dashboardData.inventory.avgItemCost || 0)}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Reorder Value</span>
+                    <strong className="warning">{formatCurrency(dashboardData.inventory.reorderValue || 0)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="inventory-card">
+                <h4>Purchase Orders</h4>
+                <div className="inventory-stats">
+                  <div className="inventory-stat">
+                    <span>Total Orders</span>
+                    <strong>{dashboardData.inventory.totalPurchaseOrders || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Pending</span>
+                    <strong className="warning">{dashboardData.inventory.pendingOrders || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Completed</span>
+                    <strong className="success">{dashboardData.inventory.completedOrders || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>This Month</span>
+                    <strong>{dashboardData.inventory.ordersThisMonth || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="inventory-card">
+                <h4>Supplier Management</h4>
+                <div className="inventory-stats">
+                  <div className="inventory-stat">
+                    <span>Total Suppliers</span>
+                    <strong>{dashboardData.inventory.totalSuppliers || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Active Suppliers</span>
+                    <strong className="success">{dashboardData.inventory.activeSuppliers || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Direct Purchase</span>
+                    <strong className="info">{dashboardData.inventory.directPurchase || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Top Supplier</span>
+                    <strong>{dashboardData.inventory.topSupplier || 'N/A'}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transport Operations Tab */}
+      {activeTab === 'transport' && (
+        <div className="tab-content">
+          <div className="transport-overview">
+            <h3>Transport Operations</h3>
+            <div className="transport-grid">
+              <div className="transport-card">
+                <h4>Route Management</h4>
+                <div className="transport-stats">
+                  <div className="transport-stat">
+                    <span>Total Routes</span>
+                    <strong>{dashboardData.transport.totalRoutes || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Active Routes</span>
+                    <strong className="success">{dashboardData.transport.activeRoutes || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Popular Route</span>
+                    <strong>{dashboardData.transport.popularRoute || 'N/A'}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Average Distance</span>
+                    <strong>{dashboardData.transport.avgDistance || 0} km</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="transport-card">
+                <h4>Trip Performance</h4>
+                <div className="transport-stats">
+                  <div className="transport-stat">
+                    <span>Today's Trips</span>
+                    <strong>{dashboardData.transport.todayTrips || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Completed</span>
+                    <strong className="success">{dashboardData.transport.completedToday || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>In Transit</span>
+                    <strong className="info">{dashboardData.transport.inTransit || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>On Time Rate</span>
+                    <strong>{dashboardData.transport.onTimePercentage || 0}%</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="transport-card">
+                <h4>Vehicle Utilization</h4>
+                <div className="transport-stats">
+                  <div className="transport-stat">
+                    <span>Total Vehicles</span>
+                    <strong>{dashboardData.transport.totalVehicles || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>In Service</span>
+                    <strong className="success">{dashboardData.transport.inService || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Utilization Rate</span>
+                    <strong>{insights.vehicleUtilization || 0}%</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Average Occupancy</span>
+                    <strong>{dashboardData.transport.avgOccupancy || 0}%</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="transport-card">
+                <h4>Live Display Status</h4>
+                <div className="transport-stats">
+                  <div className="transport-stat">
+                    <span>Departures Today</span>
+                    <strong>{dashboardData.transport.departuresToday || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Next Departure</span>
+                    <strong>{dashboardData.transport.nextDeparture || 'N/A'}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Delayed Trips</span>
+                    <strong className="warning">{dashboardData.transport.delayedTrips || 0}</strong>
+                  </div>
+                  <div className="transport-stat">
+                    <span>Auto Update</span>
+                    <strong className={dashboardData.transport.autoUpdate ? 'success' : 'warning'}>
+                      {dashboardData.transport.autoUpdate ? 'ON' : 'OFF'}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Management Tab */}
+      {activeTab === 'users' && (
+        <div className="tab-content">
+          <div className="users-overview">
+            <h3>User Management</h3>
+            <div className="users-grid">
+              <div className="users-card">
+                <h4>User Overview</h4>
+                <div className="users-stats">
+                  <div className="users-stat">
+                    <span>Total Users</span>
+                    <strong>{dashboardData.users.totalUsers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Active Users</span>
+                    <strong className="success">{dashboardData.users.activeUsers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Inactive Users</span>
+                    <strong className="warning">{dashboardData.users.inactiveUsers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Online Now</span>
+                    <strong className="info">{dashboardData.users.onlineUsers || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="users-card">
+                <h4>Role Distribution</h4>
+                <div className="users-stats">
+                  <div className="users-stat">
+                    <span>Super Admins</span>
+                    <strong>{dashboardData.users.superAdmins || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Terminal Managers</span>
+                    <strong>{dashboardData.users.terminalManagers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Route Managers</span>
+                    <strong>{dashboardData.users.routeManagers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Fleet Managers</span>
+                    <strong>{dashboardData.users.fleetManagers || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="users-card">
+                <h4>Terminal Distribution</h4>
+                <div className="users-stats">
+                  <div className="users-stat">
+                    <span>Kigali Terminal</span>
+                    <strong>{dashboardData.users.kigaliUsers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Kampala Terminal</span>
+                    <strong>{dashboardData.users.kampalaUsers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Nairobi Terminal</span>
+                    <strong>{dashboardData.users.nairobiUsers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Juba Terminal</span>
+                    <strong>{dashboardData.users.jubaUsers || 0}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="users-card">
+                <h4>Security & Access</h4>
+                <div className="users-stats">
+                  <div className="users-stat">
+                    <span>Password Changes Today</span>
+                    <strong>{dashboardData.users.passwordChangesToday || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Failed Logins</span>
+                    <strong className="warning">{dashboardData.users.failedLogins || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Last Login Today</span>
+                    <strong>{dashboardData.users.lastLoginToday || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Account Lockouts</span>
+                    <strong className="danger">{dashboardData.users.accountLockouts || 0}</strong>
                   </div>
                 </div>
               </div>
