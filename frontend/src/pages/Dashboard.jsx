@@ -38,23 +38,21 @@ const Dashboard = () => {
         console.log('Dashboard: Token exists:', !!token);
         console.log('Dashboard: User:', user);
         
-        const [overviewRes, financialRes, operationsRes, maintenanceRes] = await Promise.all([
-          dashboardAPI.getOverview(),
-          dashboardAPI.getFinancials(),
-          dashboardAPI.getOperations(),
-          dashboardAPI.getMaintenance()
+        // For now, only fetch overview data to focus on Assets section
+        const [overviewRes] = await Promise.all([
+          dashboardAPI.getOverview()
         ]);
         
         setDashboardData({
           overview: overviewRes.data || {},
-          financial: financialRes.data || {},
-          operations: operationsRes.data || {},
-          maintenance: maintenanceRes.data || {},
-          garage: maintenanceRes.data || {},
-          inventory: operationsRes.data || {},
+          financial: {},
+          operations: {},
+          maintenance: {},
+          garage: {},
+          inventory: {},
           assets: overviewRes.data || {},
-          personnel: overviewRes.data || {},
-          users: overviewRes.data || {}
+          personnel: {},
+          users: {}
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -184,7 +182,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs - Simplified for Development */}
       <div className="dashboard-tabs">
         <button 
           className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
@@ -200,6 +198,7 @@ const Dashboard = () => {
           <FaBus className="tab-icon" />
           Assets
         </button>
+        {/* Temporarily commented out for development
         <button 
           className={`tab-btn ${activeTab === 'personnel' ? 'active' : ''}`}
           onClick={() => setActiveTab('personnel')}
@@ -221,13 +220,7 @@ const Dashboard = () => {
           <FaBoxes className="tab-icon" />
           Inventory
         </button>
-        <button 
-          className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          <FaUserCog className="tab-icon" />
-          Users
-        </button>
+        */}
       </div>
 
       {/* Overview Tab */}
@@ -439,8 +432,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Personnel Management Tab */}
-      {activeTab === 'personnel' && (
+      {/* Personnel Management Tab - Temporarily disabled for development */}
+      {false && activeTab === 'personnel' && (
         <div className="tab-content">
           <div className="personnel-overview">
             <h3>Personnel Management</h3>
@@ -493,8 +486,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Garage Management Tab */}
-      {activeTab === 'garage' && (
+      {/* Garage Management Tab - Temporarily disabled for development */}
+      {false && activeTab === 'garage' && (
         <div className="tab-content">
           <div className="garage-overview">
             <h3>Garage Management</h3>
@@ -591,8 +584,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Inventory Management Tab */}
-      {activeTab === 'inventory' && (
+      {/* Inventory Management Tab - Temporarily disabled for development */}
+      {false && activeTab === 'inventory' && (
         <div className="tab-content">
           <div className="inventory-overview">
             <h3>Inventory Management</h3>
@@ -685,8 +678,8 @@ const Dashboard = () => {
           </div>
         )}
 
-      {/* User Management Tab */}
-      {activeTab === 'users' && (
+      {/* User Management Tab - Temporarily disabled for development */}
+      {false && activeTab === 'users' && (
         <div className="tab-content">
           <div className="users-overview">
             <h3>User Management</h3>

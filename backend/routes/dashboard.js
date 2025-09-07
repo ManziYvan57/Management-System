@@ -239,6 +239,9 @@ router.get('/financial', protect, async (req, res) => {
   try {
     const { terminal } = req.query;
     
+    // Define minimum quantity threshold for low stock
+    const minQuantity = 10;
+    
     // Build query based on user role and terminal
     let query = {};
     
