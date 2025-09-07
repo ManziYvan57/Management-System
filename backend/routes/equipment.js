@@ -365,8 +365,18 @@ router.delete('/:id', protect, authorize('equipment', 'delete'), async (req, res
       });
     }
     
+    // Debug logging
+    console.log('Equipment deletion attempt:', {
+      equipmentId: req.params.id,
+      equipmentTerminal: equipment.terminal,
+      userRole: req.user.role,
+      userTerminal: req.user.terminal,
+      isSuperAdmin: req.user.role === 'super_admin'
+    });
+    
     // Check terminal access
     if (req.user.role !== 'super_admin' && equipment.terminal !== req.user.terminal) {
+      console.log('Access denied: User terminal does not match equipment terminal');
       return res.status(403).json({
         success: false,
         message: 'Access denied to this equipment'
@@ -398,7 +408,7 @@ router.get('/available', protect, authorize('equipment', 'read'), async (req, re
   try {
     const query = { 
       isActive: true,
-      status: 'available'
+      status: 'active'
     };
     
     // Terminal filtering
