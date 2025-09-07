@@ -301,11 +301,13 @@ router.get('/financial', protect, async (req, res) => {
         { $group: { _id: null, avg: { $avg: '$unitCost' } } }
       ]).then(result => result[0]?.avg || 0),
       
-      // Reorder value (items that need reordering)
-      Inventory.aggregate([
-        { $match: { ...query, quantity: { $lte: minQuantity } } },
-        { $group: { _id: null, total: { $sum: { $multiply: [minQuantity, '$unitCost'] } } } }
-      ]).then(result => result[0]?.total || 0)
+      // Reorder value (items that need reordering) - simplified calculation
+      Inventory.find({ ...query, quantity: { $lte: minQuantity } })
+        .then(items => {
+          return items.reduce((total, item) => {
+            return total + (minQuantity * (item.unitCost || 0));
+          }, 0);
+        })
     ]);
     
     const financial = {
