@@ -8,7 +8,7 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel }) => {
     description: '',
     points: 0,
     severity: 'minor',
-    status: 'pending',
+    status: 'active',
     notes: ''
   });
 
@@ -204,9 +204,9 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel }) => {
                 value={formData.status}
                 onChange={handleInputChange}
               >
-                <option value="pending">Pending</option>
-                <option value="resolved">Resolved</option>
+                <option value="active">Active</option>
                 <option value="appealed">Appealed</option>
+                <option value="resolved">Resolved</option>
               </select>
             </div>
           </div>

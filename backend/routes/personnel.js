@@ -193,9 +193,9 @@ router.post('/', protect, authorize('personnel', 'create'), validatePersonnel, a
     // Clean up empty strings to prevent validation errors
     const cleanData = { ...req.body };
     
-    // Handle email field - convert empty/undefined to undefined for sparse unique index
+    // Handle email field - remove completely if empty for sparse unique index
     if (cleanData.email === '' || cleanData.email === null || cleanData.email === undefined) {
-      cleanData.email = undefined;
+      delete cleanData.email; // Remove the field completely
     }
     
     // Convert empty strings to null for ObjectId fields
@@ -276,9 +276,9 @@ router.put('/:id', protect, authorize('personnel', 'edit'), validatePersonnel, a
     // Clean up empty strings to prevent validation errors
     const cleanData = { ...req.body };
     
-    // Handle email field - convert empty/undefined to undefined for sparse unique index
+    // Handle email field - remove completely if empty for sparse unique index
     if (cleanData.email === '' || cleanData.email === null || cleanData.email === undefined) {
-      cleanData.email = undefined;
+      delete cleanData.email; // Remove the field completely
     }
     
     // Convert empty strings to null for ObjectId fields
@@ -554,7 +554,7 @@ router.post('/:id/infractions', protect, authorize('personnel', 'edit'), [
 // @route   PUT /api/personnel/:id/infractions/:infractionId
 // @access  Private
 router.put('/:id/infractions/:infractionId', protect, authorize('personnel', 'edit'), [
-  body('status').isIn(['pending', 'resolved', 'appealed']).withMessage('Please select a valid status'),
+  body('status').isIn(['active', 'appealed', 'resolved']).withMessage('Please select a valid status'),
   body('notes').optional().trim()
 ], async (req, res) => {
   try {
@@ -573,9 +573,24 @@ router.put('/:id/infractions/:infractionId', protect, authorize('personnel', 'ed
       return res.status(404).json({ success: false, message: 'Infraction not found' });
     }
 
+    const oldStatus = infraction.status;
     infraction.status = req.body.status;
     if (req.body.notes) {
       infraction.notes = req.body.notes;
+    }
+
+    // Automatic points management based on status change
+    if (oldStatus !== req.body.status) {
+      if (req.body.status === 'appealed') {
+        // When appealed, restore the points (remove the penalty)
+        personnel.drivingPoints = (personnel.drivingPoints || 0) + infraction.points;
+      } else if (req.body.status === 'active' && oldStatus === 'appealed') {
+        // When changing back to active from appealed, re-apply the penalty
+        personnel.drivingPoints = Math.max(0, (personnel.drivingPoints || 0) - infraction.points);
+      } else if (req.body.status === 'resolved') {
+        // When resolved, keep the points as they are (penalty remains)
+        // No change to points
+      }
     }
 
     personnel.updatedBy = req.user.id;

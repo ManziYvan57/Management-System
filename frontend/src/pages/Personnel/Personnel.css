@@ -1111,19 +1111,19 @@ tr:hover {
   text-transform: capitalize;
 }
 
-.status-badge.pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-badge.resolved {
-  background: #d1fae5;
-  color: #065f46;
+.status-badge.active {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .status-badge.appealed {
   background: #e0f2fe;
   color: #0369a1;
+}
+
+.status-badge.resolved {
+  background: #d1fae5;
+  color: #065f46;
 }
 
 /* Empty State */

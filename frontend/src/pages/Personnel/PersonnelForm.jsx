@@ -238,10 +238,16 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     try {
       const submitData = {
         ...formData,
-        email: formData.email && formData.email.trim() !== '' ? formData.email.trim() : undefined,
         drivingPoints: formData.drivingPoints ? parseInt(formData.drivingPoints) : null,
         performanceRating: formData.performanceRating ? parseInt(formData.performanceRating) : null
       };
+
+      // Handle email field - remove it completely if empty
+      if (formData.email && formData.email.trim() !== '') {
+        submitData.email = formData.email.trim();
+      } else {
+        delete submitData.email; // Remove the field completely
+      }
 
       console.log('Submitting data:', submitData);
       await onSubmit(submitData);
