@@ -394,9 +394,8 @@ router.delete('/:id', protect, authorize('equipment', 'delete'), async (req, res
       });
     }
     
-    // Soft delete - set isActive to false
-    equipment.isActive = false;
-    await equipment.save();
+    // Hard delete - actually remove the record from database
+    await Equipment.findByIdAndDelete(req.params.id);
     
     res.status(200).json({
       success: true,
