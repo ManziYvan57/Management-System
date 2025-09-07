@@ -91,6 +91,7 @@ const Personnel = () => {
       await personnelAPI.addInfraction(personnelId, infractionData);
       setShowInfractionForm(false);
       setSelectedPersonnel(null);
+      setEditingInfraction(null);
       fetchPersonnel();
     } catch (err) {
       console.error('Error adding infraction:', err);
@@ -103,6 +104,7 @@ const Personnel = () => {
       await personnelAPI.updateInfraction(personnelId, infractionId, infractionData);
       setShowInfractionForm(false);
       setSelectedPersonnel(null);
+      setEditingInfraction(null);
       fetchPersonnel();
     } catch (err) {
       console.error('Error updating infraction:', err);

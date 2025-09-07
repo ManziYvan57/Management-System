@@ -505,7 +505,7 @@ router.post('/:id/infractions', protect, authorize('personnel', 'edit'), [
   body('description').optional().trim(),
   body('points').isInt({ min: 0 }).withMessage('Points must be a positive number'),
   body('severity').isIn(['minor', 'major', 'critical']).withMessage('Please select a valid severity'),
-  body('status').optional().isIn(['pending', 'resolved', 'appealed']).withMessage('Please select a valid status'),
+  body('status').optional().isIn(['active', 'appealed']).withMessage('Please select a valid status'),
   body('notes').optional().trim()
 ], async (req, res) => {
   try {
@@ -525,13 +525,17 @@ router.post('/:id/infractions', protect, authorize('personnel', 'edit'), [
       description: req.body.description,
       points: req.body.points,
       severity: req.body.severity,
-      status: req.body.status || 'pending',
+      status: req.body.status || 'active',
       notes: req.body.notes
     };
 
-    // Update driving points for drivers
+    // Update driving points for drivers based on status
     if (personnel.role === 'driver') {
-      personnel.drivingPoints = Math.max(0, personnel.drivingPoints - req.body.points);
+      if (infraction.status === 'active') {
+        // Only deduct points for active infractions
+        personnel.drivingPoints = Math.max(0, (personnel.drivingPoints || 0) - req.body.points);
+      }
+      // For appealed status, don't deduct points (they can be restored later)
     }
 
     personnel.infractions.push(infraction);
@@ -554,7 +558,7 @@ router.post('/:id/infractions', protect, authorize('personnel', 'edit'), [
 // @route   PUT /api/personnel/:id/infractions/:infractionId
 // @access  Private
 router.put('/:id/infractions/:infractionId', protect, authorize('personnel', 'edit'), [
-  body('status').isIn(['active', 'appealed', 'resolved']).withMessage('Please select a valid status'),
+  body('status').isIn(['active', 'appealed']).withMessage('Please select a valid status'),
   body('notes').optional().trim()
 ], async (req, res) => {
   try {
@@ -584,14 +588,8 @@ router.put('/:id/infractions/:infractionId', protect, authorize('personnel', 'ed
       if (req.body.status === 'appealed') {
         // When appealed, restore the points (remove the penalty)
         personnel.drivingPoints = (personnel.drivingPoints || 0) + infraction.points;
-      } else if (req.body.status === 'resolved') {
-        // When resolved, restore the points (remove the penalty) - infraction is settled
-        personnel.drivingPoints = (personnel.drivingPoints || 0) + infraction.points;
       } else if (req.body.status === 'active' && oldStatus === 'appealed') {
         // When changing back to active from appealed, re-apply the penalty
-        personnel.drivingPoints = Math.max(0, (personnel.drivingPoints || 0) - infraction.points);
-      } else if (req.body.status === 'active' && oldStatus === 'resolved') {
-        // When changing back to active from resolved, re-apply the penalty
         personnel.drivingPoints = Math.max(0, (personnel.drivingPoints || 0) - infraction.points);
       }
     }

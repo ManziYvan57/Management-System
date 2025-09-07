@@ -104,7 +104,7 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel, editingInfractio
       };
 
       await onSubmit(submitData);
-      onClose();
+      // Don't close here - let parent component handle closing after successful API call
     } catch (error) {
       console.error('Error submitting infraction:', error);
     } finally {
@@ -232,7 +232,6 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel, editingInfractio
               >
                 <option value="active">Active</option>
                 <option value="appealed">Appealed</option>
-                <option value="resolved">Resolved</option>
               </select>
             </div>
           </div>
