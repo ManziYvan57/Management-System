@@ -34,7 +34,7 @@ const Dashboard = () => {
         
         const [overviewRes, financialRes, operationsRes, maintenanceRes] = await Promise.all([
           dashboardAPI.getOverview(),
-          dashboardAPI.getFinancial(),
+          dashboardAPI.getFinancials(),
           dashboardAPI.getOperations(),
           dashboardAPI.getMaintenance()
         ]);
@@ -52,7 +52,19 @@ const Dashboard = () => {
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError(err.message || 'Failed to fetch dashboard data');
+        // Set fallback data instead of showing error
+        setDashboardData({
+          overview: {},
+          financial: {},
+          operations: {},
+          maintenance: {},
+          garage: {},
+          inventory: {},
+          assets: {},
+          personnel: {},
+          users: {}
+        });
+        setError('Using fallback data - API connection failed');
       } finally {
         setLoading(false);
       }
@@ -70,25 +82,25 @@ const Dashboard = () => {
     return () => clearInterval(timeInterval);
   }, []);
 
-  // Calculate cross-module insights
+  // Calculate cross-module insights with safe property access
   const insights = {
     // Financial Overview
-    totalMonthlySpending: (dashboardData.garage.monthlySpending || 0) + (dashboardData.financial.monthlySpending || 0),
-    totalAssetValue: dashboardData.assets.totalAssetValue || 0,
-    netAssetValue: (dashboardData.assets.totalAssetValue || 0) - (dashboardData.assets.depreciation || 0),
+    totalMonthlySpending: ((dashboardData.garage?.monthlySpending || 0) + (dashboardData.financial?.monthlySpending || 0)),
+    totalAssetValue: dashboardData.assets?.totalAssetValue || 0,
+    netAssetValue: (dashboardData.assets?.totalAssetValue || 0) - (dashboardData.assets?.depreciation || 0),
     
     // Operational Efficiency
-    maintenanceEfficiency: dashboardData.garage.totalWorkOrders > 0 ? 
-      Math.round(((dashboardData.garage.completedWorkOrders || 0) / dashboardData.garage.totalWorkOrders) * 100) : 0,
-    personnelUtilization: dashboardData.personnel.totalPersonnel > 0 ? 
-      Math.round(((dashboardData.personnel.activePersonnel || 0) / dashboardData.personnel.totalPersonnel) * 100) : 0,
+    maintenanceEfficiency: (dashboardData.garage?.totalWorkOrders || 0) > 0 ? 
+      Math.round(((dashboardData.garage?.completedWorkOrders || 0) / (dashboardData.garage?.totalWorkOrders || 1)) * 100) : 0,
+    personnelUtilization: (dashboardData.personnel?.totalPersonnel || 0) > 0 ? 
+      Math.round(((dashboardData.personnel?.activePersonnel || 0) / (dashboardData.personnel?.totalPersonnel || 1)) * 100) : 0,
     
     // Critical Alerts
     criticalAlerts: [
-      ...(dashboardData.garage.criticalAlerts > 0 ? [`${dashboardData.garage.criticalAlerts} vehicles need immediate attention`] : []),
-      ...(dashboardData.inventory.outOfStockItems > 0 ? [`${dashboardData.inventory.outOfStockItems} items out of stock`] : []),
-      ...(dashboardData.inventory.lowStockItems > 5 ? [`${dashboardData.inventory.lowStockItems} items running low`] : []),
-      ...(dashboardData.garage.overdueSchedules > 0 ? [`${dashboardData.garage.overdueSchedules} maintenance schedules overdue`] : [])
+      ...((dashboardData.garage?.criticalAlerts || 0) > 0 ? [`${dashboardData.garage?.criticalAlerts || 0} vehicles need immediate attention`] : []),
+      ...((dashboardData.inventory?.outOfStockItems || 0) > 0 ? [`${dashboardData.inventory?.outOfStockItems || 0} items out of stock`] : []),
+      ...((dashboardData.inventory?.lowStockItems || 0) > 5 ? [`${dashboardData.inventory?.lowStockItems || 0} items running low`] : []),
+      ...((dashboardData.garage?.overdueSchedules || 0) > 0 ? [`${dashboardData.garage?.overdueSchedules || 0} maintenance schedules overdue`] : [])
     ]
   };
 
@@ -112,16 +124,13 @@ const Dashboard = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="dashboard-container">
-        <div className="error-state">
-          <FaExclamationTriangle className="error-icon" />
-          <p>Error loading dashboard: {error}</p>
-        </div>
-      </div>
-    );
-  }
+  // Show warning if there's an error but still render dashboard
+  const showErrorWarning = error && (
+    <div className="error-warning">
+      <FaExclamationTriangle className="warning-icon" />
+      <span>{error}</span>
+    </div>
+  );
 
   return (
     <div className="dashboard-container">
@@ -142,6 +151,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Error Warning */}
+      {showErrorWarning}
 
       {/* Critical Alerts */}
       {insights.criticalAlerts.length > 0 && (
@@ -217,9 +229,9 @@ const Dashboard = () => {
                 <FaBus />
               </div>
               <div className="metric-content">
-                <h3>{dashboardData.assets.totalVehicles || 0}</h3>
+                <h3>{dashboardData.assets?.totalVehicles || 0}</h3>
                 <p>Total Vehicles</p>
-                <span className="metric-subtitle">{dashboardData.assets.activeVehicles || 0} active</span>
+                <span className="metric-subtitle">{dashboardData.assets?.activeVehicles || 0} active</span>
               </div>
             </div>
 
@@ -228,9 +240,9 @@ const Dashboard = () => {
                 <FaUsers />
               </div>
               <div className="metric-content">
-                <h3>{dashboardData.personnel.totalPersonnel || 0}</h3>
+                <h3>{dashboardData.personnel?.totalPersonnel || 0}</h3>
                 <p>Total Personnel</p>
-                <span className="metric-subtitle">{dashboardData.personnel.activePersonnel || 0} active</span>
+                <span className="metric-subtitle">{dashboardData.personnel?.activePersonnel || 0} active</span>
               </div>
             </div>
 
@@ -239,9 +251,9 @@ const Dashboard = () => {
                 <FaBoxes />
               </div>
               <div className="metric-content">
-                <h3>{dashboardData.inventory.totalInventory || 0}</h3>
+                <h3>{dashboardData.inventory?.totalInventory || 0}</h3>
                 <p>Inventory Items</p>
-                <span className="metric-subtitle">{dashboardData.inventory.lowStockItems || 0} low stock</span>
+                <span className="metric-subtitle">{dashboardData.inventory?.lowStockItems || 0} low stock</span>
               </div>
             </div>
 
