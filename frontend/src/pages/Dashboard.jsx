@@ -5,7 +5,7 @@ import {
   FaChartLine, FaChartBar, FaChartPie, FaCalendarAlt,
   FaDollarSign, FaWrench, FaUserTie, FaUserCog,
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
-  FaCog, FaWarehouse, FaUserShield
+  FaCog, FaWarehouse, FaUserShield, FaTimesCircle, FaPlus
 } from 'react-icons/fa';
 import { assetsAPI, vehiclesAPI, equipmentAPI } from '../services/api';
 import './Dashboard.css';
@@ -396,7 +396,21 @@ const Dashboard = () => {
       {activeTab === 'assets' && (
         <div className="tab-content">
           <div className="assets-overview">
-            <h3>Assets Management</h3>
+            <div className="assets-header">
+              <h3>Assets Management</h3>
+              <div className="assets-actions">
+                <button className="btn btn-primary">
+                  <FaBus className="btn-icon" />
+                  Add Vehicle
+                </button>
+                <button className="btn btn-secondary">
+                  <FaCog className="btn-icon" />
+                  Add Equipment
+                </button>
+              </div>
+            </div>
+
+            {/* Key Metrics Row */}
             <div className="assets-grid">
               <div className="asset-card">
                 <h4>Vehicle Fleet</h4>
@@ -436,7 +450,7 @@ const Dashboard = () => {
                     <strong className="warning">{dashboardData.assets.underRepairEquipment || 0}</strong>
                   </div>
                   <div className="asset-stat">
-                    <span>Retired</span>
+                    <span>Out of Service</span>
                     <strong className="info">{dashboardData.assets.retiredEquipment || 0}</strong>
                   </div>
                 </div>
@@ -456,6 +470,106 @@ const Dashboard = () => {
                   <div className="asset-stat">
                     <span>Net Value</span>
                     <strong className="success">{formatCurrency(insights.netAssetValue || 0)}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Asset Health & Performance */}
+            <div className="assets-details">
+              <div className="asset-health">
+                <h4>Asset Health Status</h4>
+                <div className="health-grid">
+                  <div className="health-item">
+                    <div className="health-icon success">
+                      <FaCheckCircle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Fully Operational</span>
+                      <span className="health-count">{((dashboardData.assets.activeVehicles || 0) + (dashboardData.assets.operationalEquipment || 0))}</span>
+                    </div>
+                  </div>
+                  <div className="health-item">
+                    <div className="health-icon warning">
+                      <FaExclamationTriangle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Needs Attention</span>
+                      <span className="health-count">{((dashboardData.assets.vehiclesInMaintenance || 0) + (dashboardData.assets.underRepairEquipment || 0))}</span>
+                    </div>
+                  </div>
+                  <div className="health-item">
+                    <div className="health-icon danger">
+                      <FaTimesCircle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Out of Service</span>
+                      <span className="health-count">{((dashboardData.assets.outOfServiceVehicles || 0) + (dashboardData.assets.retiredEquipment || 0))}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="asset-performance">
+                <h4>Performance Metrics</h4>
+                <div className="performance-grid">
+                  <div className="performance-item">
+                    <span className="performance-label">Asset Utilization</span>
+                    <div className="performance-bar">
+                      <div 
+                        className="performance-fill" 
+                        style={{ width: `${Math.min(100, ((dashboardData.assets.activeVehicles || 0) + (dashboardData.assets.operationalEquipment || 0)) / Math.max(1, (dashboardData.assets.totalVehicles || 0) + (dashboardData.assets.totalEquipment || 0)) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="performance-value">
+                      {Math.round(((dashboardData.assets.activeVehicles || 0) + (dashboardData.assets.operationalEquipment || 0)) / Math.max(1, (dashboardData.assets.totalVehicles || 0) + (dashboardData.assets.totalEquipment || 0)) * 100)}%
+                    </span>
+                  </div>
+                  <div className="performance-item">
+                    <span className="performance-label">Maintenance Efficiency</span>
+                    <div className="performance-bar">
+                      <div 
+                        className="performance-fill" 
+                        style={{ width: `${Math.min(100, ((dashboardData.assets.vehiclesInMaintenance || 0) + (dashboardData.assets.underRepairEquipment || 0)) / Math.max(1, (dashboardData.assets.totalVehicles || 0) + (dashboardData.assets.totalEquipment || 0)) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="performance-value">
+                      {Math.round(((dashboardData.assets.vehiclesInMaintenance || 0) + (dashboardData.assets.underRepairEquipment || 0)) / Math.max(1, (dashboardData.assets.totalVehicles || 0) + (dashboardData.assets.totalEquipment || 0)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="recent-activity">
+              <h4>Recent Asset Activity</h4>
+              <div className="activity-list">
+                <div className="activity-item">
+                  <div className="activity-icon success">
+                    <FaPlus />
+                  </div>
+                  <div className="activity-content">
+                    <span className="activity-text">New vehicle added to fleet</span>
+                    <span className="activity-time">2 hours ago</span>
+                  </div>
+                </div>
+                <div className="activity-item">
+                  <div className="activity-icon warning">
+                    <FaWrench />
+                  </div>
+                  <div className="activity-content">
+                    <span className="activity-text">Equipment maintenance scheduled</span>
+                    <span className="activity-time">4 hours ago</span>
+                  </div>
+                </div>
+                <div className="activity-item">
+                  <div className="activity-icon info">
+                    <FaFileAlt />
+                  </div>
+                  <div className="activity-content">
+                    <span className="activity-text">Vehicle documents updated</span>
+                    <span className="activity-time">1 day ago</span>
                   </div>
                 </div>
               </div>
