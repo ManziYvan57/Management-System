@@ -223,9 +223,7 @@ const Inventory = () => {
          quantity: parseInt(newItem.quantity) || 0,
          minQuantity: parseInt(newItem.minQuantity) || 0,
          unitCost: parseFloat(newItem.unitCost) || 0,
-         supplier: {
-           name: newItem.supplier
-         },
+         supplier: newItem.supplier || 'N/A',
          lastUpdated: new Date().toISOString().split('T')[0]
        };
       
@@ -282,9 +280,7 @@ const Inventory = () => {
          quantity: parseInt(newItem.quantity) || 0,
          minQuantity: parseInt(newItem.minQuantity) || 0,
          unitCost: parseFloat(newItem.unitCost) || 0,
-         supplier: {
-           name: newItem.supplier
-         },
+         supplier: newItem.supplier || 'N/A',
          lastUpdated: new Date().toISOString().split('T')[0]
        };
       
