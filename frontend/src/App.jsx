@@ -50,7 +50,7 @@ function App() {
           path="/inventory" 
           element={
             <ProtectedRoute>
-              <Layout>
+              <Layout title="Inventory Management">
                 <Inventory />
               </Layout>
             </ProtectedRoute>
