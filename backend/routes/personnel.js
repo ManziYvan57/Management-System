@@ -616,4 +616,37 @@ router.put('/:id/infractions/:infractionId', protect, authorize('personnel', 'ed
   }
 });
 
+// @desc    Delete infraction
+// @route   DELETE /api/personnel/:id/infractions/:infractionId
+// @access  Private
+router.delete('/:id/infractions/:infractionId', protect, authorize('personnel', 'edit'), async (req, res) => {
+  try {
+    console.log('Deleting infraction:', req.params.infractionId);
+    
+    const personnel = await Personnel.findById(req.params.id);
+    if (!personnel) {
+      return res.status(404).json({ success: false, message: 'Personnel not found' });
+    }
+
+    const infraction = personnel.infractions.id(req.params.infractionId);
+    if (!infraction) {
+      return res.status(404).json({ success: false, message: 'Infraction not found' });
+    }
+
+    // Remove the infraction
+    personnel.infractions.pull(req.params.infractionId);
+    personnel.updatedBy = req.user.id;
+    await personnel.save();
+
+    const updatedPersonnel = await Personnel.findById(req.params.id)
+      .populate('assignedVehicle', 'plateNumber make model')
+      .populate('supervisor', 'firstName lastName employeeId');
+
+    res.json({ success: true, data: updatedPersonnel });
+  } catch (error) {
+    console.error('Error deleting infraction:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 module.exports = router;

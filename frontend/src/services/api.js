@@ -432,6 +432,12 @@ export const personnelAPI = {
       method: 'PUT',
       body: JSON.stringify(infractionData)
     });
+  },
+  
+  deleteInfraction: async (id, infractionId) => {
+    return apiRequest(`/personnel/${id}/infractions/${infractionId}`, {
+      method: 'DELETE'
+    });
   }
 };
 

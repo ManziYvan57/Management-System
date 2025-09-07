@@ -929,6 +929,16 @@ tr:hover {
   background-color: #dc2626;
 }
 
+/* Infraction table delete button */
+.infractions-table .delete-btn {
+  background-color: #ef4444;
+  color: white !important;
+}
+
+.infractions-table .delete-btn:hover {
+  background-color: #dc2626;
+}
+
 /* Driver Management */
 .driver-management {
   padding: 0;

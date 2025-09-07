@@ -112,6 +112,19 @@ const Personnel = () => {
     }
   };
 
+  const handleDeleteInfraction = async (personnelId, infractionId) => {
+    if (window.confirm('Are you sure you want to delete this infraction?')) {
+      try {
+        await personnelAPI.deleteInfraction(personnelId, infractionId);
+        fetchPersonnel();
+        alert('Infraction deleted successfully');
+      } catch (err) {
+        console.error('Error deleting infraction:', err);
+        alert('Failed to delete infraction');
+      }
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     fetchPersonnel();
@@ -672,6 +685,13 @@ const Personnel = () => {
                                   }}
                                 >
                                   <FaEdit />
+                                </button>
+                                <button
+                                  className="action-btn delete-btn"
+                                  title="Delete Infraction"
+                                  onClick={() => handleDeleteInfraction(person._id, infraction._id)}
+                                >
+                                  <FaTrash />
                                 </button>
                               </div>
                             </td>
