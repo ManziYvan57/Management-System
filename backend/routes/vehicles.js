@@ -118,10 +118,9 @@ router.post('/', protect, authorize('vehicles', 'create'), [
       });
     }
 
-    // Check if plate number already exists
+    // Check if plate number already exists (check all vehicles, not just active ones)
     const existingVehicle = await Vehicle.findOne({ 
-      plateNumber: req.body.plateNumber,
-      isActive: true 
+      plateNumber: req.body.plateNumber
     });
     
     if (existingVehicle) {
@@ -149,6 +148,17 @@ router.post('/', protect, authorize('vehicles', 'create'), [
     });
   } catch (error) {
     console.error('Error creating vehicle:', error);
+    
+    // Handle duplicate key error specifically
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({
+        success: false,
+        message: `Vehicle with this ${field} already exists`,
+        error: error.message
+      });
+    }
+    
     res.status(400).json({
       success: false,
       message: 'Error creating vehicle',
