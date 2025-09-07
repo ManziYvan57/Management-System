@@ -11,8 +11,10 @@ const Personnel = () => {
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showViewForm, setShowViewForm] = useState(false);
   const [showInfractionForm, setShowInfractionForm] = useState(false);
   const [editingPersonnel, setEditingPersonnel] = useState(null);
+  const [viewingPersonnel, setViewingPersonnel] = useState(null);
   const [selectedPersonnel, setSelectedPersonnel] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -367,21 +369,25 @@ const Personnel = () => {
                   </td>
                   <td>
                     <div className="contact-info">
-                      <div className="contact-item">
-                        <FaEnvelope />
-                        <span>{person.email}</span>
-                      </div>
-                      <div className="contact-item">
-                        <FaPhone />
-                        <span>{person.phoneNumber}</span>
-                      </div>
+                      {person.email && (
+                        <div className="contact-item">
+                          <FaEnvelope />
+                          <span>{person.email}</span>
+                        </div>
+                      )}
+                      {person.phoneNumber && (
+                        <div className="contact-item">
+                          <FaPhone />
+                          <span>{person.phoneNumber}</span>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td>
                     {person.role === 'driver' ? (
                       <div className="driver-info">
                         {person.licenseNumber && (
-                          <div className="license-info">
+                          <div className="driver-info-item">
                             <FaIdCard />
                             <span>{person.licenseNumber}</span>
                             {person.licenseExpiryDate && (
@@ -391,21 +397,25 @@ const Personnel = () => {
                             )}
                           </div>
                         )}
+                        {person.drivingPoints !== null && person.drivingPoints !== undefined && person.drivingPoints > 0 && (
+                          <div className="driver-info-item">
+                            <span className={`points-info ${getPointsColor(person.drivingPoints)}`}>
+                              {person.drivingPoints}
+                            </span>
+                          </div>
+                        )}
                         {person.assignedVehicle && (
-                          <div className="vehicle-info">
+                          <div className="driver-info-item">
                             <FaCar />
-                            <span>{person.assignedVehicle.plateNumber}</span>
+                            <span>{person.assignedVehicle.plateNumber || person.assignedVehicle}</span>
                           </div>
                         )}
                         {person.assignedRoute && (
-                          <div className="route-info">
+                          <div className="driver-info-item">
                             <FaRoute />
                             <span>{person.assignedRoute}</span>
                           </div>
                         )}
-                        <div className={`points-info ${getPointsColor(person.drivingPoints)}`}>
-                          <span>{person.drivingPoints} points</span>
-                        </div>
                       </div>
                     ) : (
                       <span className="not-driver">N/A</span>
@@ -435,8 +445,8 @@ const Personnel = () => {
                         className="action-btn view-btn"
                         title="View Details"
                         onClick={() => {
-                          setEditingPersonnel(person);
-                          setShowEditForm(true);
+                          setViewingPersonnel(person);
+                          setShowViewForm(true);
                         }}
                       >
                         <FaEye />
@@ -452,16 +462,16 @@ const Personnel = () => {
                         <FaEdit />
                       </button>
                       {person.role === 'driver' && (
-                                              <button
-                        className="action-btn infraction-btn"
-                        title="Add Infraction"
-                        onClick={() => {
-                          setSelectedPersonnel(person);
-                          setShowInfractionForm(true);
-                        }}
-                      >
-                        <FaExclamationTriangle />
-                      </button>
+                        <button
+                          className="action-btn infraction-btn"
+                          title="Add Infraction"
+                          onClick={() => {
+                            setSelectedPersonnel(person);
+                            setShowInfractionForm(true);
+                          }}
+                        >
+                          <FaExclamationTriangle />
+                        </button>
                       )}
                       <button
                         className="action-btn delete-btn"
@@ -478,6 +488,66 @@ const Personnel = () => {
           </table>
         )}
       </div>
+
+      {/* Infractions Table */}
+      {filteredPersonnel.some(person => person.role === 'driver' && person.infractions && person.infractions.length > 0) && (
+        <div className="infractions-section">
+          <h3>Driver Infractions</h3>
+          <div className="table-container">
+            <table className="infractions-table">
+              <thead>
+                <tr>
+                  <th>Driver</th>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Points</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPersonnel
+                  .filter(person => person.role === 'driver' && person.infractions && person.infractions.length > 0)
+                  .flatMap(person => 
+                    person.infractions.map((infraction, index) => (
+                      <tr key={`${person._id}-${index}`}>
+                        <td>
+                          <div className="driver-name">
+                            <FaUser />
+                            <span>{person.firstName} {person.lastName}</span>
+                          </div>
+                        </td>
+                        <td>{new Date(infraction.date).toLocaleDateString()}</td>
+                        <td>
+                          <span className={`infraction-type ${infraction.severity}`}>
+                            {infraction.type}
+                          </span>
+                        </td>
+                        <td>{infraction.description}</td>
+                        <td>
+                          <span className={`points-badge ${getPointsColor(infraction.points)}`}>
+                            {infraction.points}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`severity-badge ${infraction.severity}`}>
+                            {infraction.severity}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`status-badge ${infraction.status}`}>
+                            {infraction.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Add Personnel Modal */}
       {showAddForm && (
@@ -500,6 +570,20 @@ const Personnel = () => {
           onSubmit={(data) => handleEditPersonnel(editingPersonnel._id, data)}
           mode="edit"
           personnel={editingPersonnel}
+        />
+      )}
+
+      {/* View Personnel Modal */}
+      {showViewForm && viewingPersonnel && (
+        <PersonnelForm
+          isOpen={showViewForm}
+          onClose={() => {
+            setShowViewForm(false);
+            setViewingPersonnel(null);
+          }}
+          onSubmit={() => {}}
+          mode="view"
+          personnel={viewingPersonnel}
         />
       )}
 

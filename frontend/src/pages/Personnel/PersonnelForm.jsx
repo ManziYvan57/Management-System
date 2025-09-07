@@ -197,6 +197,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     if (!formData.role) newErrors.role = 'Role is required';
     if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.terminal) newErrors.terminal = 'Terminal is required';
+    if (!formData.employmentStatus) newErrors.employmentStatus = 'Employment status is required';
 
     // Driver-specific validation (optional fields)
     if (formData.role === 'driver') {
@@ -237,7 +238,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     try {
       const submitData = {
         ...formData,
-        email: formData.email && formData.email.trim() !== '' ? formData.email.trim() : undefined,
+        email: formData.email && formData.email.trim() !== '' ? formData.email.trim() : null,
         drivingPoints: formData.drivingPoints ? parseInt(formData.drivingPoints) : null,
         performanceRating: formData.performanceRating ? parseInt(formData.performanceRating) : null
       };
@@ -255,6 +256,13 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
   // Check if current role is driver
   const isDriver = formData.role === 'driver';
+
+  // Helper function to get form element props
+  const getFormElementProps = (fieldName) => ({
+    disabled: mode === 'view',
+    readOnly: mode === 'view',
+    className: errors[fieldName] ? 'error' : ''
+  });
 
   if (!isOpen) return null;
 
@@ -288,6 +296,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   onChange={handleInputChange}
                   className={errors.firstName ? 'error' : ''}
                   disabled={mode === 'view'}
+                  readOnly={mode === 'view'}
                 />
                 {errors.firstName && <span className="error-message">{errors.firstName}</span>}
               </div>
@@ -300,6 +309,8 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   value={formData.lastName}
                   onChange={handleInputChange}
                   className={errors.lastName ? 'error' : ''}
+                  disabled={mode === 'view'}
+                  readOnly={mode === 'view'}
                 />
                 {errors.lastName && <span className="error-message">{errors.lastName}</span>}
               </div>
@@ -314,7 +325,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={errors.email ? 'error' : ''}
+                  {...getFormElementProps('email')}
                   placeholder="Optional"
                 />
                 {errors.email && <span className="error-message">{errors.email}</span>}
@@ -327,7 +338,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   name="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
-                  className={errors.phoneNumber ? 'error' : ''}
+                  {...getFormElementProps('phoneNumber')}
                 />
                 {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
               </div>
@@ -342,7 +353,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
-                  className={errors.dateOfBirth ? 'error' : ''}
+                  {...getFormElementProps('dateOfBirth')}
                 />
                 {errors.dateOfBirth && <span className="error-message">{errors.dateOfBirth}</span>}
               </div>
@@ -353,7 +364,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
-                  className={errors.gender ? 'error' : ''}
+                  {...getFormElementProps('gender')}
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -377,7 +388,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className={errors.role ? 'error' : ''}
+                  {...getFormElementProps('role')}
                 >
                   {roleOptions.map(role => (
                     <option key={role.value} value={role.value}>
@@ -397,7 +408,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   name="department"
                   value={formData.department}
                   onChange={handleInputChange}
-                  className={errors.department ? 'error' : ''}
+                  {...getFormElementProps('department')}
                 >
                   <option value="">Select Department</option>
                   {departmentOptions.map(dept => (
@@ -415,7 +426,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   name="terminal"
                   value={formData.terminal}
                   onChange={handleInputChange}
-                  className={errors.terminal ? 'error' : ''}
+                  {...getFormElementProps('terminal')}
                 >
                   <option value="">Select Terminal</option>
                   <option value="Kigali">Kigali</option>
@@ -429,12 +440,13 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="employmentStatus">Employment Status</label>
+                <label htmlFor="employmentStatus">Employment Status *</label>
                 <select
                   id="employmentStatus"
                   name="employmentStatus"
                   value={formData.employmentStatus}
                   onChange={handleInputChange}
+                  {...getFormElementProps('employmentStatus')}
                 >
                   <option value="">Select Status</option>
                   <option value="active">Active</option>
@@ -443,6 +455,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   <option value="terminated">Terminated</option>
                   <option value="on_leave">On Leave</option>
                 </select>
+                {errors.employmentStatus && <span className="error-message">{errors.employmentStatus}</span>}
               </div>
             </div>
           </div>
@@ -736,26 +749,28 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
           {/* Form Actions */}
           <div className="form-actions">
             <button type="button" onClick={onClose} className="cancel-button">
-              Cancel
+              {mode === 'view' ? 'Close' : 'Cancel'}
             </button>
-            <button 
-              type="submit" 
-              className="submit-button" 
-              disabled={loading}
-              onClick={() => console.log('Submit button clicked!')}
-            >
-              {loading ? (
-                <>
-                  <div className="spinner-small"></div>
-                  {mode === 'add' ? 'Adding...' : 'Updating...'}
-                </>
-              ) : (
-                <>
-                  <FaSave />
-                  {mode === 'add' ? 'Add Personnel' : 'Update Personnel'}
-                </>
-              )}
-            </button>
+            {mode !== 'view' && (
+              <button 
+                type="submit" 
+                className="submit-button" 
+                disabled={loading}
+                onClick={() => console.log('Submit button clicked!')}
+              >
+                {loading ? (
+                  <>
+                    <div className="spinner-small"></div>
+                    {mode === 'add' ? 'Adding...' : 'Updating...'}
+                  </>
+                ) : (
+                  <>
+                    <FaSave />
+                    {mode === 'add' ? 'Add Personnel' : 'Update Personnel'}
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </form>
       </div>

@@ -753,6 +753,14 @@ tr:hover {
   gap: 0.5rem;
 }
 
+.driver-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
 .license-info,
 .vehicle-info,
 .route-info {
@@ -818,86 +826,190 @@ tr:hover {
   color: #6b7280;
 }
 
-/* Action Buttons */
+/* Action Buttons - Match Documents Tab Style */
 .action-buttons {
   display: flex;
-  gap: 0.25rem;
+  gap: 8px;
   align-items: center;
+  flex-direction: row;
 }
 
 .action-btn {
-  padding: 0.5rem;
+  padding: 4px 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.875rem;
-  width: 32px;
-  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 0.125rem;
   color: inherit;
 }
 
 .action-btn svg {
-  width: 14px !important;
-  height: 14px !important;
+  width: 12px !important;
+  height: 12px !important;
   display: block !important;
   color: inherit !important;
 }
 
 .view-btn {
-  background-color: #e0f2fe;
-  color: #0369a1 !important;
-  border: 1px solid #bae6fd;
+  background-color: #3b82f6;
+  color: white !important;
 }
 
 .view-btn:hover {
-  background-color: #bae6fd;
-  color: #0c4a6e !important;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #2563eb;
 }
 
 .edit-btn {
-  background-color: #fef3c7;
-  color: #92400e !important;
-  border: 1px solid #fde68a;
+  background-color: #f59e0b;
+  color: white !important;
 }
 
 .edit-btn:hover {
-  background-color: #fde68a;
-  color: #78350f !important;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #d97706;
 }
 
 .infraction-btn {
-  background-color: #fee2e2;
-  color: #991b1b !important;
-  border: 1px solid #fecaca;
+  background-color: #f59e0b;
+  color: white !important;
 }
 
 .infraction-btn:hover {
-  background-color: #fecaca;
-  color: #7f1d1d !important;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #d97706;
 }
 
 .delete-btn {
-  background-color: #fee2e2;
-  color: #991b1b !important;
-  border: 1px solid #fecaca;
+  background-color: #ef4444;
+  color: white !important;
 }
 
 .delete-btn:hover {
-  background-color: #fecaca;
-  color: #7f1d1d !important;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #dc2626;
+}
+
+/* Infractions Section */
+.infractions-section {
+  margin-top: 2rem;
+}
+
+.infractions-section h3 {
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.infractions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.infractions-table th {
+  background: #f9fafb;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.infractions-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.infractions-table tr:hover {
+  background: #f9fafb;
+}
+
+.driver-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.infraction-type {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.infraction-type.minor {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.infraction-type.major {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.infraction-type.critical {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.points-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.severity-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.severity-badge.minor {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.severity-badge.major {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.severity-badge.critical {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.resolved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.appealed {
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 /* Empty State */
