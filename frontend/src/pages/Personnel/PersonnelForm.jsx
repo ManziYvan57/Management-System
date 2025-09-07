@@ -252,6 +252,58 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
       console.log('Submitting data:', submitData);
       await onSubmit(submitData);
       console.log('Submit successful!');
+      
+      // Reset form after successful submission only for add mode
+      if (mode === 'add') {
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phoneNumber: '',
+          dateOfBirth: '',
+          gender: '',
+          address: {
+            street: '',
+            city: '',
+            state: '',
+            country: '',
+            postalCode: ''
+          },
+          emergencyContact: {
+            name: '',
+            relationship: '',
+            phoneNumber: ''
+          },
+          employeeId: '',
+          role: '',
+          department: '',
+          terminal: '',
+          hireDate: '',
+          employmentStatus: '',
+          salary: '',
+          supervisor: '',
+          licenseNumber: '',
+          licenseType: '',
+          licenseExpiryDate: '',
+          drivingPoints: '',
+          assignedVehicle: '',
+          assignedRoute: '',
+          performanceRating: '',
+          lastEvaluationDate: '',
+          trainingCompleted: [],
+          certifications: [],
+          workSchedule: {
+            shift: 'morning',
+            workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+            startTime: '08:00',
+            endTime: '17:00'
+          },
+          notes: '',
+          skills: [],
+          languages: []
+        });
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error submitting personnel:', error);

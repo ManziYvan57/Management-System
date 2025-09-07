@@ -126,20 +126,7 @@
   margin-bottom: 2rem;
 }
 
-.action-btn {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
- .action-btn:hover {
-   background: #2563eb;
- }
+/* Action buttons moved to compact style below */
 
    /* Search and Filter Controls */
   .search-box {

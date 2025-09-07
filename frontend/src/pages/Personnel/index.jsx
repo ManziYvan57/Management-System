@@ -16,6 +16,7 @@ const Personnel = () => {
   const [editingPersonnel, setEditingPersonnel] = useState(null);
   const [viewingPersonnel, setViewingPersonnel] = useState(null);
   const [selectedPersonnel, setSelectedPersonnel] = useState(null);
+  const [editingInfraction, setEditingInfraction] = useState(null);
   const [activeTab, setActiveTab] = useState('personnel');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -93,6 +94,18 @@ const Personnel = () => {
       fetchPersonnel();
     } catch (err) {
       console.error('Error adding infraction:', err);
+      throw err;
+    }
+  };
+
+  const handleEditInfraction = async (personnelId, infractionId, infractionData) => {
+    try {
+      await personnelAPI.updateInfraction(personnelId, infractionId, infractionData);
+      setShowInfractionForm(false);
+      setSelectedPersonnel(null);
+      fetchPersonnel();
+    } catch (err) {
+      console.error('Error updating infraction:', err);
       throw err;
     }
   };
@@ -608,6 +621,7 @@ const Personnel = () => {
                       <th>Points</th>
                       <th>Severity</th>
                       <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -643,6 +657,21 @@ const Personnel = () => {
                               <span className={`status-badge ${infraction.status}`}>
                                 {infraction.status}
                               </span>
+                            </td>
+                            <td>
+                              <div className="action-buttons">
+                                <button
+                                  className="action-btn edit-btn"
+                                  title="Edit Infraction"
+                                  onClick={() => {
+                                    setSelectedPersonnel(person);
+                                    setEditingInfraction(infraction);
+                                    setShowInfractionForm(true);
+                                  }}
+                                >
+                                  <FaEdit />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -700,9 +729,17 @@ const Personnel = () => {
           onClose={() => {
             setShowInfractionForm(false);
             setSelectedPersonnel(null);
+            setEditingInfraction(null);
           }}
-          onSubmit={(data) => handleAddInfraction(selectedPersonnel._id, data)}
+          onSubmit={(data) => {
+            if (editingInfraction) {
+              handleEditInfraction(selectedPersonnel._id, editingInfraction._id, data);
+            } else {
+              handleAddInfraction(selectedPersonnel._id, data);
+            }
+          }}
           personnel={selectedPersonnel}
+          editingInfraction={editingInfraction}
         />
       )}
     </div>

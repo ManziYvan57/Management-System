@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaTimes, FaSave, FaExclamationTriangle } from 'react-icons/fa';
 
-const InfractionForm = ({ isOpen, onClose, onSubmit, personnel }) => {
+const InfractionForm = ({ isOpen, onClose, onSubmit, personnel, editingInfraction }) => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     type: '',
@@ -14,6 +14,32 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel }) => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editingInfraction) {
+      setFormData({
+        date: editingInfraction.date ? new Date(editingInfraction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        type: editingInfraction.type || '',
+        description: editingInfraction.description || '',
+        points: editingInfraction.points || 0,
+        severity: editingInfraction.severity || 'minor',
+        status: editingInfraction.status || 'active',
+        notes: editingInfraction.notes || ''
+      });
+    } else {
+      // Reset form for new infraction
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        type: '',
+        description: '',
+        points: 0,
+        severity: 'minor',
+        status: 'active',
+        notes: ''
+      });
+    }
+  }, [editingInfraction]);
 
   // Predefined infraction types with point values
   const infractionTypes = [
@@ -94,7 +120,7 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel }) => {
         <div className="modal-header">
           <h3>
             <FaExclamationTriangle />
-            Add Infraction - {personnel?.firstName} {personnel?.lastName}
+            {editingInfraction ? 'Edit Infraction' : 'Add Infraction'} - {personnel?.firstName} {personnel?.lastName}
           </h3>
           <button onClick={onClose} className="close-button">
             <FaTimes />
@@ -244,7 +270,7 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel }) => {
               ) : (
                 <>
                   <FaSave />
-                  Add Infraction
+                  {editingInfraction ? 'Update Infraction' : 'Add Infraction'}
                 </>
               )}
             </button>
