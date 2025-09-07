@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FaTools, FaBoxes, FaBus, FaUsers, FaRoute, 
+  FaTools, FaBoxes, FaBus, FaUsers, 
   FaExclamationTriangle, FaCheckCircle, FaClock,
   FaChartLine, FaChartBar, FaChartPie, FaCalendarAlt,
-  FaDollarSign, FaWrench, FaTruck, FaUserTie, FaUserCog,
+  FaDollarSign, FaWrench, FaUserTie, FaUserCog,
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
-  FaCog, FaWarehouse, FaTruckLoading, FaUserShield
+  FaCog, FaWarehouse, FaUserShield
 } from 'react-icons/fa';
 import { dashboardAPI } from '../../services/api';
 import './Dashboard.css';
@@ -79,7 +79,6 @@ const Dashboard = () => {
     netAssetValue: dashboardData.assets.totalValue - dashboardData.assets.depreciation,
     
     // Operational Efficiency
-    vehicleUtilization: Math.round((dashboardData.transport.todayTrips / dashboardData.transport.totalVehicles) * 100),
     maintenanceEfficiency: Math.round((dashboardData.garage.completedWorkOrders / dashboardData.garage.totalWorkOrders) * 100),
     personnelUtilization: Math.round((dashboardData.personnel.activePersonnel / dashboardData.personnel.totalPersonnel) * 100),
     
@@ -176,13 +175,6 @@ const Dashboard = () => {
           Inventory
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'transport' ? 'active' : ''}`}
-          onClick={() => setActiveTab('transport')}
-        >
-          <FaTruck className="tab-icon" />
-          Transport
-        </button>
-        <button 
           className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
           onClick={() => setActiveTab('users')}
         >
@@ -201,31 +193,31 @@ const Dashboard = () => {
                 <FaBus />
               </div>
               <div className="metric-content">
-                <h3>{dashboardData.transport.totalVehicles}</h3>
+                <h3>{dashboardData.assets.totalVehicles || 0}</h3>
                 <p>Total Vehicles</p>
-                <span className="metric-subtitle">{dashboardData.transport.inTransit} in transit</span>
+                <span className="metric-subtitle">{dashboardData.assets.activeVehicles || 0} active</span>
               </div>
             </div>
 
             <div className="metric-card success">
               <div className="metric-icon">
-                <FaRoute />
+                <FaUsers />
               </div>
               <div className="metric-content">
-                <h3>{dashboardData.transport.todayTrips}</h3>
-                <p>Today's Trips</p>
-                <span className="metric-subtitle">{dashboardData.transport.onTimePercentage}% on time</span>
+                <h3>{dashboardData.personnel.totalPersonnel || 0}</h3>
+                <p>Total Personnel</p>
+                <span className="metric-subtitle">{dashboardData.personnel.activePersonnel || 0} active</span>
               </div>
             </div>
 
             <div className="metric-card warning">
               <div className="metric-icon">
-                <FaUsers />
+                <FaBoxes />
               </div>
               <div className="metric-content">
-                <h3>{dashboardData.personnel.totalPersonnel}</h3>
-                <p>Total Personnel</p>
-                <span className="metric-subtitle">{dashboardData.personnel.performanceScore}% performance</span>
+                <h3>{dashboardData.inventory.totalItems || 0}</h3>
+                <p>Inventory Items</p>
+                <span className="metric-subtitle">{dashboardData.inventory.lowStockItems || 0} low stock</span>
               </div>
             </div>
 
@@ -234,9 +226,9 @@ const Dashboard = () => {
                 <FaDollarSign />
               </div>
               <div className="metric-content">
-                <h3>{formatCurrency(insights.totalAssetValue)}</h3>
+                <h3>{formatCurrency(insights.totalAssetValue || 0)}</h3>
                 <p>Total Asset Value</p>
-                <span className="metric-subtitle">{formatCurrency(insights.netAssetValue)} net value</span>
+                <span className="metric-subtitle">{formatCurrency(insights.netAssetValue || 0)} net value</span>
               </div>
             </div>
           </div>
@@ -247,28 +239,14 @@ const Dashboard = () => {
             <div className="efficiency-grid">
               <div className="efficiency-card">
                 <div className="efficiency-header">
-                  <FaTruck className="efficiency-icon" />
-                  <span>Vehicle Utilization</span>
-                </div>
-                <div className="efficiency-value">{insights.vehicleUtilization}%</div>
-                <div className="efficiency-bar">
-                  <div 
-                    className="efficiency-fill" 
-                    style={{ width: `${insights.vehicleUtilization}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="efficiency-card">
-                <div className="efficiency-header">
                   <FaWrench className="efficiency-icon" />
                   <span>Maintenance Efficiency</span>
                 </div>
-                <div className="efficiency-value">{insights.maintenanceEfficiency}%</div>
+                <div className="efficiency-value">{insights.maintenanceEfficiency || 0}%</div>
                 <div className="efficiency-bar">
                   <div 
                     className="efficiency-fill" 
-                    style={{ width: `${insights.maintenanceEfficiency}%` }}
+                    style={{ width: `${insights.maintenanceEfficiency || 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -278,11 +256,25 @@ const Dashboard = () => {
                   <FaUserTie className="efficiency-icon" />
                   <span>Personnel Utilization</span>
                 </div>
-                <div className="efficiency-value">{insights.personnelUtilization}%</div>
+                <div className="efficiency-value">{insights.personnelUtilization || 0}%</div>
                 <div className="efficiency-bar">
                   <div 
                     className="efficiency-fill" 
-                    style={{ width: `${insights.personnelUtilization}%` }}
+                    style={{ width: `${insights.personnelUtilization || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="efficiency-card">
+                <div className="efficiency-header">
+                  <FaBoxes className="efficiency-icon" />
+                  <span>Inventory Efficiency</span>
+                </div>
+                <div className="efficiency-value">{Math.round(((dashboardData.inventory.inStock || 0) / (dashboardData.inventory.totalItems || 1)) * 100)}%</div>
+                <div className="efficiency-bar">
+                  <div 
+                    className="efficiency-fill" 
+                    style={{ width: `${Math.round(((dashboardData.inventory.inStock || 0) / (dashboardData.inventory.totalItems || 1)) * 100)}%` }}
                   ></div>
                 </div>
               </div>
@@ -295,7 +287,7 @@ const Dashboard = () => {
               <div className="stat-item">
                 <FaTools className="stat-icon" />
                 <div className="stat-info">
-                  <h4>{dashboardData.garage.totalWorkOrders}</h4>
+                  <h4>{dashboardData.garage.totalWorkOrders || 0}</h4>
                   <p>Work Orders</p>
                 </div>
               </div>
@@ -303,7 +295,7 @@ const Dashboard = () => {
               <div className="stat-item">
                 <FaBoxes className="stat-icon" />
                 <div className="stat-info">
-                  <h4>{dashboardData.inventory.totalItems}</h4>
+                  <h4>{dashboardData.inventory.totalItems || 0}</h4>
                   <p>Inventory Items</p>
                 </div>
               </div>
@@ -311,16 +303,16 @@ const Dashboard = () => {
               <div className="stat-item">
                 <FaBus className="stat-icon" />
                 <div className="stat-info">
-                  <h4>{dashboardData.assets.totalAssets}</h4>
-                  <p>Total Assets</p>
+                  <h4>{dashboardData.assets.totalVehicles || 0}</h4>
+                  <p>Total Vehicles</p>
                 </div>
               </div>
 
               <div className="stat-item">
-                <FaRoute className="stat-icon" />
+                <FaUsers className="stat-icon" />
                 <div className="stat-info">
-                  <h4>{dashboardData.transport.totalRoutes}</h4>
-                  <p>Active Routes</p>
+                  <h4>{dashboardData.personnel.totalDrivers || 0}</h4>
+                  <p>Total Drivers</p>
                 </div>
               </div>
             </div>
@@ -712,105 +704,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Transport Operations Tab */}
-      {activeTab === 'transport' && (
-        <div className="tab-content">
-          <div className="transport-overview">
-            <h3>Transport Operations</h3>
-            <div className="transport-grid">
-              <div className="transport-card">
-                <h4>Route Management</h4>
-                <div className="transport-stats">
-                  <div className="transport-stat">
-                    <span>Total Routes</span>
-                    <strong>{dashboardData.transport.totalRoutes || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Active Routes</span>
-                    <strong className="success">{dashboardData.transport.activeRoutes || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Popular Route</span>
-                    <strong>{dashboardData.transport.popularRoute || 'N/A'}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Average Distance</span>
-                    <strong>{dashboardData.transport.avgDistance || 0} km</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="transport-card">
-                <h4>Trip Performance</h4>
-                <div className="transport-stats">
-                  <div className="transport-stat">
-                    <span>Today's Trips</span>
-                    <strong>{dashboardData.transport.todayTrips || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Completed</span>
-                    <strong className="success">{dashboardData.transport.completedToday || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>In Transit</span>
-                    <strong className="info">{dashboardData.transport.inTransit || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>On Time Rate</span>
-                    <strong>{dashboardData.transport.onTimePercentage || 0}%</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="transport-card">
-                <h4>Vehicle Utilization</h4>
-                <div className="transport-stats">
-                  <div className="transport-stat">
-                    <span>Total Vehicles</span>
-                    <strong>{dashboardData.transport.totalVehicles || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>In Service</span>
-                    <strong className="success">{dashboardData.transport.inService || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Utilization Rate</span>
-                    <strong>{insights.vehicleUtilization || 0}%</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Average Occupancy</span>
-                    <strong>{dashboardData.transport.avgOccupancy || 0}%</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="transport-card">
-                <h4>Live Display Status</h4>
-                <div className="transport-stats">
-                  <div className="transport-stat">
-                    <span>Departures Today</span>
-                    <strong>{dashboardData.transport.departuresToday || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Next Departure</span>
-                    <strong>{dashboardData.transport.nextDeparture || 'N/A'}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Delayed Trips</span>
-                    <strong className="warning">{dashboardData.transport.delayedTrips || 0}</strong>
-                  </div>
-                  <div className="transport-stat">
-                    <span>Auto Update</span>
-                    <strong className={dashboardData.transport.autoUpdate ? 'success' : 'warning'}>
-                      {dashboardData.transport.autoUpdate ? 'ON' : 'OFF'}
-                    </strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* User Management Tab */}
       {activeTab === 'users' && (
