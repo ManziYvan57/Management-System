@@ -261,8 +261,9 @@ router.get('/stats/overview', protect, async (req, res) => {
     const [
       totalVehicles,
       activeVehicles,
-      maintenanceVehicles,
       inactiveVehicles,
+      maintenanceVehicles,
+      outOfServiceVehicles,
       totalValue,
       totalMileage,
       fuelTypeStats,
@@ -270,8 +271,9 @@ router.get('/stats/overview', protect, async (req, res) => {
     ] = await Promise.all([
       Vehicle.countDocuments(query),
       Vehicle.countDocuments({ ...query, status: 'active' }),
-      Vehicle.countDocuments({ ...query, status: 'maintenance' }),
       Vehicle.countDocuments({ ...query, status: 'inactive' }),
+      Vehicle.countDocuments({ ...query, status: 'maintenance' }),
+      Vehicle.countDocuments({ ...query, status: 'out_of_service' }),
       Vehicle.aggregate([
         { $match: query },
         { $group: { _id: null, total: { $sum: '$currentValue' } } }
@@ -297,8 +299,9 @@ router.get('/stats/overview', protect, async (req, res) => {
       data: {
         totalVehicles,
         activeVehicles,
-        maintenanceVehicles,
         inactiveVehicles,
+        maintenanceVehicles,
+        outOfServiceVehicles,
         totalValue: totalValue[0]?.total || 0,
         totalMileage: totalMileage[0]?.total || 0,
         fuelTypeStats,

@@ -49,19 +49,19 @@ const Dashboard = () => {
         console.log('Vehicles response:', vehiclesRes);
         console.log('Equipment response:', equipmentRes);
         
-        // Combine data from individual APIs and map to expected field names
+        // Combine data from individual APIs using standardized field names
         const combinedData = {
-          // Vehicle data (map to expected field names)
+          // Vehicle data (now using standardized field names)
           totalVehicles: vehiclesRes.data?.totalVehicles || 0,
           activeVehicles: vehiclesRes.data?.activeVehicles || 0,
           vehiclesInMaintenance: vehiclesRes.data?.maintenanceVehicles || 0,
-          outOfServiceVehicles: vehiclesRes.data?.inactiveVehicles || 0,
+          outOfServiceVehicles: vehiclesRes.data?.outOfServiceVehicles || 0,
           
-          // Equipment data (map to expected field names)
+          // Equipment data (now using standardized field names)
           totalEquipment: equipmentRes.data?.totalEquipment || 0,
-          operationalEquipment: equipmentRes.data?.availableEquipment || 0,
+          operationalEquipment: equipmentRes.data?.activeEquipment || 0,
           underRepairEquipment: equipmentRes.data?.maintenanceEquipment || 0,
-          retiredEquipment: equipmentRes.data?.retiredEquipment || 0,
+          retiredEquipment: equipmentRes.data?.outOfServiceEquipment || 0,
           
           // Asset data
           totalAssetValue: (vehiclesRes.data?.totalValue || 0) + (equipmentRes.data?.totalValue || 0),

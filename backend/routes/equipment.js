@@ -72,18 +72,18 @@ router.get('/stats/overview', protect, authorize('equipment', 'read'), async (re
     
     const [
       totalEquipment,
-      availableEquipment,
-      inUseEquipment,
+      activeEquipment,
+      inactiveEquipment,
       maintenanceEquipment,
-      retiredEquipment,
+      outOfServiceEquipment,
       totalValue,
       categoryStats
     ] = await Promise.all([
       Equipment.countDocuments(query),
-      Equipment.countDocuments({ ...query, status: 'available' }),
-      Equipment.countDocuments({ ...query, status: 'in_use' }),
+      Equipment.countDocuments({ ...query, status: 'active' }),
+      Equipment.countDocuments({ ...query, status: 'inactive' }),
       Equipment.countDocuments({ ...query, status: 'maintenance' }),
-      Equipment.countDocuments({ ...query, status: 'retired' }),
+      Equipment.countDocuments({ ...query, status: 'out_of_service' }),
       Equipment.aggregate([
         { $match: query },
         { $group: { _id: null, total: { $sum: '$currentValue' } } }
@@ -99,10 +99,10 @@ router.get('/stats/overview', protect, authorize('equipment', 'read'), async (re
       success: true,
       data: {
         totalEquipment,
-        availableEquipment,
-        inUseEquipment,
+        activeEquipment,
+        inactiveEquipment,
         maintenanceEquipment,
-        retiredEquipment,
+        outOfServiceEquipment,
         totalValue: totalValue[0]?.total || 0,
         categories: categoryStats
       }

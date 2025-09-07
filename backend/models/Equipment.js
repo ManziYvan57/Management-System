@@ -28,8 +28,8 @@ const EquipmentSchema = new mongoose.Schema({
   status: {
     type: String,
     required: [true, 'Please provide equipment status'],
-    enum: ['available', 'in_use', 'maintenance', 'retired'],
-    default: 'available'
+    enum: ['active', 'inactive', 'maintenance', 'out_of_service'],
+    default: 'active'
   },
   location: {
     type: String,
