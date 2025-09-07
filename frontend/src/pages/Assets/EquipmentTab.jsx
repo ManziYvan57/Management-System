@@ -87,10 +87,10 @@ const EquipmentTab = () => {
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
-      case 'available': return 'status-active';
-      case 'in_use': return 'status-maintenance';
+      case 'active': return 'status-active';
+      case 'inactive': return 'status-inactive';
       case 'maintenance': return 'status-maintenance';
-      case 'retired': return 'status-retired';
+      case 'out_of_service': return 'status-retired';
       default: return 'status-default';
     }
   };
@@ -161,10 +161,10 @@ const EquipmentTab = () => {
               }}
             >
               <option value="">All Status</option>
-              <option value="available">Available</option>
-              <option value="in_use">In Use</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
               <option value="maintenance">Maintenance</option>
-              <option value="retired">Retired</option>
+              <option value="out_of_service">Out of Service</option>
             </select>
           </div>
 

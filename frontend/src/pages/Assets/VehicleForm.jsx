@@ -190,9 +190,8 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                 disabled={mode === 'view'}
               >
                 <option value="active">Active</option>
-                <option value="maintenance">Maintenance</option>
                 <option value="inactive">Inactive</option>
-                <option value="retired">Retired</option>
+                <option value="maintenance">Maintenance</option>
                 <option value="out_of_service">Out of Service</option>
               </select>
             </div>

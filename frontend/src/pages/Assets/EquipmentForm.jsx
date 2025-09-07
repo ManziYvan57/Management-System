@@ -8,7 +8,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
     category: '',
     type: '',
     serialNumber: '',
-    status: 'available',
+    status: 'active',
     location: '',
     terminal: '',
     description: '',
@@ -27,7 +27,7 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
         category: equipment.category || '',
         type: equipment.type || '',
         serialNumber: equipment.serialNumber || '',
-        status: equipment.status || 'available',
+        status: equipment.status || 'active',
         location: equipment.location || '',
         terminal: equipment.terminal || '',
         description: equipment.description || '',
@@ -175,10 +175,10 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 onChange={handleInputChange}
                 disabled={mode === 'view'}
               >
-                <option value="available">Available</option>
-                <option value="in_use">In Use</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
                 <option value="maintenance">Maintenance</option>
-                <option value="retired">Retired</option>
+                <option value="out_of_service">Out of Service</option>
               </select>
             </div>
 

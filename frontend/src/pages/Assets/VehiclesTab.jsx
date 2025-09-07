@@ -89,9 +89,8 @@ const VehiclesTab = () => {
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'active': return 'status-active';
-      case 'maintenance': return 'status-maintenance';
       case 'inactive': return 'status-inactive';
-      case 'retired': return 'status-retired';
+      case 'maintenance': return 'status-maintenance';
       case 'out_of_service': return 'status-out-of-service';
       default: return 'status-default';
     }
@@ -174,9 +173,8 @@ const VehiclesTab = () => {
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
-              <option value="maintenance">Maintenance</option>
               <option value="inactive">Inactive</option>
-              <option value="retired">Retired</option>
+              <option value="maintenance">Maintenance</option>
               <option value="out_of_service">Out of Service</option>
             </select>
           </div>
