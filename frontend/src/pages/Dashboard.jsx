@@ -7,7 +7,7 @@ import {
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
   FaCog, FaWarehouse, FaUserShield, FaTimesCircle
 } from 'react-icons/fa';
-import { assetsAPI, vehiclesAPI, equipmentAPI } from '../services/api';
+import { assetsAPI, vehiclesAPI, equipmentAPI, personnelAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -40,14 +40,16 @@ const Dashboard = () => {
         
         // Fetch data from individual APIs instead of dashboard API
         console.log('Fetching assets data from individual APIs...');
-        const [assetsRes, vehiclesRes, equipmentRes] = await Promise.all([
+        const [assetsRes, vehiclesRes, equipmentRes, personnelRes] = await Promise.all([
           assetsAPI.getStats(),
           vehiclesAPI.getStats(),
-          equipmentAPI.getStats()
+          equipmentAPI.getStats(),
+          personnelAPI.getStats()
         ]);
         console.log('Assets response:', assetsRes);
         console.log('Vehicles response:', vehiclesRes);
         console.log('Equipment response:', equipmentRes);
+        console.log('Personnel response:', personnelRes);
         
         // Combine data from individual APIs using standardized field names
         const combinedData = {
@@ -69,6 +71,21 @@ const Dashboard = () => {
           // Keep other data from assets API
           ...assetsRes.data
         };
+
+        // Personnel data
+        const personnelData = {
+          totalPersonnel: personnelRes.data?.totalPersonnel || 0,
+          activePersonnel: personnelRes.data?.activePersonnel || 0,
+          drivers: personnelRes.data?.drivers || 0,
+          administrative: personnelRes.data?.administrative || 0,
+          maintenance: personnelRes.data?.maintenance || 0,
+          activeDrivers: personnelRes.data?.activeDrivers || 0,
+          driversWithInfractions: personnelRes.data?.driversWithInfractions || 0,
+          averagePoints: personnelRes.data?.averagePoints || 0,
+          criticalDrivers: personnelRes.data?.criticalDrivers || 0,
+          driverEfficiency: personnelRes.data?.driverEfficiency || 0,
+          trainingCompletion: personnelRes.data?.trainingCompletion || 0
+        };
         
         setDashboardData({
           overview: combinedData,
@@ -78,13 +95,14 @@ const Dashboard = () => {
           garage: {},
           inventory: {},
           assets: combinedData,
-          personnel: {},
+          personnel: personnelData,
           users: {}
         });
         
         console.log('Dashboard data set:', {
           combinedData,
-          assets: combinedData
+          assets: combinedData,
+          personnel: personnelData
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -102,7 +120,19 @@ const Dashboard = () => {
           garage: {},
           inventory: {},
           assets: {},
-          personnel: {},
+          personnel: {
+            totalPersonnel: 0,
+            activePersonnel: 0,
+            drivers: 0,
+            administrative: 0,
+            maintenance: 0,
+            activeDrivers: 0,
+            driversWithInfractions: 0,
+            averagePoints: 0,
+            criticalDrivers: 0,
+            driverEfficiency: 0,
+            trainingCompletion: 0
+          },
           users: {}
         });
         setError(`Failed to load data - ${err.message || 'API connection failed'}`);
@@ -251,8 +281,7 @@ const Dashboard = () => {
           <FaBoxes className="tab-icon" />
           Inventory
         </button>
-        */}
-      </div>
+      </div> 
 
       {/* Overview Tab */}
       {activeTab === 'overview' && (
