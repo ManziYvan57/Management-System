@@ -268,20 +268,48 @@ const InfractionForm = ({ isOpen, onClose, onSubmit, personnel, editingInfractio
 
           {/* Form Actions */}
           <div className="form-actions">
-            <button type="button" onClick={onClose} className="cancel-button">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="cancel-button"
+              style={{
+                background: '#f3f4f6',
+                color: '#374151',
+                border: '1px solid #d1d5db',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '6px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
               Cancel
             </button>
-            <button type="submit" className="submit-button" disabled={loading}>
+            <button 
+              type="submit" 
+              className="submit-button" 
+              disabled={loading}
+              style={{
+                background: loading ? '#9ca3af' : '#10b981',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '6px',
+                fontWeight: '500',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
               {loading ? (
-                <>
-                  <div className="spinner-small"></div>
-                  {editingInfraction ? 'Updating...' : 'Adding...'}
-                </>
+                <span>Loading...</span>
               ) : (
-                <>
-                  <FaSave />
-                  {editingInfraction ? 'Update Infraction' : 'Add Infraction'}
-                </>
+                <span>
+                  <FaSave /> {editingInfraction ? 'Update Infraction' : 'Add Infraction'}
+                </span>
               )}
             </button>
           </div>
