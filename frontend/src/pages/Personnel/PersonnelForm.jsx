@@ -238,7 +238,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     try {
       const submitData = {
         ...formData,
-        email: formData.email && formData.email.trim() !== '' ? formData.email.trim() : null,
+        email: formData.email && formData.email.trim() !== '' ? formData.email.trim() : undefined,
         drivingPoints: formData.drivingPoints ? parseInt(formData.drivingPoints) : null,
         performanceRating: formData.performanceRating ? parseInt(formData.performanceRating) : null
       };

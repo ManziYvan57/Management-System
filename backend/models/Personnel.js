@@ -27,7 +27,14 @@ const personnelSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
     lowercase: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    default: undefined,
+    validate: {
+      validator: function(v) {
+        if (!v || v.trim() === '') return true; // Allow empty or null
+        return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
+      },
+      message: 'Please enter a valid email'
+    }
   },
   phoneNumber: {
     type: String,
@@ -253,6 +260,11 @@ personnelSchema.virtual('licenseStatus').get(function() {
 
 // Pre-save middleware to generate employeeId and validate driver-specific fields
 personnelSchema.pre('save', async function(next) {
+  // Handle email field - convert empty strings to undefined for sparse unique index
+  if (this.email && (this.email.trim() === '' || this.email === null)) {
+    this.email = undefined;
+  }
+
   // Generate employeeId if not provided or if it's null/empty
   if (!this.employeeId || this.employeeId.trim() === '') {
     try {
