@@ -39,9 +39,11 @@ const Dashboard = () => {
         console.log('Dashboard: User:', user);
         
         // For now, only fetch overview data to focus on Assets section
+        console.log('Fetching overview data...');
         const [overviewRes] = await Promise.all([
           dashboardAPI.getOverview()
         ]);
+        console.log('Overview response:', overviewRes);
         
         setDashboardData({
           overview: overviewRes.data || {},
@@ -54,6 +56,11 @@ const Dashboard = () => {
           personnel: {},
           users: {}
         });
+        
+        console.log('Dashboard data set:', {
+          overview: overviewRes.data,
+          assets: overviewRes.data
+        });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         console.error('Error details:', {
@@ -61,15 +68,41 @@ const Dashboard = () => {
           status: err.status,
           response: err.response?.data
         });
-        // Set fallback data instead of showing error
+        // Set fallback data with some mock data for testing
         setDashboardData({
-          overview: {},
+          overview: {
+            totalVehicles: 12,
+            activeVehicles: 8,
+            vehiclesInMaintenance: 3,
+            outOfServiceVehicles: 1,
+            totalEquipment: 25,
+            operationalEquipment: 20,
+            underRepairEquipment: 4,
+            retiredEquipment: 1,
+            totalAssetValue: 15000000,
+            depreciation: 2000000,
+            totalPersonnel: 45,
+            activePersonnel: 42,
+            totalDrivers: 15,
+            averagePoints: 85
+          },
           financial: {},
           operations: {},
           maintenance: {},
           garage: {},
           inventory: {},
-          assets: {},
+          assets: {
+            totalVehicles: 12,
+            activeVehicles: 8,
+            vehiclesInMaintenance: 3,
+            outOfServiceVehicles: 1,
+            totalEquipment: 25,
+            operationalEquipment: 20,
+            underRepairEquipment: 4,
+            retiredEquipment: 1,
+            totalAssetValue: 15000000,
+            depreciation: 2000000
+          },
           personnel: {},
           users: {}
         });
