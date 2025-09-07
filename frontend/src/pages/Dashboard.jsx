@@ -7,7 +7,7 @@ import {
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
   FaCog, FaWarehouse, FaUserShield
 } from 'react-icons/fa';
-import { assetsAPI, vehiclesAPI } from '../services/api';
+import { assetsAPI, vehiclesAPI, equipmentAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -40,17 +40,34 @@ const Dashboard = () => {
         
         // Fetch data from individual APIs instead of dashboard API
         console.log('Fetching assets data from individual APIs...');
-        const [assetsRes, vehiclesRes] = await Promise.all([
+        const [assetsRes, vehiclesRes, equipmentRes] = await Promise.all([
           assetsAPI.getStats(),
-          vehiclesAPI.getStats()
+          vehiclesAPI.getStats(),
+          equipmentAPI.getStats()
         ]);
         console.log('Assets response:', assetsRes);
         console.log('Vehicles response:', vehiclesRes);
+        console.log('Equipment response:', equipmentRes);
         
-        // Combine data from individual APIs
+        // Combine data from individual APIs and map to expected field names
         const combinedData = {
-          ...assetsRes.data,
-          ...vehiclesRes.data
+          // Vehicle data (map to expected field names)
+          totalVehicles: vehiclesRes.data?.totalVehicles || 0,
+          activeVehicles: vehiclesRes.data?.activeVehicles || 0,
+          vehiclesInMaintenance: vehiclesRes.data?.maintenanceVehicles || 0,
+          outOfServiceVehicles: vehiclesRes.data?.inactiveVehicles || 0,
+          
+          // Equipment data (map to expected field names)
+          totalEquipment: equipmentRes.data?.totalEquipment || 0,
+          operationalEquipment: equipmentRes.data?.availableEquipment || 0,
+          underRepairEquipment: equipmentRes.data?.maintenanceEquipment || 0,
+          retiredEquipment: equipmentRes.data?.retiredEquipment || 0,
+          
+          // Asset data
+          totalAssetValue: (vehiclesRes.data?.totalValue || 0) + (equipmentRes.data?.totalValue || 0),
+          
+          // Keep other data from assets API
+          ...assetsRes.data
         };
         
         setDashboardData({

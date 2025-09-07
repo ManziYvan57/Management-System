@@ -58,6 +58,65 @@ router.get('/', protect, authorize('equipment', 'read'), async (req, res) => {
   }
 });
 
+// @desc    Get equipment statistics overview
+// @route   GET /api/equipment/stats/overview
+// @access  Private
+router.get('/stats/overview', protect, authorize('equipment', 'read'), async (req, res) => {
+  try {
+    const query = { isActive: true };
+    
+    // Terminal filtering
+    if (req.user.role !== 'super_admin') {
+      query.terminal = req.user.terminal;
+    }
+    
+    const [
+      totalEquipment,
+      availableEquipment,
+      inUseEquipment,
+      maintenanceEquipment,
+      retiredEquipment,
+      totalValue,
+      categoryStats
+    ] = await Promise.all([
+      Equipment.countDocuments(query),
+      Equipment.countDocuments({ ...query, status: 'available' }),
+      Equipment.countDocuments({ ...query, status: 'in_use' }),
+      Equipment.countDocuments({ ...query, status: 'maintenance' }),
+      Equipment.countDocuments({ ...query, status: 'retired' }),
+      Equipment.aggregate([
+        { $match: query },
+        { $group: { _id: null, total: { $sum: '$currentValue' } } }
+      ]),
+      Equipment.aggregate([
+        { $match: query },
+        { $group: { _id: '$category', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ])
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        totalEquipment,
+        availableEquipment,
+        inUseEquipment,
+        maintenanceEquipment,
+        retiredEquipment,
+        totalValue: totalValue[0]?.total || 0,
+        categories: categoryStats
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching equipment stats overview:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching equipment statistics overview',
+      error: error.message
+    });
+  }
+});
+
 // @desc    Get equipment statistics
 // @route   GET /api/equipment/stats
 // @access  Private
