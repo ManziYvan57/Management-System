@@ -9,7 +9,11 @@ const { body, validationResult } = require('express-validator');
 const validatePersonnel = [
   body('firstName').trim().isLength({ min: 1 }).withMessage('First name is required'),
   body('lastName').trim().isLength({ min: 1 }).withMessage('Last name is required'),
-  body('email').optional().isEmail().withMessage('Please enter a valid email'),
+  body('email').optional({ nullable: true, checkFalsy: true }).custom((value) => {
+    if (!value || value.trim() === '') return true;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error('Please enter a valid email');
+    return true;
+  }),
   body('phoneNumber').matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid phone number'),
   body('dateOfBirth').isISO8601().withMessage('Please enter a valid date of birth'),
   body('gender').isIn(['male', 'female', 'other']).withMessage('Please select a valid gender'),

@@ -54,6 +54,7 @@ const Inventory = () => {
     minQuantity: '',
     reorderPoint: '',
     unitCost: '',
+    supplier: 'Direct Purchase',
     terminal: ''
   });
 
@@ -1073,6 +1074,18 @@ const Inventory = () => {
                  />
                </div>
 
+               <div className="form-group">
+                 <label htmlFor="supplier">Supplier *</label>
+                 <select
+                   id="supplier"
+                   name="supplier"
+                   value={newItem.supplier}
+                   onChange={(e) => handleInputChange(e, 'item')}
+                   required
+                 >
+                   <option value="Direct Purchase">Direct Purchase</option>
+                 </select>
+               </div>
 
                <div className="form-group">
                  <label htmlFor="terminal">Terminal *</label>

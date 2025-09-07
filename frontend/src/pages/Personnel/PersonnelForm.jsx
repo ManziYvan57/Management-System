@@ -79,7 +79,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
   // Department options
   const departmentOptions = [
-    { value: '', label: 'Select Department...' },
     { value: 'operations', label: 'Operations' },
     { value: 'maintenance', label: 'Maintenance' },
     { value: 'customer_service', label: 'Customer Service' },
@@ -189,7 +188,9 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     // Basic validation
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Please enter a valid email';
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
     if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     if (!formData.gender) newErrors.gender = 'Gender is required';
@@ -236,6 +237,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     try {
       const submitData = {
         ...formData,
+        email: formData.email && formData.email.trim() !== '' ? formData.email.trim() : undefined,
         drivingPoints: formData.drivingPoints ? parseInt(formData.drivingPoints) : null,
         performanceRating: formData.performanceRating ? parseInt(formData.performanceRating) : null
       };
@@ -434,6 +436,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   value={formData.employmentStatus}
                   onChange={handleInputChange}
                 >
+                  <option value="">Select Status</option>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                   <option value="suspended">Suspended</option>

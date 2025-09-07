@@ -2,6 +2,13 @@ const mongoose = require('mongoose');
 
 const personnelSchema = new mongoose.Schema({
   // Basic Information
+  employeeId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    default: null
+  },
   firstName: {
     type: String,
     required: [true, 'First name is required'],
@@ -244,8 +251,56 @@ personnelSchema.virtual('licenseStatus').get(function() {
   return 'valid';
 });
 
-// Pre-save middleware to validate driver-specific fields (only if they are provided)
-personnelSchema.pre('save', function(next) {
+// Pre-save middleware to generate employeeId and validate driver-specific fields
+personnelSchema.pre('save', async function(next) {
+  // Generate employeeId if not provided or if it's null/empty
+  if (!this.employeeId || this.employeeId.trim() === '') {
+    try {
+      // Use a more robust approach - find the highest numeric employeeId
+      const lastPersonnel = await this.constructor.findOne(
+        { 
+          employeeId: { 
+            $exists: true, 
+            $ne: null, 
+            $ne: '',
+            $regex: /^EMP\d+$/
+          } 
+        }, 
+        {}, 
+        { sort: { employeeId: -1 } }
+      );
+      
+      let nextId = 1;
+      if (lastPersonnel && lastPersonnel.employeeId) {
+        const lastId = parseInt(lastPersonnel.employeeId.replace('EMP', ''));
+        if (!isNaN(lastId) && lastId > 0) {
+          nextId = lastId + 1;
+        }
+      }
+      
+      // Generate the employeeId
+      let employeeId = `EMP${String(nextId).padStart(4, '0')}`;
+      
+      // Check if this employeeId already exists (to handle race conditions)
+      let counter = 0;
+      while (counter < 100) { // Prevent infinite loop
+        const existing = await this.constructor.findOne({ employeeId });
+        if (!existing) {
+          break;
+        }
+        nextId++;
+        employeeId = `EMP${String(nextId).padStart(4, '0')}`;
+        counter++;
+      }
+      
+      this.employeeId = employeeId;
+    } catch (error) {
+      console.error('Error generating employeeId:', error);
+      // Fallback to timestamp-based ID if there's an error
+      this.employeeId = `EMP${Date.now().toString().slice(-4)}`;
+    }
+  }
+
   if (this.role === 'driver') {
     // Only validate if license fields are provided (they are optional now)
     if (this.licenseNumber && !this.licenseType) {
@@ -265,8 +320,8 @@ personnelSchema.pre('save', function(next) {
 });
 
 // Indexes
+personnelSchema.index({ employeeId: 1 });
 personnelSchema.index({ email: 1 });
-
 personnelSchema.index({ role: 1 });
 
 personnelSchema.index({ employmentStatus: 1 });

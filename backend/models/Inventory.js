@@ -97,27 +97,10 @@ const InventorySchema = new mongoose.Schema({
   
   // Supplier Information
   supplier: {
-    name: {
-      type: String,
-      required: [true, 'Supplier name is required'],
-      trim: true
-    },
-    contactPerson: {
-      type: String,
-      trim: true
-    },
-    phone: {
-      type: String,
-      trim: true
-    },
-    email: {
-      type: String,
-      trim: true
-    },
-    address: {
-      type: String,
-      trim: true
-    }
+    type: String,
+    required: [true, 'Supplier name is required'],
+    trim: true,
+    default: 'Direct Purchase'
   },
   
   // Vehicle Compatibility (for parts)
@@ -172,7 +155,6 @@ const InventorySchema = new mongoose.Schema({
 InventorySchema.index({ sku: 1 });
 InventorySchema.index({ category: 1 });
 InventorySchema.index({ status: 1 });
-InventorySchema.index({ 'supplier.name': 1 });
 InventorySchema.index({ isActive: 1 });
 
 // Virtual for stock status
