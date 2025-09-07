@@ -704,7 +704,7 @@ const Personnel = () => {
           }}
           onSubmit={(data) => handleEditPersonnel(editingPersonnel._id, data)}
           mode="edit"
-          personnel={editingPersonnel}
+          personnel={personnel.find(p => p._id === editingPersonnel._id) || editingPersonnel}
         />
       )}
 
