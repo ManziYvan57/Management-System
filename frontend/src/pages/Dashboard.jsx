@@ -7,7 +7,7 @@ import {
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
   FaCog, FaWarehouse, FaUserShield
 } from 'react-icons/fa';
-import { dashboardAPI } from '../services/api';
+import { assetsAPI, vehiclesAPI, equipmentAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -38,28 +38,39 @@ const Dashboard = () => {
         console.log('Dashboard: Token exists:', !!token);
         console.log('Dashboard: User:', user);
         
-        // For now, only fetch overview data to focus on Assets section
-        console.log('Fetching overview data...');
-        const [overviewRes] = await Promise.all([
-          dashboardAPI.getOverview()
+        // Fetch data from individual APIs instead of dashboard API
+        console.log('Fetching assets data from individual APIs...');
+        const [assetsRes, vehiclesRes, equipmentRes] = await Promise.all([
+          assetsAPI.getStats(),
+          vehiclesAPI.getStats(),
+          equipmentAPI.getStats()
         ]);
-        console.log('Overview response:', overviewRes);
+        console.log('Assets response:', assetsRes);
+        console.log('Vehicles response:', vehiclesRes);
+        console.log('Equipment response:', equipmentRes);
+        
+        // Combine data from individual APIs
+        const combinedData = {
+          ...assetsRes.data,
+          ...vehiclesRes.data,
+          ...equipmentRes.data
+        };
         
         setDashboardData({
-          overview: overviewRes.data || {},
+          overview: combinedData,
           financial: {},
           operations: {},
           maintenance: {},
           garage: {},
           inventory: {},
-          assets: overviewRes.data || {},
+          assets: combinedData,
           personnel: {},
           users: {}
         });
         
         console.log('Dashboard data set:', {
-          overview: overviewRes.data,
-          assets: overviewRes.data
+          combinedData,
+          assets: combinedData
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
