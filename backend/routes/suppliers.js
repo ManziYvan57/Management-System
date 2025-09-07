@@ -224,10 +224,8 @@ router.delete('/:id', protect, authorize('inventory', 'delete'), async (req, res
       });
     }
     
-    // Soft delete
-    supplier.isActive = false;
-    supplier.updatedBy = req.user.id;
-    await supplier.save();
+    // Hard delete - actually remove the record from database
+    await Supplier.findByIdAndDelete(req.params.id);
     
     res.status(200).json({
       success: true,
