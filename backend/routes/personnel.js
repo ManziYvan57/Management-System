@@ -371,6 +371,17 @@ router.get('/stats/overview', protect, authorize('personnel', 'read'), async (re
       admins,
       otherRoles,
       
+      // Driver-specific data
+      activeDrivers,
+      driversWithInfractions,
+      criticalDrivers,
+      averagePoints,
+      
+      // Health status data
+      suspendedPersonnel,
+      onLeavePersonnel,
+      terminatedPersonnel,
+      
       personnelByDepartment,
       personnelByStatus,
       recentHires,
@@ -386,6 +397,33 @@ router.get('/stats/overview', protect, authorize('personnel', 'read'), async (re
       Personnel.countDocuments({ ...query, role: 'manager' }),
       Personnel.countDocuments({ ...query, role: 'admin' }),
       Personnel.countDocuments({ ...query, role: 'other' }),
+
+      // Driver-specific counts
+      Personnel.countDocuments({ ...query, role: 'driver', employmentStatus: 'active' }),
+      Personnel.countDocuments({ 
+        ...query, 
+        role: 'driver', 
+        'infractions': { $exists: true, $not: { $size: 0 } }
+      }),
+      Personnel.countDocuments({ 
+        ...query, 
+        role: 'driver', 
+        $or: [
+          { drivingPoints: { $gte: 80 } },
+          { employmentStatus: 'suspended' }
+        ]
+      }),
+      
+      // Calculate average points for drivers
+      Personnel.aggregate([
+        { $match: { ...query, role: 'driver', drivingPoints: { $exists: true } } },
+        { $group: { _id: null, avgPoints: { $avg: '$drivingPoints' } } }
+      ]),
+      
+      // Health status counts
+      Personnel.countDocuments({ ...query, employmentStatus: 'suspended' }),
+      Personnel.countDocuments({ ...query, employmentStatus: 'on_leave' }),
+      Personnel.countDocuments({ ...query, employmentStatus: 'terminated' }),
 
       Personnel.aggregate([
         { $match: query },
@@ -414,6 +452,13 @@ router.get('/stats/overview', protect, authorize('personnel', 'read'), async (re
         .limit(10)
     ]);
 
+    // Calculate average points
+    const avgPoints = averagePoints.length > 0 ? Math.round(averagePoints[0].avgPoints || 0) : 0;
+    
+    // Calculate health status
+    const needsAttention = onLeavePersonnel; // Personnel on leave need attention
+    const criticalStatus = suspendedPersonnel + terminatedPersonnel; // Suspended or terminated are critical
+
     res.json({
       success: true,
       data: {
@@ -429,6 +474,21 @@ router.get('/stats/overview', protect, authorize('personnel', 'read'), async (re
           admins,
           otherRoles
         },
+
+        // Driver-specific data
+        activeDrivers,
+        driversWithInfractions,
+        criticalDrivers,
+        averagePoints: avgPoints,
+        driverEfficiency: activeDrivers > 0 ? Math.round((activeDrivers / drivers) * 100) : 0,
+        trainingCompletion: 0, // Placeholder - would need training data
+
+        // Health status data
+        needsAttention,
+        criticalStatus,
+        suspendedPersonnel,
+        onLeavePersonnel,
+        terminatedPersonnel,
 
         personnelByDepartment,
         personnelByStatus,

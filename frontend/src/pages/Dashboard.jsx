@@ -95,13 +95,20 @@ const Dashboard = () => {
           // Maintenance staff
           maintenance: personnelRes.data?.roleBreakdown?.mechanics || 0,
           
-          // Driver-specific data
+          // Driver-specific data (now from API)
           activeDrivers: personnelRes.data?.activeDrivers || 0,
           driversWithInfractions: personnelRes.data?.driversWithInfractions || 0,
           averagePoints: personnelRes.data?.averagePoints || 0,
           criticalDrivers: personnelRes.data?.criticalDrivers || 0,
           driverEfficiency: personnelRes.data?.driverEfficiency || 0,
-          trainingCompletion: personnelRes.data?.trainingCompletion || 0
+          trainingCompletion: personnelRes.data?.trainingCompletion || 0,
+          
+          // Health status data (now from API)
+          needsAttention: personnelRes.data?.needsAttention || 0,
+          criticalStatus: personnelRes.data?.criticalStatus || 0,
+          suspendedPersonnel: personnelRes.data?.suspendedPersonnel || 0,
+          onLeavePersonnel: personnelRes.data?.onLeavePersonnel || 0,
+          terminatedPersonnel: personnelRes.data?.terminatedPersonnel || 0
         };
         
         setDashboardData({
@@ -141,6 +148,13 @@ const Dashboard = () => {
             totalPersonnel: 0,
             activePersonnel: 0,
             drivers: 0,
+            teamLeaders: 0,
+            customerCare: 0,
+            mechanics: 0,
+            supervisors: 0,
+            managers: 0,
+            admins: 0,
+            otherRoles: 0,
             administrative: 0,
             maintenance: 0,
             activeDrivers: 0,
@@ -148,7 +162,12 @@ const Dashboard = () => {
             averagePoints: 0,
             criticalDrivers: 0,
             driverEfficiency: 0,
-            trainingCompletion: 0
+            trainingCompletion: 0,
+            needsAttention: 0,
+            criticalStatus: 0,
+            suspendedPersonnel: 0,
+            onLeavePersonnel: 0,
+            terminatedPersonnel: 0
           },
           users: {}
         });
@@ -673,7 +692,7 @@ const Dashboard = () => {
                     </div>
                     <div className="health-info">
                       <span className="health-label">Needs Attention</span>
-                      <span className="health-count">{dashboardData.personnel?.driversWithInfractions || 0}</span>
+                      <span className="health-count">{dashboardData.personnel?.needsAttention || 0}</span>
                     </div>
                   </div>
                   <div className="health-item">
@@ -682,7 +701,7 @@ const Dashboard = () => {
                     </div>
                     <div className="health-info">
                       <span className="health-label">Critical Status</span>
-                      <span className="health-count">{dashboardData.personnel?.criticalDrivers || 0}</span>
+                      <span className="health-count">{dashboardData.personnel?.criticalStatus || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -715,9 +734,9 @@ const Dashboard = () => {
                       {dashboardData.personnel?.driverEfficiency || 0}%
                     </span>
                   </div>
-                </div>
-              </div>
-            </div>
+        </div>
+      </div>
+    </div>
 
             {/* Role Distribution */}
             <div className="role-distribution">
