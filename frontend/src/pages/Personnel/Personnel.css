@@ -61,6 +61,51 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Personnel Tabs */
+.personnel-tabs {
+  display: flex;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #d1d5db;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tab-button {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: #f9fafb;
+  color: #6b7280;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-right: 1px solid #e5e7eb;
+}
+
+.tab-button:last-child {
+  border-right: none;
+}
+
+.tab-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.tab-button.active {
+  background: #3b82f6;
+  color: white;
+}
+
+.tab-button.active:hover {
+  background: #2563eb;
+}
+
 .personnel-overview h3 {
   color: #1f2937;
   font-size: 1.25rem;
@@ -826,7 +871,7 @@ tr:hover {
   color: #6b7280;
 }
 
-/* Action Buttons - Match Documents Tab Style */
+/* Action Buttons - Exact Match to Documents Tab Style */
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -845,6 +890,8 @@ tr:hover {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 28px;
+  height: 28px;
   color: inherit;
 }
 
@@ -889,6 +936,71 @@ tr:hover {
 
 .delete-btn:hover {
   background-color: #dc2626;
+}
+
+/* Driver Management */
+.driver-management {
+  padding: 0;
+}
+
+.driver-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.drivers-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.drivers-table th {
+  background: #f9fafb;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.drivers-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.drivers-table tr:hover {
+  background: #f9fafb;
+}
+
+.driver-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.license-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.vehicle-info, .route-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.no-license, .no-points, .no-vehicle, .no-route {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.875rem;
 }
 
 /* Infractions Section */

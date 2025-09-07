@@ -16,7 +16,7 @@ const Personnel = () => {
   const [editingPersonnel, setEditingPersonnel] = useState(null);
   const [viewingPersonnel, setViewingPersonnel] = useState(null);
   const [selectedPersonnel, setSelectedPersonnel] = useState(null);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('personnel');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -203,12 +203,33 @@ const Personnel = () => {
 
       {/* Personnel Overview */}
       <div className="personnel-overview">
-        <h3>All Personnel</h3>
+        <h3>Personnel Management</h3>
         <p>Manage and view all personnel across different roles and departments</p>
       </div>
 
-      {/* Search and Filter Controls */}
-      <div className="search-filter-container">
+      {/* Tabs */}
+      <div className="personnel-tabs">
+        <button 
+          className={`tab-button ${activeTab === 'personnel' ? 'active' : ''}`}
+          onClick={() => setActiveTab('personnel')}
+        >
+          <FaUser />
+          All Personnel
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'drivers' ? 'active' : ''}`}
+          onClick={() => setActiveTab('drivers')}
+        >
+          <FaCar />
+          Driver Management
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'personnel' && (
+        <>
+          {/* Search and Filter Controls */}
+          <div className="search-filter-container">
         <form onSubmit={handleSearch} className="search-form">
           <div className="search-input-group">
             <FaSearch className="search-icon" />
@@ -329,7 +350,6 @@ const Personnel = () => {
                 <th>Terminal</th>
                 <th>Status</th>
                 <th>Contact</th>
-                <th>Driver Info</th>
                 <th>Performance</th>
                 <th>Actions</th>
               </tr>
@@ -382,44 +402,6 @@ const Personnel = () => {
                         </div>
                       )}
                     </div>
-                  </td>
-                  <td>
-                    {person.role === 'driver' ? (
-                      <div className="driver-info">
-                        {person.licenseNumber && (
-                          <div className="driver-info-item">
-                            <FaIdCard />
-                            <span>{person.licenseNumber}</span>
-                            {person.licenseExpiryDate && (
-                              <span className={`license-status ${getLicenseStatusColor(person.licenseStatus)}`}>
-                                {person.licenseStatus}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {person.drivingPoints !== null && person.drivingPoints !== undefined && person.drivingPoints > 0 && (
-                          <div className="driver-info-item">
-                            <span className={`points-info ${getPointsColor(person.drivingPoints)}`}>
-                              {person.drivingPoints}
-                            </span>
-                          </div>
-                        )}
-                        {person.assignedVehicle && (
-                          <div className="driver-info-item">
-                            <FaCar />
-                            <span>{person.assignedVehicle.plateNumber || person.assignedVehicle}</span>
-                          </div>
-                        )}
-                        {person.assignedRoute && (
-                          <div className="driver-info-item">
-                            <FaRoute />
-                            <span>{person.assignedRoute}</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="not-driver">N/A</span>
-                    )}
                   </td>
                   <td>
                                          <div className="performance-info">
@@ -488,64 +470,200 @@ const Personnel = () => {
           </table>
         )}
       </div>
+        </>
+      )}
 
-      {/* Infractions Table */}
-      {filteredPersonnel.some(person => person.role === 'driver' && person.infractions && person.infractions.length > 0) && (
-        <div className="infractions-section">
-          <h3>Driver Infractions</h3>
+      {/* Driver Management Tab */}
+      {activeTab === 'drivers' && (
+        <div className="driver-management">
+          <div className="driver-stats">
+            <div className="stat-card">
+              <h3>{filteredPersonnel.filter(p => p.role === 'driver').length}</h3>
+              <p>Total Drivers</p>
+            </div>
+            <div className="stat-card">
+              <h3>{filteredPersonnel.filter(p => p.role === 'driver' && p.employmentStatus === 'active').length}</h3>
+              <p>Active Drivers</p>
+            </div>
+            <div className="stat-card">
+              <h3>{filteredPersonnel.filter(p => p.role === 'driver' && p.drivingPoints && p.drivingPoints > 0).length}</h3>
+              <p>With Points</p>
+            </div>
+          </div>
+
+          {/* Drivers Table */}
           <div className="table-container">
-            <table className="infractions-table">
+            <table className="drivers-table">
               <thead>
                 <tr>
                   <th>Driver</th>
-                  <th>Date</th>
-                  <th>Type</th>
-                  <th>Description</th>
+                  <th>License</th>
                   <th>Points</th>
-                  <th>Severity</th>
+                  <th>Vehicle</th>
+                  <th>Route</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPersonnel
-                  .filter(person => person.role === 'driver' && person.infractions && person.infractions.length > 0)
-                  .flatMap(person => 
-                    person.infractions.map((infraction, index) => (
-                      <tr key={`${person._id}-${index}`}>
-                        <td>
-                          <div className="driver-name">
-                            <FaUser />
-                            <span>{person.firstName} {person.lastName}</span>
+                  .filter(person => person.role === 'driver')
+                  .map((person) => (
+                    <tr key={person._id}>
+                      <td>
+                        <div className="driver-info">
+                          <FaUser />
+                          <span>{person.firstName} {person.lastName}</span>
+                        </div>
+                      </td>
+                      <td>
+                        {person.licenseNumber ? (
+                          <div className="license-info">
+                            <FaIdCard />
+                            <span>{person.licenseNumber}</span>
+                            {person.licenseExpiryDate && (
+                              <span className={`license-status ${getLicenseStatusColor(person.licenseStatus)}`}>
+                                {person.licenseStatus}
+                              </span>
+                            )}
                           </div>
-                        </td>
-                        <td>{new Date(infraction.date).toLocaleDateString()}</td>
-                        <td>
-                          <span className={`infraction-type ${infraction.severity}`}>
-                            {infraction.type}
+                        ) : (
+                          <span className="no-license">No License</span>
+                        )}
+                      </td>
+                      <td>
+                        {person.drivingPoints !== null && person.drivingPoints !== undefined && person.drivingPoints > 0 ? (
+                          <span className={`points-info ${getPointsColor(person.drivingPoints)}`}>
+                            {person.drivingPoints}
                           </span>
-                        </td>
-                        <td>{infraction.description}</td>
-                        <td>
-                          <span className={`points-badge ${getPointsColor(infraction.points)}`}>
-                            {infraction.points}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`severity-badge ${infraction.severity}`}>
-                            {infraction.severity}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`status-badge ${infraction.status}`}>
-                            {infraction.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                        ) : (
+                          <span className="no-points">No Points</span>
+                        )}
+                      </td>
+                      <td>
+                        {person.assignedVehicle ? (
+                          <div className="vehicle-info">
+                            <FaCar />
+                            <span>{person.assignedVehicle.plateNumber || person.assignedVehicle}</span>
+                          </div>
+                        ) : (
+                          <span className="no-vehicle">Not Assigned</span>
+                        )}
+                      </td>
+                      <td>
+                        {person.assignedRoute ? (
+                          <div className="route-info">
+                            <FaRoute />
+                            <span>{person.assignedRoute}</span>
+                          </div>
+                        ) : (
+                          <span className="no-route">No Route</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`status-badge ${getStatusBadgeClass(person.employmentStatus)}`}>
+                          {person.employmentStatus.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="action-btn view-btn"
+                            title="View Details"
+                            onClick={() => {
+                              setViewingPersonnel(person);
+                              setShowViewForm(true);
+                            }}
+                          >
+                            <FaEye />
+                          </button>
+                          <button
+                            className="action-btn edit-btn"
+                            title="Edit Driver"
+                            onClick={() => {
+                              setEditingPersonnel(person);
+                              setShowEditForm(true);
+                            }}
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            className="action-btn infraction-btn"
+                            title="Add Infraction"
+                            onClick={() => {
+                              setSelectedPersonnel(person);
+                              setShowInfractionForm(true);
+                            }}
+                          >
+                            <FaExclamationTriangle />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
+
+          {/* Infractions Table */}
+          {filteredPersonnel.some(person => person.role === 'driver' && person.infractions && person.infractions.length > 0) && (
+            <div className="infractions-section">
+              <h3>Driver Infractions</h3>
+              <div className="table-container">
+                <table className="infractions-table">
+                  <thead>
+                    <tr>
+                      <th>Driver</th>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                      <th>Points</th>
+                      <th>Severity</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPersonnel
+                      .filter(person => person.role === 'driver' && person.infractions && person.infractions.length > 0)
+                      .flatMap(person => 
+                        person.infractions.map((infraction, index) => (
+                          <tr key={`${person._id}-${index}`}>
+                            <td>
+                              <div className="driver-name">
+                                <FaUser />
+                                <span>{person.firstName} {person.lastName}</span>
+                              </div>
+                            </td>
+                            <td>{new Date(infraction.date).toLocaleDateString()}</td>
+                            <td>
+                              <span className={`infraction-type ${infraction.severity}`}>
+                                {infraction.type}
+                              </span>
+                            </td>
+                            <td>{infraction.description}</td>
+                            <td>
+                              <span className={`points-badge ${getPointsColor(infraction.points)}`}>
+                                {infraction.points}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`severity-badge ${infraction.severity}`}>
+                                {infraction.severity}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`status-badge ${infraction.status}`}>
+                                {infraction.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
