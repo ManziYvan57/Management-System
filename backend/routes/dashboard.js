@@ -10,6 +10,7 @@ const Vehicle = require('../models/Vehicle');
 const Equipment = require('../models/Equipment');
 const MaintenanceSchedule = require('../models/MaintenanceSchedule');
 const PurchaseOrder = require('../models/PurchaseOrder');
+const Supplier = require('../models/Supplier');
 
 // @desc    Get dashboard overview
 // @route   GET /api/dashboard/overview
@@ -17,6 +18,9 @@ const PurchaseOrder = require('../models/PurchaseOrder');
 router.get('/overview', protect, async (req, res) => {
   try {
     const { terminal } = req.query;
+    
+    // Define minimum quantity threshold for low stock
+    const minQuantity = 10;
     
     // Build query based on user role and terminal
     let query = {};
@@ -119,7 +123,7 @@ router.get('/overview', protect, async (req, res) => {
       Inventory.countDocuments({ ...query, quantity: { $gt: 0 } }),
       Inventory.countDocuments({ 
         ...query, 
-        quantity: { $gt: 0, $lte: '$minQuantity' } 
+        quantity: { $gt: 0, $lte: minQuantity } 
       }),
       Inventory.countDocuments({ ...query, quantity: 0 }),
       
@@ -299,8 +303,8 @@ router.get('/financial', protect, async (req, res) => {
       
       // Reorder value (items that need reordering)
       Inventory.aggregate([
-        { $match: { ...query, quantity: { $lte: '$minQuantity' } } },
-        { $group: { _id: null, total: { $sum: { $multiply: ['$minQuantity', '$unitCost'] } } } }
+        { $match: { ...query, quantity: { $lte: minQuantity } } },
+        { $group: { _id: null, total: { $sum: { $multiply: [minQuantity, '$unitCost'] } } } }
       ]).then(result => result[0]?.total || 0)
     ]);
     
@@ -336,6 +340,9 @@ router.get('/operations', protect, async (req, res) => {
   try {
     const { terminal } = req.query;
     
+    // Define minimum quantity threshold for low stock
+    const minQuantity = 10;
+    
     // Build query based on user role and terminal
     let query = {};
     
@@ -364,7 +371,7 @@ router.get('/operations', protect, async (req, res) => {
       Inventory.countDocuments({ ...query, quantity: { $gt: 0 } }),
       Inventory.countDocuments({ 
         ...query, 
-        quantity: { $gt: 0, $lte: '$minQuantity' } 
+        quantity: { $gt: 0, $lte: minQuantity } 
       }),
       Inventory.countDocuments({ ...query, quantity: 0 }),
       
