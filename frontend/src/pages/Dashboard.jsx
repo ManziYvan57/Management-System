@@ -5,7 +5,7 @@ import {
   FaChartLine, FaChartBar, FaChartPie, FaCalendarAlt,
   FaDollarSign, FaWrench, FaUserTie, FaUserCog,
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
-  FaCog, FaWarehouse, FaUserShield, FaTimesCircle, FaPlus
+  FaCog, FaWarehouse, FaUserShield, FaTimesCircle
 } from 'react-icons/fa';
 import { assetsAPI, vehiclesAPI, equipmentAPI } from '../services/api';
 import './Dashboard.css';
@@ -398,16 +398,6 @@ const Dashboard = () => {
           <div className="assets-overview">
             <div className="assets-header">
               <h3>Assets Management</h3>
-              <div className="assets-actions">
-                <button className="btn btn-primary">
-                  <FaBus className="btn-icon" />
-                  Add Vehicle
-                </button>
-                <button className="btn btn-secondary">
-                  <FaCog className="btn-icon" />
-                  Add Equipment
-                </button>
-              </div>
             </div>
 
             {/* Key Metrics Row */}
@@ -541,39 +531,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="recent-activity">
-              <h4>Recent Asset Activity</h4>
-              <div className="activity-list">
-                <div className="activity-item">
-                  <div className="activity-icon success">
-                    <FaPlus />
-                  </div>
-                  <div className="activity-content">
-                    <span className="activity-text">New vehicle added to fleet</span>
-                    <span className="activity-time">2 hours ago</span>
-                  </div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-icon warning">
-                    <FaWrench />
-                  </div>
-                  <div className="activity-content">
-                    <span className="activity-text">Equipment maintenance scheduled</span>
-                    <span className="activity-time">4 hours ago</span>
-                  </div>
-                </div>
-                <div className="activity-item">
-                  <div className="activity-icon info">
-                    <FaFileAlt />
-                  </div>
-                  <div className="activity-content">
-                    <span className="activity-text">Vehicle documents updated</span>
-                    <span className="activity-time">1 day ago</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}
