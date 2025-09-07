@@ -46,9 +46,8 @@ const Dashboard = () => {
           maintenance: maintenanceRes.data || {},
           garage: maintenanceRes.data || {},
           inventory: operationsRes.data || {},
-          assets: financialRes.data || {},
-          personnel: operationsRes.data || {},
-          transport: operationsRes.data || {},
+          assets: overviewRes.data || {},
+          personnel: overviewRes.data || {},
           users: overviewRes.data || {}
         });
       } catch (err) {
@@ -74,19 +73,22 @@ const Dashboard = () => {
   // Calculate cross-module insights
   const insights = {
     // Financial Overview
-    totalMonthlySpending: dashboardData.garage.monthlySpending + dashboardData.inventory.monthlySpending,
-    totalAssetValue: dashboardData.assets.totalValue,
-    netAssetValue: dashboardData.assets.totalValue - dashboardData.assets.depreciation,
+    totalMonthlySpending: (dashboardData.garage.monthlySpending || 0) + (dashboardData.financial.monthlySpending || 0),
+    totalAssetValue: dashboardData.assets.totalAssetValue || 0,
+    netAssetValue: (dashboardData.assets.totalAssetValue || 0) - (dashboardData.assets.depreciation || 0),
     
     // Operational Efficiency
-    maintenanceEfficiency: Math.round((dashboardData.garage.completedWorkOrders / dashboardData.garage.totalWorkOrders) * 100),
-    personnelUtilization: Math.round((dashboardData.personnel.activePersonnel / dashboardData.personnel.totalPersonnel) * 100),
+    maintenanceEfficiency: dashboardData.garage.totalWorkOrders > 0 ? 
+      Math.round(((dashboardData.garage.completedWorkOrders || 0) / dashboardData.garage.totalWorkOrders) * 100) : 0,
+    personnelUtilization: dashboardData.personnel.totalPersonnel > 0 ? 
+      Math.round(((dashboardData.personnel.activePersonnel || 0) / dashboardData.personnel.totalPersonnel) * 100) : 0,
     
     // Critical Alerts
     criticalAlerts: [
       ...(dashboardData.garage.criticalAlerts > 0 ? [`${dashboardData.garage.criticalAlerts} vehicles need immediate attention`] : []),
       ...(dashboardData.inventory.outOfStockItems > 0 ? [`${dashboardData.inventory.outOfStockItems} items out of stock`] : []),
-      ...(dashboardData.inventory.lowStockItems > 5 ? [`${dashboardData.inventory.lowStockItems} items running low`] : [])
+      ...(dashboardData.inventory.lowStockItems > 5 ? [`${dashboardData.inventory.lowStockItems} items running low`] : []),
+      ...(dashboardData.garage.overdueSchedules > 0 ? [`${dashboardData.garage.overdueSchedules} maintenance schedules overdue`] : [])
     ]
   };
 
