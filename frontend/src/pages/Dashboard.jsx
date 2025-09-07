@@ -230,7 +230,6 @@ const Dashboard = () => {
           <FaBus className="tab-icon" />
           Assets
         </button>
-        {/* Temporarily commented out for development
         <button 
           className={`tab-btn ${activeTab === 'personnel' ? 'active' : ''}`}
           onClick={() => setActiveTab('personnel')}
