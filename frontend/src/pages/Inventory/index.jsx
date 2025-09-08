@@ -374,8 +374,8 @@ const Inventory = () => {
     e.preventDefault();
     setIsSubmittingPurchaseOrder(true);
     try {
-      // Find the selected item to get its ID
-      const selectedItem = inventory.find(item => item.name === newPurchaseOrder.itemName);
+      // Find the selected item to get its ID (from filtered inventory for current terminal)
+      const selectedItem = filteredInventory.find(item => item.name === newPurchaseOrder.itemName);
       
       if (!selectedItem) {
         alert('Please select a valid item');
@@ -481,8 +481,8 @@ const Inventory = () => {
     setIsSubmittingStockMovement(true);
     
     try {
-      // Find the selected item to get its ID
-      const selectedItem = inventory.find(item => item.name === newStockMovement.inventoryItem);
+      // Find the selected item to get its ID (from filtered inventory for current terminal)
+      const selectedItem = filteredInventory.find(item => item.name === newStockMovement.inventoryItem);
       
       if (!selectedItem) {
         alert('Please select a valid item');
@@ -576,7 +576,7 @@ const Inventory = () => {
   };
 
   const handleItemSelection = (itemName) => {
-    const selectedItem = inventory.find(item => item.name === itemName);
+    const selectedItem = filteredInventory.find(item => item.name === itemName);
     if (selectedItem) {
       setNewPurchaseOrder({
         ...newPurchaseOrder,
