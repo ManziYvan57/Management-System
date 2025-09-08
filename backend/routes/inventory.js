@@ -173,8 +173,22 @@ router.get('/stats', protect, async (req, res) => {
     // Get supplier count
     const totalSuppliers = await Supplier.countDocuments({ isActive: true });
     
-    // Get unique suppliers from inventory
-    const inventorySuppliers = await Inventory.distinct('supplier', query);
+    // Get unique suppliers from inventory - handle both string and object cases
+    const inventoryItems = await Inventory.find(query, 'supplier').lean();
+    const inventorySuppliers = [...new Set(
+      inventoryItems
+        .map(item => {
+          // Handle both string and object cases
+          if (typeof item.supplier === 'string') {
+            return item.supplier;
+          } else if (item.supplier && typeof item.supplier === 'object' && item.supplier.name) {
+            return item.supplier.name;
+          }
+          return null;
+        })
+        .filter(Boolean)
+    )];
+    
     const activeSuppliers = await Supplier.countDocuments({ 
       isActive: true,
       name: { $in: inventorySuppliers }
@@ -205,12 +219,23 @@ router.get('/stats', protect, async (req, res) => {
       { $sort: { value: -1 } }
     ]);
     
-    // Supplier statistics
+    // Supplier statistics - handle both string and object cases
     const suppliers = await Inventory.aggregate([
       { $match: query },
+      {
+        $addFields: {
+          supplierName: {
+            $cond: {
+              if: { $eq: [{ $type: '$supplier' }, 'string'] },
+              then: '$supplier',
+              else: '$supplier.name'
+            }
+          }
+        }
+      },
       { 
         $group: { 
-          _id: '$supplier', 
+          _id: '$supplierName', 
           items: { $sum: 1 },
           value: { $sum: '$totalValue' }
         } 
