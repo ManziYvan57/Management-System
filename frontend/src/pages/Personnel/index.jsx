@@ -256,8 +256,8 @@ const Personnel = () => {
       {/* Tab Content */}
       {activeTab === 'personnel' && (
         <>
-          {/* Search and Filter Controls */}
-          <div className="search-filter-container">
+      {/* Search and Filter Controls */}
+      <div className="search-filter-container">
         <form onSubmit={handleSearch} className="search-form">
           <div className="search-input-group">
             <FaSearch className="search-icon" />
@@ -418,16 +418,16 @@ const Personnel = () => {
                   <td>
                     <div className="contact-info">
                       {person.email && (
-                        <div className="contact-item">
-                          <FaEnvelope />
-                          <span>{person.email}</span>
-                        </div>
+                      <div className="contact-item">
+                        <FaEnvelope />
+                        <span>{person.email}</span>
+                      </div>
                       )}
                       {person.phoneNumber && (
-                        <div className="contact-item">
-                          <FaPhone />
-                          <span>{person.phoneNumber}</span>
-                        </div>
+                      <div className="contact-item">
+                        <FaPhone />
+                        <span>{person.phoneNumber}</span>
+                      </div>
                       )}
                     </div>
                   </td>
@@ -592,33 +592,33 @@ const Personnel = () => {
                             }}
                           >
                             <FaEye />
-                          </button>
-                          <button
-                            className="action-btn edit-btn"
+                      </button>
+                      <button
+                        className="action-btn edit-btn"
                             title="Edit Driver"
-                            onClick={() => {
-                              setEditingPersonnel(person);
-                              setShowEditForm(true);
-                            }}
-                          >
+                        onClick={() => {
+                          setEditingPersonnel(person);
+                          setShowEditForm(true);
+                        }}
+                      >
                             <FaEdit />
-                          </button>
-                          <button
-                            className="action-btn infraction-btn"
+                      </button>
+                        <button
+                          className="action-btn infraction-btn"
                             title="Add Infraction"
-                            onClick={() => {
-                              setSelectedPersonnel(person);
-                              setShowInfractionForm(true);
-                            }}
-                          >
+                          onClick={() => {
+                            setSelectedPersonnel(person);
+                            setShowInfractionForm(true);
+                          }}
+                        >
                             <FaExclamationTriangle />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           </div>
 
           {/* Infractions Table */}
@@ -702,8 +702,8 @@ const Personnel = () => {
                 </table>
               </div>
             </div>
-          )}
-        </div>
+        )}
+      </div>
       )}
 
       {/* Add Personnel Modal */}

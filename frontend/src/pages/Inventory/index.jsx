@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { inventoryAPI, suppliersAPI, purchaseOrdersAPI, stockMovementsAPI } from '../../services/api';
-import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaWarehouse, FaBuilding } from 'react-icons/fa';
 import './Inventory.css';
 
 const Inventory = () => {
+  // Get user information from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userTerminal = user.terminal || 'Kigali';
+  const userRole = user.role || 'user';
+  
+  // Terminal tabs state
+  const [activeTerminal, setActiveTerminal] = useState(userTerminal);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
+  
+  // Data state
   const [inventory, setInventory] = useState([]);
+  const [filteredInventory, setFilteredInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
@@ -55,7 +66,7 @@ const Inventory = () => {
     reorderPoint: '',
     unitCost: '',
     supplier: 'Direct Purchase',
-    terminal: ''
+    terminal: userTerminal // Pre-select user's terminal
   });
 
   const [newPurchaseOrder, setNewPurchaseOrder] = useState({
@@ -72,7 +83,7 @@ const Inventory = () => {
     phone: '',
     email: '',
     supplies: '',
-    terminal: ''
+    terminal: userTerminal // Pre-select user's terminal
   });
 
   const [newStockMovement, setNewStockMovement] = useState({
@@ -82,6 +93,12 @@ const Inventory = () => {
     reason: '',
     reference: ''
   });
+
+  // Filter inventory by active terminal
+  useEffect(() => {
+    const filtered = inventory.filter(item => item.terminal === activeTerminal);
+    setFilteredInventory(filtered);
+  }, [inventory, activeTerminal]);
 
   // Fetch data from API
   useEffect(() => {
@@ -113,6 +130,19 @@ const Inventory = () => {
 
     fetchData();
   }, []);
+
+  // Handle terminal tab change
+  const handleTerminalChange = (terminal) => {
+    setActiveTerminal(terminal);
+  };
+
+  // Get terminals available to user based on role
+  const getUserTerminals = () => {
+    if (userRole === 'super_admin') {
+      return availableTerminals;
+    }
+    return [userTerminal]; // Regular users only see their terminal
+  };
 
   // Refresh purchase orders
   const refreshPurchaseOrders = async () => {
@@ -149,11 +179,11 @@ const Inventory = () => {
     }
   };
 
-  // Dashboard Statistics
-  const totalItems = inventory.length;
-  const lowStockItems = inventory.filter(item => item.quantity <= item.minQuantity).length;
-  const outOfStockItems = inventory.filter(item => item.quantity === 0).length;
-  const totalInventoryValue = inventory.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
+  // Dashboard Statistics (using filtered inventory for current terminal)
+  const totalItems = filteredInventory.length;
+  const lowStockItems = filteredInventory.filter(item => item.quantity <= item.minQuantity).length;
+  const outOfStockItems = filteredInventory.filter(item => item.quantity === 0).length;
+  const totalInventoryValue = filteredInventory.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
   const pendingOrders = purchaseOrders.filter(order => order.status === 'pending').length;
   
   // Financial Statistics
@@ -244,8 +274,8 @@ const Inventory = () => {
         minQuantity: '',
         reorderPoint: '',
         unitCost: '',
-        supplier: '',
-        terminal: ''
+        supplier: 'Direct Purchase',
+        terminal: activeTerminal // Keep current terminal
       });
       
       setShowAddItemForm(false);
@@ -297,8 +327,8 @@ const Inventory = () => {
         quantity: '',
         minQuantity: '',
         unitCost: '',
-        supplier: '',
-        terminal: ''
+        supplier: 'Direct Purchase',
+        terminal: activeTerminal // Keep current terminal
       });
       setEditingItem(null);
       setShowEditItemForm(false);
@@ -365,7 +395,8 @@ const Inventory = () => {
         name: '',
         phone: '',
         email: '',
-        supplies: ''
+        supplies: '',
+        terminal: activeTerminal // Keep current terminal
       });
       setShowSupplierForm(false);
       // Refresh suppliers list
@@ -399,7 +430,8 @@ const Inventory = () => {
         name: '',
         phone: '',
         email: '',
-        supplies: ''
+        supplies: '',
+        terminal: activeTerminal // Keep current terminal
       });
       setEditingSupplier(null);
       setShowSupplierForm(false);
@@ -598,12 +630,32 @@ const Inventory = () => {
     return 'in-stock';
   };
 
-  const lowStockItemsList = inventory.filter(item => item.quantity <= item.minQuantity && item.quantity > 0);
-  const outOfStockItemsList = inventory.filter(item => item.quantity === 0);
+  const lowStockItemsList = filteredInventory.filter(item => item.quantity <= item.minQuantity && item.quantity > 0);
+  const outOfStockItemsList = filteredInventory.filter(item => item.quantity === 0);
 
   return (
     <div className="inventory-container">
+      <div className="inventory-header">
       <h2>Inventory Management</h2>
+        <div className="terminal-info">
+          <FaBuilding className="terminal-icon" />
+          <span>Current Terminal: <strong>{activeTerminal}</strong></span>
+        </div>
+      </div>
+
+      {/* Terminal Tabs */}
+      <div className="terminal-tabs">
+        {getUserTerminals().map((terminal) => (
+          <button
+            key={terminal}
+            className={`terminal-tab ${activeTerminal === terminal ? 'active' : ''}`}
+            onClick={() => handleTerminalChange(terminal)}
+          >
+            <FaWarehouse className="tab-icon" />
+            {terminal} Terminal
+          </button>
+        ))}
+      </div>
       
       {/* Mini Dashboard */}
       <div className="dashboard-stats">
@@ -694,7 +746,7 @@ const Inventory = () => {
                   </tr>
                 </thead>
                 <tbody>
-                              {inventory.map((item) => (
+                              {filteredInventory.map((item) => (
                   <tr key={item._id} className={`stock-${getStockStatus(item)}`}>
                     <td>{item.sku}</td>
                     <td>{item.name}</td>
@@ -718,22 +770,22 @@ const Inventory = () => {
                    </td>
                    <td>
                      <div className="action-controls">
-                       <button 
-                         onClick={() => handleEditItem(item)}
-                         className="edit-btn"
-                         title="Edit Item"
-                         disabled={isUpdatingItem || isDeletingItem}
-                       >
-                         {isUpdatingItem ? 'Editing...' : 'Edit'}
-                       </button>
-                       <button 
-                         onClick={() => handleDeleteItem(item._id)}
-                         className="delete-btn"
-                         title="Delete Item"
-                         disabled={isUpdatingItem || isDeletingItem}
-                       >
-                         {isDeletingItem ? 'Deleting...' : 'Delete'}
-                       </button>
+                                               <button 
+                          onClick={() => handleEditItem(item)}
+                          className="edit-btn"
+                          title="Edit Item"
+                          disabled={isUpdatingItem || isDeletingItem}
+                        >
+                          {isUpdatingItem ? 'Editing...' : 'Edit'}
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteItem(item._id)}
+                          className="delete-btn"
+                          title="Delete Item"
+                          disabled={isUpdatingItem || isDeletingItem}
+                        >
+                          {isDeletingItem ? 'Deleting...' : 'Delete'}
+                        </button>
                      </div>
                    </td>
                 </tr>
@@ -1080,13 +1132,7 @@ const Inventory = () => {
                    onChange={(e) => handleInputChange(e, 'item')}
                    required
                  >
-                   <option value="">Select Supplier</option>
                    <option value="Direct Purchase">Direct Purchase</option>
-                   {suppliers.map(supplier => (
-                     <option key={supplier._id} value={supplier.name}>
-                       {supplier.name}
-                     </option>
-                   ))}
                  </select>
                </div>
 
@@ -1237,6 +1283,8 @@ const Inventory = () => {
                    required
                  >
                    <option value="">Select Supplier</option>
+                   <option value="General Store">General Store</option>
+                   <option value="Road Vendor">Road Vendor</option>
                    <option value="Direct Purchase">Direct Purchase</option>
                    {suppliers.map(supplier => (
                      <option key={supplier._id} value={supplier.name}>
@@ -1433,7 +1481,7 @@ const Inventory = () => {
                    required
                  >
                                       <option value="">Select Item</option>
-                    {inventory.map(item => (
+                    {filteredInventory.map(item => (
                       <option key={item._id} value={item.name}>
                         {item.name} (Current: {item.quantity})
                       </option>
@@ -1533,7 +1581,7 @@ const Inventory = () => {
                      required
                    >
                                            <option value="">Select Item</option>
-                      {inventory.map(item => (
+                      {filteredInventory.map(item => (
                         <option key={item._id} value={item.name}>
                           {item.name} (Current: {item.quantity})
                         </option>

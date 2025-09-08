@@ -31,7 +31,7 @@ const Assets = () => {
   ];
 
   return (
-    <div className="assets-container">
+      <div className="assets-container">
         <div className="assets-header">
           <p>Manage your fleet vehicles and equipment inventory</p>
         </div>

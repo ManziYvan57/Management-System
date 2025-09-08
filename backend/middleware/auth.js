@@ -56,36 +56,12 @@ const authorize = (...permissions) => {
     if (permissions.length === 2 && typeof permissions[0] === 'string' && typeof permissions[1] === 'string') {
       const [module, action] = permissions;
       
-      console.log('🔐 Authorization check:', {
-        userRole: req.user.role,
-        module: module,
-        action: action,
-        userId: req.user.id,
-        username: req.user.username
-      });
-      
-      // Allow both admin and super_admin roles to access all modules
-      if (req.user.role === 'admin' || req.user.role === 'super_admin') {
-        console.log('✅ Access granted for', req.user.role);
-        return next();
-      }
-      
-      // Allow specific role-based access to their respective modules
-      if (module === 'equipment' && req.user.role === 'garage_staff') {
-        console.log('✅ Access granted for garage_staff to equipment module');
-        return next();
-      }
-      if (module === 'inventory' && req.user.role === 'inventory_staff') {
-        console.log('✅ Access granted for inventory_staff to inventory module');
-        return next();
-      }
-      if (module === 'personnel' && (req.user.role === 'admin' || req.user.role === 'super_admin')) {
-        console.log('✅ Access granted for', req.user.role, 'to personnel module');
+      // For now, allow admin role to access all modules
+      if (req.user.role === 'admin') {
         return next();
       }
       
       // For other roles, you can add specific module-based permissions here
-      console.log('❌ Access denied for', req.user.role);
       return res.status(403).json({
         success: false,
         error: `User role '${req.user.role}' is not authorized to ${action} in ${module} module`
