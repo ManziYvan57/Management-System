@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
+import { RoleBasedAccess } from '../../components/RoleBasedAccess';
 import { inventoryAPI, suppliersAPI, purchaseOrdersAPI, stockMovementsAPI } from '../../services/api';
 import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
 import './Inventory.css';
@@ -602,8 +603,9 @@ const Inventory = () => {
   const outOfStockItemsList = inventory.filter(item => item.quantity === 0);
 
   return (
-    <div className="inventory-container">
-      <h2>Inventory Management</h2>
+    <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="inventory" action="view">
+      <div className="inventory-container">
+        <h2>Inventory Management</h2>
       
       {/* Mini Dashboard */}
       <div className="dashboard-stats">
@@ -643,18 +645,26 @@ const Inventory = () => {
       
       {/* Quick Actions */}
       <div className="quick-actions">
-        <button onClick={() => setShowAddItemForm(true)} className="action-btn">
-          Add Item
-        </button>
-        <button onClick={() => setShowPurchaseOrderForm(true)} className="action-btn">
-          Purchase Order
-        </button>
-        <button onClick={() => setShowSupplierForm(true)} className="action-btn">
-          Add Supplier
-        </button>
-        <button onClick={() => setShowStockMovementForm(true)} className="action-btn">
-           Stock Usage
-        </button>
+        <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="inventory" action="create">
+          <button onClick={() => setShowAddItemForm(true)} className="action-btn">
+            Add Item
+          </button>
+        </RoleBasedAccess>
+        <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="inventory" action="create">
+          <button onClick={() => setShowPurchaseOrderForm(true)} className="action-btn">
+            Purchase Order
+          </button>
+        </RoleBasedAccess>
+        <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="inventory" action="create">
+          <button onClick={() => setShowSupplierForm(true)} className="action-btn">
+            Add Supplier
+          </button>
+        </RoleBasedAccess>
+        <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="inventory" action="edit">
+          <button onClick={() => setShowStockMovementForm(true)} className="action-btn">
+             Stock Usage
+          </button>
+        </RoleBasedAccess>
       </div>
 
             {/* Inventory List */}
@@ -718,22 +728,26 @@ const Inventory = () => {
                    </td>
                    <td>
                      <div className="action-controls">
-                                               <button 
-                          onClick={() => handleEditItem(item)}
-                          className="edit-btn"
-                          title="Edit Item"
-                          disabled={isUpdatingItem || isDeletingItem}
-                        >
-                          {isUpdatingItem ? 'Editing...' : 'Edit'}
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteItem(item._id)}
-                          className="delete-btn"
-                          title="Delete Item"
-                          disabled={isUpdatingItem || isDeletingItem}
-                        >
-                          {isDeletingItem ? 'Deleting...' : 'Delete'}
-                        </button>
+                       <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="inventory" action="edit">
+                         <button 
+                           onClick={() => handleEditItem(item)}
+                           className="edit-btn"
+                           title="Edit Item"
+                           disabled={isUpdatingItem || isDeletingItem}
+                         >
+                           {isUpdatingItem ? 'Editing...' : 'Edit'}
+                         </button>
+                       </RoleBasedAccess>
+                       <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="inventory" action="delete">
+                         <button 
+                           onClick={() => handleDeleteItem(item._id)}
+                           className="delete-btn"
+                           title="Delete Item"
+                           disabled={isUpdatingItem || isDeletingItem}
+                         >
+                           {isDeletingItem ? 'Deleting...' : 'Delete'}
+                         </button>
+                       </RoleBasedAccess>
                      </div>
                    </td>
                 </tr>
@@ -1080,7 +1094,13 @@ const Inventory = () => {
                    onChange={(e) => handleInputChange(e, 'item')}
                    required
                  >
+                   <option value="">Select Supplier</option>
                    <option value="Direct Purchase">Direct Purchase</option>
+                   {suppliers.map(supplier => (
+                     <option key={supplier._id} value={supplier.name}>
+                       {supplier.name}
+                     </option>
+                   ))}
                  </select>
                </div>
 
@@ -1231,8 +1251,6 @@ const Inventory = () => {
                    required
                  >
                    <option value="">Select Supplier</option>
-                   <option value="General Store">General Store</option>
-                   <option value="Road Vendor">Road Vendor</option>
                    <option value="Direct Purchase">Direct Purchase</option>
                    {suppliers.map(supplier => (
                      <option key={supplier._id} value={supplier.name}>
@@ -1605,7 +1623,8 @@ const Inventory = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </RoleBasedAccess>
   );
 };
 

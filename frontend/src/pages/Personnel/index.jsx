@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaUser, FaIdCard, FaPhone, FaEnvelope, FaCalendar, FaMapMarkerAlt, FaCar, FaRoute, FaExclamationTriangle, FaCheckCircle, FaClock, FaStar } from 'react-icons/fa';
+import { RoleBasedAccess } from '../../components/RoleBasedAccess';
 import { personnelAPI } from '../../services/api';
 import PersonnelForm from './PersonnelForm';
 import InfractionForm from './InfractionForm';
@@ -210,9 +211,10 @@ const Personnel = () => {
   }
 
   return (
-    <div className="personnel-container">
-      {/* Header */}
-      <div className="personnel-header">
+    <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="personnel" action="view">
+      <div className="personnel-container">
+        {/* Header */}
+        <div className="personnel-header">
         <div className="header-left">
           <h2>Personnel Management</h2>
           <span className="personnel-count">{personnel.length} personnel</span>
@@ -764,7 +766,8 @@ const Personnel = () => {
           editingInfraction={editingInfraction}
         />
       )}
-    </div>
+      </div>
+    </RoleBasedAccess>
   );
 };
 
