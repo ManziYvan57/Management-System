@@ -137,8 +137,15 @@ router.post('/', protect, authorize('inventory', 'create'), [
 // @access  Private
 router.get('/stats', protect, async (req, res) => {
   try {
-    // Build query based on user role
+    const { terminal } = req.query;
+    
+    // Build query based on user role and terminal
     let query = { isActive: true };
+    
+    // Filter by terminal
+    if (terminal) {
+      query.terminal = terminal;
+    }
     
     // Get real statistics from database
     const totalItems = await Inventory.countDocuments(query);

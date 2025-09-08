@@ -269,8 +269,15 @@ router.delete('/:id', protect, authorize('vehicles', 'delete'), async (req, res)
 // @access  Private
 router.get('/stats/overview', protect, async (req, res) => {
   try {
-    // Build query based on user role
+    const { terminal } = req.query;
+    
+    // Build query based on user role and terminal
     let query = { isActive: true };
+    
+    // Filter by terminal
+    if (terminal) {
+      query.terminal = terminal;
+    }
     
     const [
       totalVehicles,

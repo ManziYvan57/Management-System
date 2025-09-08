@@ -63,10 +63,13 @@ router.get('/', protect, authorize('equipment', 'read'), async (req, res) => {
 // @access  Private
 router.get('/stats/overview', protect, authorize('equipment', 'read'), async (req, res) => {
   try {
+    const { terminal } = req.query;
     const query = { isActive: true };
     
-    // Terminal filtering - allow both super_admin and admin to see all terminals
-    if (req.user.role !== 'super_admin' && req.user.role !== 'admin') {
+    // Terminal filtering - use query parameter if provided, otherwise use user's terminal
+    if (terminal) {
+      query.terminal = terminal;
+    } else if (req.user.role !== 'super_admin' && req.user.role !== 'admin') {
       query.terminal = req.user.terminal;
     }
     

@@ -341,8 +341,9 @@ export const vehiclesAPI = {
     });
   },
   
-  getStats: async () => {
-    return apiRequest('/vehicles/stats/overview');
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/vehicles/stats/overview${queryString ? `?${queryString}` : ''}`);
   },
   
   getAvailable: async (params = {}) => {
@@ -382,8 +383,9 @@ export const equipmentAPI = {
     });
   },
   
-  getStats: async () => {
-    return apiRequest('/equipment/stats/overview');
+  getStats: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/equipment/stats/overview${queryString ? `?${queryString}` : ''}`);
   },
   
   getAvailable: async (params = {}) => {

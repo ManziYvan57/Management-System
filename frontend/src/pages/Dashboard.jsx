@@ -63,8 +63,8 @@ const Dashboard = () => {
         console.log('Fetching assets data from individual APIs...');
         const [assetsRes, vehiclesRes, equipmentRes, personnelRes, garageRes, inventoryRes] = await Promise.all([
           assetsAPI.getStats({ terminal: activeTerminal }),
-          vehiclesAPI.getStats(),
-          equipmentAPI.getStats(),
+          vehiclesAPI.getStats({ terminal: activeTerminal }),
+          equipmentAPI.getStats({ terminal: activeTerminal }),
           personnelAPI.getStats({ terminal: activeTerminal }),
           garageAPI.getStats({ terminal: activeTerminal }),
           inventoryAPI.getStats({ terminal: activeTerminal })
