@@ -71,7 +71,8 @@ const Inventory = () => {
     name: '',
     phone: '',
     email: '',
-    supplies: ''
+    supplies: '',
+    terminal: ''
   });
 
   const [newStockMovement, setNewStockMovement] = useState({
@@ -1375,6 +1376,23 @@ const Inventory = () => {
                    placeholder="e.g., Lubricants, Brake parts, Electrical components, etc."
                    rows="3"
                  />
+               </div>
+               
+               <div className="form-group">
+                 <label htmlFor="supplierTerminal">Terminal *</label>
+                 <select
+                   id="supplierTerminal"
+                   name="terminal"
+                   value={newSupplier.terminal}
+                   onChange={(e) => handleInputChange(e, 'supplier')}
+                   required
+                 >
+                   <option value="">Select Terminal</option>
+                   <option value="Kigali">Kigali</option>
+                   <option value="Kampala">Kampala</option>
+                   <option value="Nairobi">Nairobi</option>
+                   <option value="Juba">Juba</option>
+                 </select>
                </div>
               
               <div className="form-actions">

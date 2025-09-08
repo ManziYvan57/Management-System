@@ -7,7 +7,7 @@ import {
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
   FaCog, FaWarehouse, FaUserShield, FaTimesCircle
 } from 'react-icons/fa';
-import { assetsAPI, vehiclesAPI, equipmentAPI, personnelAPI, garageAPI } from '../services/api';
+import { assetsAPI, vehiclesAPI, equipmentAPI, personnelAPI, garageAPI, inventoryAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -40,12 +40,13 @@ const Dashboard = () => {
         
         // Fetch data from individual APIs instead of dashboard API
         console.log('Fetching assets data from individual APIs...');
-        const [assetsRes, vehiclesRes, equipmentRes, personnelRes, garageRes] = await Promise.all([
+        const [assetsRes, vehiclesRes, equipmentRes, personnelRes, garageRes, inventoryRes] = await Promise.all([
           assetsAPI.getStats(),
           vehiclesAPI.getStats(),
           equipmentAPI.getStats(),
           personnelAPI.getStats(),
-          garageAPI.getStats()
+          garageAPI.getStats(),
+          inventoryAPI.getStats()
         ]);
         console.log('Assets response:', assetsRes);
         console.log('Vehicles response:', vehiclesRes);
@@ -53,6 +54,8 @@ const Dashboard = () => {
         console.log('Personnel response:', personnelRes);
         console.log('Garage response:', garageRes);
         console.log('Garage data structure:', garageRes.data);
+        console.log('Inventory response:', inventoryRes);
+        console.log('Inventory data structure:', inventoryRes.data);
         
         // Combine data from individual APIs using standardized field names
         const combinedData = {
@@ -131,6 +134,24 @@ const Dashboard = () => {
         };
         
         console.log('Mapped garage data:', garageData);
+
+        // Inventory data - map from API response
+        const inventoryData = {
+          totalItems: inventoryRes.data?.totalItems || 0,
+          lowStockItems: inventoryRes.data?.lowStockItems || 0,
+          outOfStockItems: inventoryRes.data?.outOfStockItems || 0,
+          totalValue: inventoryRes.data?.totalValue || 0,
+          monthlySpending: inventoryRes.data?.monthlySpending || 0,
+          totalSuppliers: inventoryRes.data?.totalSuppliers || 0,
+          activeSuppliers: inventoryRes.data?.activeSuppliers || 0,
+          recentMovements: inventoryRes.data?.recentMovements || 0,
+          criticalItems: inventoryRes.data?.criticalItems || 0,
+          averageStockLevel: inventoryRes.data?.averageStockLevel || 0,
+          turnoverRate: inventoryRes.data?.turnoverRate || 0,
+          reorderAlerts: inventoryRes.data?.reorderAlerts || 0
+        };
+        
+        console.log('Mapped inventory data:', inventoryData);
         
         setDashboardData({
           overview: combinedData,
@@ -138,7 +159,7 @@ const Dashboard = () => {
           operations: {},
           maintenance: {},
           garage: garageData,
-          inventory: {},
+          inventory: inventoryData,
           assets: combinedData,
           personnel: personnelData,
           users: {}
@@ -148,7 +169,8 @@ const Dashboard = () => {
           combinedData,
           assets: combinedData,
           personnel: personnelData,
-          garage: garageData
+          garage: garageData,
+          inventory: inventoryData
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -177,7 +199,20 @@ const Dashboard = () => {
             vehiclesInGarage: 0,
             availableMechanics: 0
           },
-          inventory: {},
+          inventory: {
+            totalItems: 0,
+            lowStockItems: 0,
+            outOfStockItems: 0,
+            totalValue: 0,
+            monthlySpending: 0,
+            totalSuppliers: 0,
+            activeSuppliers: 0,
+            recentMovements: 0,
+            criticalItems: 0,
+            averageStockLevel: 0,
+            turnoverRate: 0,
+            reorderAlerts: 0
+          },
           assets: {},
           personnel: {
             totalPersonnel: 0,
@@ -957,74 +992,56 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Inventory Management Tab - Temporarily disabled for development */}
-      {false && activeTab === 'inventory' && (
+      {/* Inventory Management Tab */}
+      {activeTab === 'inventory' && (
         <div className="tab-content">
           <div className="inventory-overview">
-            <h3>Inventory Management</h3>
+            <div className="inventory-header">
+              <h3>Inventory Management</h3>
+            </div>
+
+            {/* Key Metrics Row */}
             <div className="inventory-grid">
               <div className="inventory-card">
                 <h4>Stock Overview</h4>
                 <div className="inventory-stats">
                   <div className="inventory-stat">
                     <span>Total Items</span>
-                    <strong>{dashboardData.inventory.totalInventory || 0}</strong>
+                    <strong>{dashboardData.inventory?.totalItems || 0}</strong>
                   </div>
                   <div className="inventory-stat">
-                    <span>In Stock</span>
-                    <strong className="success">{dashboardData.inventory.inStockItems || 0}</strong>
+                    <span>Low Stock Items</span>
+                    <strong className="warning">{dashboardData.inventory?.lowStockItems || 0}</strong>
                   </div>
-                  <div className="inventory-stat">
-                    <span>Low Stock</span>
-                    <strong className="warning">{dashboardData.inventory.lowStockItems || 0}</strong>
-        </div>
                   <div className="inventory-stat">
                     <span>Out of Stock</span>
-                    <strong className="danger">{dashboardData.inventory.outOfStockItems || 0}</strong>
-        </div>
-      </div>
-    </div>
+                    <strong className="danger">{dashboardData.inventory?.outOfStockItems || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Critical Items</span>
+                    <strong className="danger">{dashboardData.inventory?.criticalItems || 0}</strong>
+                  </div>
+                </div>
+              </div>
 
               <div className="inventory-card">
                 <h4>Financial Overview</h4>
                 <div className="inventory-stats">
                   <div className="inventory-stat">
                     <span>Total Value</span>
-                    <strong>{formatCurrency(dashboardData.inventory.inventoryValue || 0)}</strong>
-        </div>
+                    <strong>{formatCurrency(dashboardData.inventory?.totalValue || 0)}</strong>
+                  </div>
                   <div className="inventory-stat">
                     <span>Monthly Spending</span>
-                    <strong>{formatCurrency(dashboardData.financial.monthlySpending || 0)}</strong>
-        </div>
-                  <div className="inventory-stat">
-                    <span>Average Item Cost</span>
-                    <strong>{formatCurrency(dashboardData.financial.avgItemCost || 0)}</strong>
-        </div>
-                  <div className="inventory-stat">
-                    <span>Reorder Value</span>
-                    <strong className="warning">{formatCurrency(dashboardData.financial.reorderValue || 0)}</strong>
-        </div>
-      </div>
-    </div>
-
-              <div className="inventory-card">
-                <h4>Purchase Orders</h4>
-                <div className="inventory-stats">
-                  <div className="inventory-stat">
-                    <span>Total Orders</span>
-                    <strong>{dashboardData.inventory.totalPurchaseOrders || 0}</strong>
+                    <strong>{formatCurrency(dashboardData.inventory?.monthlySpending || 0)}</strong>
                   </div>
                   <div className="inventory-stat">
-                    <span>Pending</span>
-                    <strong className="warning">{dashboardData.inventory.pendingOrders || 0}</strong>
+                    <span>Average Stock Level</span>
+                    <strong>{dashboardData.inventory?.averageStockLevel || 0}</strong>
                   </div>
                   <div className="inventory-stat">
-                    <span>Completed</span>
-                    <strong className="success">{dashboardData.inventory.completedOrders || 0}</strong>
-                  </div>
-                  <div className="inventory-stat">
-                    <span>This Month</span>
-                    <strong>{dashboardData.inventory.ordersThisMonth || 0}</strong>
+                    <span>Turnover Rate</span>
+                    <strong>{dashboardData.inventory?.turnoverRate || 0}%</strong>
                   </div>
                 </div>
               </div>
@@ -1034,22 +1051,147 @@ const Dashboard = () => {
                 <div className="inventory-stats">
                   <div className="inventory-stat">
                     <span>Total Suppliers</span>
-                    <strong>{dashboardData.inventory.totalSuppliers || 0}</strong>
+                    <strong>{dashboardData.inventory?.totalSuppliers || 0}</strong>
                   </div>
                   <div className="inventory-stat">
                     <span>Active Suppliers</span>
-                    <strong className="success">{dashboardData.inventory.activeSuppliers || 0}</strong>
+                    <strong className="success">{dashboardData.inventory?.activeSuppliers || 0}</strong>
                   </div>
                   <div className="inventory-stat">
-                    <span>Top Supplier</span>
-                    <strong>{dashboardData.inventory.topSupplier || 'N/A'}</strong>
+                    <span>Recent Movements</span>
+                    <strong className="info">{dashboardData.inventory?.recentMovements || 0}</strong>
+                  </div>
+                  <div className="inventory-stat">
+                    <span>Reorder Alerts</span>
+                    <strong className="warning">{dashboardData.inventory?.reorderAlerts || 0}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Inventory Health & Performance */}
+            <div className="inventory-details">
+              <div className="inventory-health">
+                <h4>Inventory Health Status</h4>
+                <div className="health-grid">
+                  <div className="health-item">
+                    <div className="health-icon success">
+                      <FaCheckCircle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Well Stocked</span>
+                      <span className="health-count">{dashboardData.inventory?.totalItems - dashboardData.inventory?.lowStockItems - dashboardData.inventory?.outOfStockItems || 0}</span>
+                    </div>
+                  </div>
+                  <div className="health-item">
+                    <div className="health-icon warning">
+                      <FaExclamationTriangle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Low Stock</span>
+                      <span className="health-count">{dashboardData.inventory?.lowStockItems || 0}</span>
+                    </div>
+                  </div>
+                  <div className="health-item">
+                    <div className="health-icon danger">
+                      <FaTimesCircle />
+                    </div>
+                    <div className="health-info">
+                      <span className="health-label">Critical/Out of Stock</span>
+                      <span className="health-count">{(dashboardData.inventory?.outOfStockItems || 0) + (dashboardData.inventory?.criticalItems || 0)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="inventory-performance">
+                <h4>Performance Metrics</h4>
+                <div className="performance-grid">
+                  <div className="performance-item">
+                    <span className="performance-label">Stock Availability</span>
+                    <div className="performance-bar">
+                      <div 
+                        className="performance-fill" 
+                        style={{ width: `${Math.min(100, ((dashboardData.inventory?.totalItems - dashboardData.inventory?.outOfStockItems || 0) / Math.max(1, dashboardData.inventory?.totalItems || 1)) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="performance-value">
+                      {Math.round(((dashboardData.inventory?.totalItems - dashboardData.inventory?.outOfStockItems || 0) / Math.max(1, dashboardData.inventory?.totalItems || 1)) * 100)}%
+                    </span>
+                  </div>
+                  <div className="performance-item">
+                    <span className="performance-label">Supplier Utilization</span>
+                    <div className="performance-bar">
+                      <div 
+                        className="performance-fill" 
+                        style={{ width: `${Math.min(100, ((dashboardData.inventory?.activeSuppliers || 0) / Math.max(1, dashboardData.inventory?.totalSuppliers || 1)) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="performance-value">
+                      {Math.round(((dashboardData.inventory?.activeSuppliers || 0) / Math.max(1, dashboardData.inventory?.totalSuppliers || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stock Status Breakdown */}
+            <div className="stock-breakdown">
+              <h4>Stock Status Breakdown</h4>
+              <div className="status-grid">
+                <div className="status-item">
+                  <div className="status-icon well-stocked">
+                    <FaWarehouse />
+                  </div>
+                  <div className="status-info">
+                    <span className="status-label">Well Stocked</span>
+                    <span className="status-count">{dashboardData.inventory?.totalItems - dashboardData.inventory?.lowStockItems - dashboardData.inventory?.outOfStockItems || 0}</span>
+                    <span className="status-percentage">
+                      {Math.round(((dashboardData.inventory?.totalItems - dashboardData.inventory?.lowStockItems - dashboardData.inventory?.outOfStockItems || 0) / Math.max(1, dashboardData.inventory?.totalItems || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="status-item">
+                  <div className="status-icon low-stock">
+                    <FaExclamationTriangle />
+                  </div>
+                  <div className="status-info">
+                    <span className="status-label">Low Stock</span>
+                    <span className="status-count">{dashboardData.inventory?.lowStockItems || 0}</span>
+                    <span className="status-percentage">
+                      {Math.round(((dashboardData.inventory?.lowStockItems || 0) / Math.max(1, dashboardData.inventory?.totalItems || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="status-item">
+                  <div className="status-icon out-of-stock">
+                    <FaTimesCircle />
+                  </div>
+                  <div className="status-info">
+                    <span className="status-label">Out of Stock</span>
+                    <span className="status-count">{dashboardData.inventory?.outOfStockItems || 0}</span>
+                    <span className="status-percentage">
+                      {Math.round(((dashboardData.inventory?.outOfStockItems || 0) / Math.max(1, dashboardData.inventory?.totalItems || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="status-item">
+                  <div className="status-icon critical">
+                    <FaShieldAlt />
+                  </div>
+                  <div className="status-info">
+                    <span className="status-label">Critical Items</span>
+                    <span className="status-count">{dashboardData.inventory?.criticalItems || 0}</span>
+                    <span className="status-percentage">
+                      {Math.round(((dashboardData.inventory?.criticalItems || 0) / Math.max(1, dashboardData.inventory?.totalItems || 1)) * 100)}%
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          </div>
-        )}
+        </div>
+      )}
 
       {/* User Management Tab - Temporarily disabled for development */}
       {false && activeTab === 'users' && (
