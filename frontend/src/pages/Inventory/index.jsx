@@ -10,6 +10,11 @@ const Inventory = () => {
   const userTerminal = user.terminal || 'Kigali';
   const userRole = user.role || 'user';
   
+  // Debug user information
+  console.log('🔍 Inventory - User data:', user);
+  console.log('🔍 Inventory - User role:', userRole);
+  console.log('🔍 Inventory - User terminal:', userTerminal);
+  
   // Terminal tabs state
   const [activeTerminal, setActiveTerminal] = useState(userTerminal);
   const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
@@ -138,9 +143,16 @@ const Inventory = () => {
 
   // Get terminals available to user based on role
   const getUserTerminals = () => {
-    if (userRole === 'super_admin') {
+    console.log('🔍 User role:', userRole);
+    console.log('🔍 Available terminals:', availableTerminals);
+    console.log('🔍 User terminal:', userTerminal);
+    
+    // For now, show all terminals to admin users (including 'admin' role)
+    if (userRole === 'super_admin' || userRole === 'admin' || userRole === 'Admin') {
+      console.log('✅ Admin access - showing all terminals');
       return availableTerminals;
     }
+    console.log('❌ Regular user - showing only their terminal');
     return [userTerminal]; // Regular users only see their terminal
   };
 
