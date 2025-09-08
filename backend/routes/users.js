@@ -313,8 +313,8 @@ router.put('/:id', [
 
 // @desc    Delete user
 // @route   DELETE /api/users/:id
-// @access  Private (super_admin only)
-router.delete('/:id', protect, authorize('super_admin'), async (req, res) => {
+// @access  Private (super_admin and admin)
+router.delete('/:id', protect, authorize('super_admin', 'admin'), async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
