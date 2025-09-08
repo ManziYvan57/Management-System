@@ -179,7 +179,8 @@ router.post('/', protect, [
   body('items.*.quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
   body('items.*.unitCost').isFloat({ min: 0 }).withMessage('Unit cost must be positive'),
   body('expectedDelivery').optional().isISO8601().withMessage('Invalid delivery date'),
-  body('paymentTerms').optional().isString().withMessage('Payment terms must be a string')
+  body('paymentTerms').optional().isString().withMessage('Payment terms must be a string'),
+  body('terminal').notEmpty().withMessage('Terminal is required').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Invalid terminal')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -191,7 +192,7 @@ router.post('/', protect, [
       });
     }
 
-    const { supplier, items, expectedDelivery, paymentTerms } = req.body;
+    const { supplier, items, expectedDelivery, paymentTerms, terminal } = req.body;
 
     // Transform items to match model structure
     const transformedItems = items.map(item => ({
@@ -221,7 +222,7 @@ router.post('/', protect, [
       paymentTerms: paymentTerms || 'net_30',
       status: 'pending',
       orderDate: new Date(),
-      terminal: 'Kigali', // Default terminal
+      terminal: terminal || 'Kigali', // Use provided terminal or default to Kigali
       createdBy: req.user._id // Set from authenticated user
     });
 

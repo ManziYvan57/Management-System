@@ -195,7 +195,8 @@ router.post('/', protect, [
   body('quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
   body('reason').notEmpty().withMessage('Reason is required'),
   body('reference').optional().isString().withMessage('Reference must be a string'),
-  body('referenceType').optional().isIn(['purchase_order', 'work_order', 'maintenance', 'manual', 'system', 'other']).withMessage('Invalid reference type')
+  body('referenceType').optional().isIn(['purchase_order', 'work_order', 'maintenance', 'manual', 'system', 'other']).withMessage('Invalid reference type'),
+  body('terminal').notEmpty().withMessage('Terminal is required').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Invalid terminal')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -207,7 +208,7 @@ router.post('/', protect, [
       });
     }
 
-    const { inventoryItem, movementType, quantity, reason, reference, referenceType } = req.body;
+    const { inventoryItem, movementType, quantity, reason, reference, referenceType, terminal } = req.body;
 
     // Check if item exists
     const item = await Inventory.findById(inventoryItem);
@@ -237,7 +238,7 @@ router.post('/', protect, [
       reason,
       reference,
       referenceType: referenceType || 'manual',
-      terminal: 'Kigali', // Default terminal
+      terminal: terminal || 'Kigali', // Use provided terminal or default to Kigali
       createdBy: req.user._id
     });
 

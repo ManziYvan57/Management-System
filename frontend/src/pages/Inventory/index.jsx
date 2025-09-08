@@ -80,6 +80,7 @@ const Inventory = () => {
     quantity: '',
     unitCost: '',
     expectedDelivery: '',
+    terminal: activeTerminal, // Auto-select active terminal
     isNewItem: false
   });
 
@@ -96,7 +97,8 @@ const Inventory = () => {
     movementType: 'out', // Only 'out' - items being used/consumed
     quantity: '',
     reason: '',
-    reference: ''
+    reference: '',
+    terminal: activeTerminal // Auto-select active terminal
   });
 
   // Filter inventory by active terminal
@@ -108,20 +110,11 @@ const Inventory = () => {
   // Filter suppliers by active terminal
   const filteredSuppliers = suppliers.filter(supplier => supplier.terminal === activeTerminal);
 
-  // Filter purchase orders by active terminal (through inventory items)
-  const filteredPurchaseOrders = purchaseOrders.filter(order => {
-    // Check if any item in the order belongs to the active terminal
-    return order.items.some(item => {
-      const inventoryItem = inventory.find(inv => inv._id === item.itemId || inv._id === item.inventoryItem);
-      return inventoryItem && inventoryItem.terminal === activeTerminal;
-    });
-  });
+  // Filter purchase orders by active terminal (direct terminal field)
+  const filteredPurchaseOrders = purchaseOrders.filter(order => order.terminal === activeTerminal);
 
-  // Filter stock movements by active terminal (through inventory items)
-  const filteredStockMovements = stockMovements.filter(movement => {
-    const inventoryItem = inventory.find(inv => inv._id === movement.inventoryItem);
-    return inventoryItem && inventoryItem.terminal === activeTerminal;
-  });
+  // Filter stock movements by active terminal (direct terminal field)
+  const filteredStockMovements = stockMovements.filter(movement => movement.terminal === activeTerminal);
 
   // Fetch data from API
   useEffect(() => {
@@ -157,6 +150,9 @@ const Inventory = () => {
   // Handle terminal tab change
   const handleTerminalChange = (terminal) => {
     setActiveTerminal(terminal);
+    // Update form terminals when switching tabs
+    setNewPurchaseOrder(prev => ({ ...prev, terminal }));
+    setNewStockMovement(prev => ({ ...prev, terminal }));
   };
 
   // Get terminals available to user based on role
@@ -384,6 +380,7 @@ const Inventory = () => {
 
       const purchaseOrderData = {
         supplier: newPurchaseOrder.supplier,
+        terminal: newPurchaseOrder.terminal, // Include terminal
         items: [{
           itemId: selectedItem._id,
           itemName: selectedItem.name,
@@ -405,6 +402,7 @@ const Inventory = () => {
         quantity: '',
         unitCost: '',
         expectedDelivery: '',
+        terminal: activeTerminal, // Keep current terminal
         isNewItem: false
       });
       setShowPurchaseOrderForm(false);
@@ -494,7 +492,8 @@ const Inventory = () => {
         movementType: newStockMovement.movementType,
         quantity: parseInt(newStockMovement.quantity),
         reason: newStockMovement.reason,
-        reference: newStockMovement.reference || 'Manual Usage'
+        reference: newStockMovement.reference || 'Manual Usage',
+        terminal: newStockMovement.terminal // Include terminal
       };
 
       // Create stock movement using API
@@ -511,7 +510,8 @@ const Inventory = () => {
         movementType: 'out',
         quantity: '',
         reason: '',
-        reference: ''
+        reference: '',
+        terminal: activeTerminal // Keep current terminal
       });
       setShowStockMovementForm(false);
     } catch (err) {
@@ -1557,6 +1557,23 @@ const Inventory = () => {
                    placeholder="e.g., WO-001, Manual Entry, etc."
                  />
                </div>
+
+               <div className="form-group">
+                 <label htmlFor="movementTerminal">Terminal *</label>
+                 <select
+                   id="movementTerminal"
+                   name="terminal"
+                   value={newStockMovement.terminal}
+                   onChange={(e) => handleInputChange(e, 'stockMovement')}
+                   required
+                 >
+                   <option value="">Select Terminal</option>
+                   <option value="Kigali">Kigali</option>
+                   <option value="Kampala">Kampala</option>
+                   <option value="Nairobi">Nairobi</option>
+                   <option value="Juba">Juba</option>
+                 </select>
+               </div>
               
               <div className="form-actions">
                 <button type="button" onClick={() => setShowStockMovementForm(false)} className="cancel-btn">
@@ -1673,6 +1690,23 @@ const Inventory = () => {
                   onChange={(e) => handleInputChange(e, 'purchaseOrder')}
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="poTerminal">Terminal *</label>
+                <select
+                  id="poTerminal"
+                  name="terminal"
+                  value={newPurchaseOrder.terminal}
+                  onChange={(e) => handleInputChange(e, 'purchaseOrder')}
+                  required
+                >
+                  <option value="">Select Terminal</option>
+                  <option value="Kigali">Kigali</option>
+                  <option value="Kampala">Kampala</option>
+                  <option value="Nairobi">Nairobi</option>
+                  <option value="Juba">Juba</option>
+                </select>
               </div>
               
               <div className="form-actions">

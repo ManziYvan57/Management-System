@@ -120,6 +120,12 @@ const PurchaseOrderSchema = new mongoose.Schema({
   approvedAt: {
     type: Date
   },
+  terminal: {
+    type: String,
+    required: [true, 'Terminal is required'],
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    trim: true
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -131,6 +137,7 @@ PurchaseOrderSchema.index({ orderNumber: 1 });
 PurchaseOrderSchema.index({ supplier: 1 });
 PurchaseOrderSchema.index({ status: 1 });
 PurchaseOrderSchema.index({ orderDate: -1 });
+PurchaseOrderSchema.index({ terminal: 1 });
 
 // Pre-save middleware to calculate totals
 PurchaseOrderSchema.pre('save', function(next) {

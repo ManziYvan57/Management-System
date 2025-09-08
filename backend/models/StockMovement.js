@@ -91,6 +91,12 @@ const StockMovementSchema = new mongoose.Schema({
   approvedAt: {
     type: Date
   },
+  terminal: {
+    type: String,
+    required: [true, 'Terminal is required'],
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    trim: true
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -102,6 +108,7 @@ StockMovementSchema.index({ inventoryItem: 1, createdAt: -1 });
 StockMovementSchema.index({ movementType: 1 });
 StockMovementSchema.index({ createdBy: 1 });
 StockMovementSchema.index({ referenceType: 1, referenceId: 1 });
+StockMovementSchema.index({ terminal: 1 });
 
 // Pre-save middleware to calculate values
 StockMovementSchema.pre('save', function(next) {
