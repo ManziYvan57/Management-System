@@ -105,6 +105,24 @@ const Inventory = () => {
     setFilteredInventory(filtered);
   }, [inventory, activeTerminal]);
 
+  // Filter suppliers by active terminal
+  const filteredSuppliers = suppliers.filter(supplier => supplier.terminal === activeTerminal);
+
+  // Filter purchase orders by active terminal (through inventory items)
+  const filteredPurchaseOrders = purchaseOrders.filter(order => {
+    // Check if any item in the order belongs to the active terminal
+    return order.items.some(item => {
+      const inventoryItem = inventory.find(inv => inv._id === item.itemId || inv._id === item.inventoryItem);
+      return inventoryItem && inventoryItem.terminal === activeTerminal;
+    });
+  });
+
+  // Filter stock movements by active terminal (through inventory items)
+  const filteredStockMovements = stockMovements.filter(movement => {
+    const inventoryItem = inventory.find(inv => inv._id === movement.inventoryItem);
+    return inventoryItem && inventoryItem.terminal === activeTerminal;
+  });
+
   // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
@@ -196,21 +214,21 @@ const Inventory = () => {
   const lowStockItems = filteredInventory.filter(item => item.quantity <= item.minQuantity).length;
   const outOfStockItems = filteredInventory.filter(item => item.quantity === 0).length;
   const totalInventoryValue = filteredInventory.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-  const pendingOrders = purchaseOrders.filter(order => order.status === 'pending').length;
+  const pendingOrders = filteredPurchaseOrders.filter(order => order.status === 'pending').length;
   
-  // Financial Statistics
-  const totalSpentOnPurchases = purchaseOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-  const totalSpentOnReceivedOrders = purchaseOrders
+  // Financial Statistics (using filtered purchase orders for current terminal)
+  const totalSpentOnPurchases = filteredPurchaseOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+  const totalSpentOnReceivedOrders = filteredPurchaseOrders
     .filter(order => order.status === 'received')
     .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-  const pendingOrdersValue = purchaseOrders
+  const pendingOrdersValue = filteredPurchaseOrders
     .filter(order => order.status === 'pending')
     .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   
   // Monthly spending (current month)
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  const monthlySpending = purchaseOrders
+  const monthlySpending = filteredPurchaseOrders
     .filter(order => {
       const orderDate = new Date(order.orderDate);
       return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
@@ -578,10 +596,10 @@ const Inventory = () => {
     }
   };
 
-  // Spending Analysis Functions
+  // Spending Analysis Functions (using filtered purchase orders for current terminal)
   const getTopSpendingCategory = () => {
     const categorySpending = {};
-    purchaseOrders.forEach(order => {
+    filteredPurchaseOrders.forEach(order => {
       order.items.forEach(item => {
         const category = inventory.find(inv => inv._id === item.inventoryItem)?.category || 'Other';
         categorySpending[category] = (categorySpending[category] || 0) + (item.quantity * item.unitCost);
@@ -596,7 +614,7 @@ const Inventory = () => {
 
   const getTopSupplier = () => {
     const supplierSpending = {};
-    purchaseOrders.forEach(order => {
+    filteredPurchaseOrders.forEach(order => {
       supplierSpending[order.supplier] = (supplierSpending[order.supplier] || 0) + (order.totalAmount || 0);
     });
     
@@ -607,13 +625,13 @@ const Inventory = () => {
   };
 
   const getAverageOrderValue = () => {
-    if (purchaseOrders.length === 0) return 0;
-    const totalValue = purchaseOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-    return Math.round(totalValue / purchaseOrders.length);
+    if (filteredPurchaseOrders.length === 0) return 0;
+    const totalValue = filteredPurchaseOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    return Math.round(totalValue / filteredPurchaseOrders.length);
   };
 
-  // Filtered Purchase Orders
-  const filteredPurchaseOrders = purchaseOrders.filter(order => {
+  // Apply search and filter to terminal-filtered purchase orders
+  const searchFilteredPurchaseOrders = filteredPurchaseOrders.filter(order => {
     const matchesSearch = searchTerm === '' || 
       order.items.some(item => (item.itemName || item.inventoryItem?.name)?.toLowerCase().includes(searchTerm.toLowerCase())) ||
       order.supplier.toLowerCase().includes(searchTerm.toLowerCase());
@@ -843,7 +861,7 @@ const Inventory = () => {
                 className="filter-select"
               >
                 <option value="all">All Suppliers</option>
-                                 {suppliers.map(supplier => (
+                                 {filteredSuppliers.map(supplier => (
                    <option key={supplier._id} value={supplier.name}>{supplier.name}</option>
                  ))}
               </select>
@@ -896,10 +914,10 @@ const Inventory = () => {
           <div className="spending-stat-card">
             <h4>Orders Found</h4>
             <div className="spending-value">
-              {filteredPurchaseOrders.length}
+              {searchFilteredPurchaseOrders.length}
             </div>
             <div className="spending-subtitle">
-              of {purchaseOrders.length} total
+              of {filteredPurchaseOrders.length} total
             </div>
           </div>
         </div>
@@ -919,7 +937,7 @@ const Inventory = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPurchaseOrders.map((order) => (
+              {searchFilteredPurchaseOrders.map((order) => (
                 <tr key={order._id}>
                   <td>{order.orderNumber}</td>
                   <td>{order.supplier}</td>
@@ -949,7 +967,7 @@ const Inventory = () => {
               ))}
             </tbody>
           </table>
-          {filteredPurchaseOrders.length === 0 && (
+          {searchFilteredPurchaseOrders.length === 0 && (
             <div className="no-results">
               <p>No purchase orders found matching your search criteria.</p>
             </div>
@@ -972,7 +990,7 @@ const Inventory = () => {
                </tr>
              </thead>
                          <tbody>
-               {stockMovements.map((movement) => (
+               {filteredStockMovements.map((movement) => (
                  <tr key={movement._id}>
                    <td>{new Date(movement.createdAt).toLocaleDateString()}</td>
                    <td>{movement.itemName || movement.inventoryItem?.name}</td>
@@ -1002,7 +1020,7 @@ const Inventory = () => {
                </tr>
              </thead>
              <tbody>
-               {suppliers.map((supplier) => (
+               {filteredSuppliers.map((supplier) => (
                  <tr key={supplier._id}>
                    <td>{supplier.name}</td>
                    <td>{supplier.phone || 'N/A'}</td>
@@ -1298,7 +1316,7 @@ const Inventory = () => {
                    <option value="General Store">General Store</option>
                    <option value="Road Vendor">Road Vendor</option>
                    <option value="Direct Purchase">Direct Purchase</option>
-                   {suppliers.map(supplier => (
+                   {filteredSuppliers.map(supplier => (
                      <option key={supplier._id} value={supplier.name}>
                        {supplier.name}
                      </option>
@@ -1576,7 +1594,7 @@ const Inventory = () => {
                   >
                     <option value="">Select Supplier</option>
                     <option value="Direct Purchase">Direct Purchase</option>
-                    {suppliers.map(supplier => (
+                    {filteredSuppliers.map(supplier => (
                       <option key={supplier._id} value={supplier.name}>
                         {supplier.name}
                       </option>
