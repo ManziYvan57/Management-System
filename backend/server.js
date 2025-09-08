@@ -58,9 +58,12 @@ app.use('/api/', limiter);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-frontend-domain.com', 'http://localhost:3002'] // Allow both production and development
-    : ['http://localhost:3002', 'http://localhost:3000'],
+  origin: [
+    'http://localhost:3002', 
+    'http://localhost:3000',
+    'https://trinity-management-system.onrender.com',
+    'https://your-frontend-domain.com' // Replace with your actual frontend domain when deployed
+  ],
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
