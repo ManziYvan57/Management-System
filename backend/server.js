@@ -46,28 +46,45 @@ app.use(helmet());
 app.use(mongoSanitize());
 app.use(xss());
 
-// Rate limiting
+// Rate limiting - More lenient for development
 const limiter = rateLimit({
-  windowMs: process.env.RATE_LIMIT_WINDOW * 60 * 1000, // 15 minutes
-  max: process.env.RATE_LIMIT_MAX, // limit each IP to 100 requests per windowMs
+  windowMs: (process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000, // 15 minutes
+  max: process.env.RATE_LIMIT_MAX || 1000, // Increased limit for development
   message: {
     error: 'Too many requests from this IP, please try again later.'
   }
 });
 app.use('/api/', limiter);
 
-// CORS configuration
+// CORS configuration - More permissive for development
 const corsOptions = {
-  origin: [
-    'http://localhost:3002', 
-    'http://localhost:3000',
-    'https://trinity-management-system.onrender.com',
-    'https://your-frontend-domain.com' // Replace with your actual frontend domain when deployed
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3002', 
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://trinity-management-system.onrender.com',
+      'https://your-frontend-domain.com'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // For development, allow any localhost origin
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 };
 app.use(cors(corsOptions));
 
