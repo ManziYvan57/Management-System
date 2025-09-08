@@ -15,6 +15,7 @@ router.get('/', protect, async (req, res) => {
       complianceStatus,
       expiryStatus,
       search,
+      terminal,
       page = 1,
       limit = 10,
       sortBy = 'expiryDate',
@@ -62,6 +63,12 @@ router.get('/', protect, async (req, res) => {
       }
     }
 
+    // Terminal filtering - filter by vehicle terminal
+    let vehicleQuery = {};
+    if (terminal) {
+      vehicleQuery.terminal = terminal;
+    }
+
     // Pagination
     const skip = (page - 1) * limit;
     
@@ -69,14 +76,32 @@ router.get('/', protect, async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    // Execute query
-    const documents = await VehicleDocument.find(query)
-      .populate('vehicle', 'plateNumber make model year')
-      .populate('createdBy', 'firstName lastName')
-      .populate('updatedBy', 'firstName lastName')
-      .sort(sort)
-      .skip(skip)
-      .limit(parseInt(limit));
+    // Execute query with terminal filtering
+    let documents;
+    if (terminal) {
+      // If terminal filter is provided, first find vehicles in that terminal
+      const vehiclesInTerminal = await Vehicle.find(vehicleQuery).select('_id');
+      const vehicleIds = vehiclesInTerminal.map(v => v._id);
+      
+      // Add vehicle filter to query
+      query.vehicle = { $in: vehicleIds };
+      
+      documents = await VehicleDocument.find(query)
+        .populate('vehicle', 'plateNumber make model year terminal')
+        .populate('createdBy', 'firstName lastName')
+        .populate('updatedBy', 'firstName lastName')
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit));
+    } else {
+      documents = await VehicleDocument.find(query)
+        .populate('vehicle', 'plateNumber make model year terminal')
+        .populate('createdBy', 'firstName lastName')
+        .populate('updatedBy', 'firstName lastName')
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit));
+    }
 
     const total = await VehicleDocument.countDocuments(query);
 

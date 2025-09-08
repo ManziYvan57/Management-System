@@ -9,10 +9,15 @@ const { body, validationResult } = require('express-validator');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, fuelType } = req.query;
+    const { page = 1, limit = 10, search, status, fuelType, terminal } = req.query;
     
     // Build query based on user role
     let query = { isActive: true };
+    
+    // Filter by terminal
+    if (terminal) {
+      query.terminal = terminal;
+    }
     
     // Search functionality
     if (search) {

@@ -19,7 +19,7 @@ const EquipmentTab = ({ activeTerminal }) => {
 
   useEffect(() => {
     fetchEquipment();
-  }, []);
+  }, [activeTerminal]);
 
   const fetchEquipment = async () => {
     try {
@@ -28,6 +28,7 @@ const EquipmentTab = ({ activeTerminal }) => {
       
       const params = {};
       if (searchTerm) params.search = searchTerm;
+      if (activeTerminal) params.terminal = activeTerminal;
       if (statusFilter) params.status = statusFilter;
       if (categoryFilter) params.category = categoryFilter;
       

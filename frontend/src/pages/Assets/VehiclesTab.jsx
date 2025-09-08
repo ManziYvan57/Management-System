@@ -17,10 +17,10 @@ const VehiclesTab = ({ activeTerminal }) => {
   const [statusFilter, setStatusFilter] = useState('');
   const [fuelTypeFilter, setFuelTypeFilter] = useState('');
 
-  // Fetch vehicles on component mount
+  // Fetch vehicles on component mount and when terminal changes
   useEffect(() => {
     fetchVehicles();
-  }, []);
+  }, [activeTerminal]);
 
   const fetchVehicles = async () => {
     try {
@@ -31,6 +31,7 @@ const VehiclesTab = ({ activeTerminal }) => {
       if (searchTerm) params.search = searchTerm;
       if (statusFilter) params.status = statusFilter;
       if (fuelTypeFilter) params.fuelType = fuelTypeFilter;
+      if (activeTerminal) params.terminal = activeTerminal;
       
       const response = await vehiclesAPI.getAll(params);
       setVehicles(response.data || []);

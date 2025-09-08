@@ -19,11 +19,11 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
   const [complianceFilter, setComplianceFilter] = useState('');
   const [expiryStatusFilter, setExpiryStatusFilter] = useState('');
 
-  // Fetch documents on component mount
+  // Fetch documents on component mount and when terminal changes
   useEffect(() => {
     fetchDocuments();
     fetchVehicles();
-  }, []);
+  }, [activeTerminal]);
 
   const fetchDocuments = async () => {
     try {
@@ -36,6 +36,7 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
       if (statusFilter) params.status = statusFilter;
       if (complianceFilter) params.complianceStatus = complianceFilter;
       if (expiryStatusFilter) params.expiryStatus = expiryStatusFilter;
+      if (activeTerminal) params.terminal = activeTerminal;
       
       const response = await vehicleDocumentsAPI.getAll(params);
       setDocuments(response.data || []);
