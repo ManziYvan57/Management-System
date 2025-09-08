@@ -4,7 +4,7 @@ import { vehicleDocumentsAPI, vehiclesAPI } from '../../services/api';
 import VehicleDocumentForm from './VehicleDocumentForm';
 import './VehicleDocumentsTab.css';
 
-const VehicleDocumentsTab = () => {
+const VehicleDocumentsTab = ({ activeTerminal }) => {
   const [documents, setDocuments] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);

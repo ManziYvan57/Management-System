@@ -5,7 +5,7 @@ import VehicleForm from './VehicleForm';
 import './Assets.css';
 import './VehiclesTab.css';
 
-const VehiclesTab = () => {
+const VehiclesTab = ({ activeTerminal }) => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

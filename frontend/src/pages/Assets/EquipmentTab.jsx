@@ -5,7 +5,7 @@ import EquipmentForm from './EquipmentForm';
 import './Assets.css';
 import './EquipmentTab.css';
 
-const EquipmentTab = () => {
+const EquipmentTab = ({ activeTerminal }) => {
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
