@@ -76,6 +76,7 @@ router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
       role,
       department,
       employmentStatus,
+      terminal,
       page = 1,
       limit = 10,
       sortBy = 'createdAt',
@@ -84,6 +85,11 @@ router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
 
     // Build query
     const query = {};
+    
+    // Filter by terminal
+    if (terminal) {
+      query.terminal = terminal;
+    }
     
     if (search) {
       query.$or = [
@@ -357,7 +363,13 @@ router.delete('/:id', protect, authorize('personnel', 'delete'), async (req, res
 // @access  Private
 router.get('/stats/overview', protect, authorize('personnel', 'read'), async (req, res) => {
   try {
+    const { terminal } = req.query;
     const query = {};
+    
+    // Filter by terminal
+    if (terminal) {
+      query.terminal = terminal;
+    }
 
     const [
       totalPersonnel,
@@ -511,11 +523,17 @@ router.get('/drivers', protect, authorize('personnel', 'read'), async (req, res)
       search,
       employmentStatus,
       licenseStatus,
+      terminal,
       page = 1,
       limit = 10
     } = req.query;
 
     const query = { role: 'driver' };
+    
+    // Filter by terminal
+    if (terminal) {
+      query.terminal = terminal;
+    }
     
     if (search) {
       query.$or = [
