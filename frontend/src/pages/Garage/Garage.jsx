@@ -10,9 +10,18 @@ const Garage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
-    workOrders: { total: 0, pending: 0, inProgress: 0, completed: 0 },
-    maintenance: { total: 0, overdue: 0 },
-    vehicles: { inMaintenance: 0 }
+    totalWorkOrders: 0,
+    pendingWorkOrders: 0,
+    inProgressWorkOrders: 0,
+    completedWorkOrders: 0,
+    totalMaintenanceSchedules: 0,
+    overdueMaintenance: 0,
+    upcomingMaintenance: 0,
+    vehiclesInGarage: 0,
+    availableMechanics: 0,
+    criticalAlerts: 0,
+    monthlySpending: 0,
+    averageRepairTime: 0
   });
 
   // Form states
@@ -460,24 +469,36 @@ const Garage = () => {
       {/* Statistics Dashboard */}
       <div className="stats-dashboard">
         <div className="stat-card">
-          <h3>{stats.workOrders?.total || 0}</h3>
+          <h3>{stats.totalWorkOrders || 0}</h3>
           <p>Total Work Orders</p>
         </div>
         <div className="stat-card">
-          <h3>{stats.workOrders?.pending || 0}</h3>
+          <h3>{stats.pendingWorkOrders || 0}</h3>
           <p>Pending Work Orders</p>
         </div>
         <div className="stat-card">
-          <h3>{stats.maintenance?.pending || 0}</h3>
-          <p>Pending Maintenance</p>
+          <h3>{stats.inProgressWorkOrders || 0}</h3>
+          <p>In Progress</p>
         </div>
         <div className="stat-card">
-          <h3>{stats.maintenance?.overdue || 0}</h3>
+          <h3>{stats.completedWorkOrders || 0}</h3>
+          <p>Completed</p>
+        </div>
+        <div className="stat-card">
+          <h3>{stats.overdueMaintenance || 0}</h3>
           <p>Overdue Maintenance</p>
         </div>
         <div className="stat-card">
-          <h3>{stats.vehicles?.inMaintenance || 0}</h3>
-          <p>Vehicles in Maintenance</p>
+          <h3>{stats.vehiclesInGarage || 0}</h3>
+          <p>Vehicles in Garage</p>
+        </div>
+        <div className="stat-card">
+          <h3>{stats.criticalAlerts || 0}</h3>
+          <p>Critical Alerts</p>
+        </div>
+        <div className="stat-card">
+          <h3>{stats.availableMechanics || 0}</h3>
+          <p>Available Mechanics</p>
         </div>
       </div>
 
