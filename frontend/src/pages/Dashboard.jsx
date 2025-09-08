@@ -52,6 +52,7 @@ const Dashboard = () => {
         console.log('Equipment response:', equipmentRes);
         console.log('Personnel response:', personnelRes);
         console.log('Garage response:', garageRes);
+        console.log('Garage data structure:', garageRes.data);
         
         // Combine data from individual APIs using standardized field names
         const combinedData = {
@@ -128,6 +129,8 @@ const Dashboard = () => {
           vehiclesInGarage: garageRes.data?.vehiclesInGarage || 0,
           availableMechanics: garageRes.data?.availableMechanics || 0
         };
+        
+        console.log('Mapped garage data:', garageData);
         
         setDashboardData({
           overview: combinedData,

@@ -289,26 +289,58 @@ router.get('/stats', protect, async (req, res) => {
       nextDue: { $lt: new Date() },
       status: { $ne: 'completed' }
     });
+    const upcomingMaintenance = await MaintenanceSchedule.countDocuments({
+      nextDue: { 
+        $gte: new Date(),
+        $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
+      },
+      status: { $ne: 'completed' }
+    });
 
     const vehiclesInMaintenance = await Vehicle.countDocuments({ status: 'maintenance', isActive: true });
+    const vehiclesInGarage = await Vehicle.countDocuments({ status: 'maintenance', isActive: true });
+    
+    // Get available mechanics
+    const availableMechanics = await Personnel.countDocuments({ 
+      role: { $in: ['mechanic', 'technician'] },
+      employmentStatus: 'active'
+    });
+
+    // Calculate critical alerts (overdue maintenance + high priority work orders)
+    const criticalWorkOrders = await WorkOrder.countDocuments({ 
+      priority: 'critical',
+      status: { $ne: 'completed' }
+    });
+    const criticalAlerts = overdueMaintenance + criticalWorkOrders;
+
+    // Calculate monthly spending (placeholder - would need actual cost tracking)
+    const monthlySpending = 0; // This would need to be calculated from actual work order costs
+
+    // Calculate average repair time (placeholder - would need actual time tracking)
+    const averageRepairTime = 0; // This would need to be calculated from completed work orders
 
     res.json({
       success: true,
       data: {
-        workOrders: {
-          total: totalWorkOrders,
-          pending: pendingWorkOrders,
-          inProgress: inProgressWorkOrders,
-          completed: completedWorkOrders
-        },
-        maintenance: {
-          total: totalMaintenanceSchedules,
-          pending: pendingMaintenanceSchedules,
-          overdue: overdueMaintenance
-        },
-        vehicles: {
-          inMaintenance: vehiclesInMaintenance
-        }
+        // Work Orders
+        totalWorkOrders,
+        pendingWorkOrders,
+        inProgressWorkOrders,
+        completedWorkOrders,
+        
+        // Maintenance Schedules
+        totalMaintenanceSchedules,
+        pendingMaintenanceSchedules,
+        overdueMaintenance,
+        upcomingMaintenance,
+        
+        // Garage Operations
+        vehiclesInMaintenance,
+        vehiclesInGarage,
+        availableMechanics,
+        criticalAlerts,
+        monthlySpending,
+        averageRepairTime
       }
     });
   } catch (error) {
