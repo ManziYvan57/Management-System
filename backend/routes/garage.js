@@ -338,20 +338,41 @@ router.delete('/maintenance-schedules/:id', protect, async (req, res) => {
 // GET /api/garage/stats - Get garage statistics
 router.get('/stats', protect, async (req, res) => {
   try {
-    const totalWorkOrders = await WorkOrder.countDocuments();
-    const pendingWorkOrders = await WorkOrder.countDocuments({ status: 'pending' });
-    const inProgressWorkOrders = await WorkOrder.countDocuments({ status: 'in_progress' });
-    const completedWorkOrders = await WorkOrder.countDocuments({ status: 'completed' });
+    const { terminal } = req.query;
+    
+    // Build query based on terminal filter
+    let workOrderQuery = {};
+    let maintenanceQuery = {};
+    let vehicleQuery = { isActive: true };
+    let personnelQuery = { 
+      role: { $in: ['mechanic', 'technician'] },
+      employmentStatus: 'active'
+    };
+    
+    if (terminal) {
+      workOrderQuery.terminal = terminal;
+      maintenanceQuery.terminal = terminal;
+      vehicleQuery.terminal = terminal;
+      personnelQuery.terminal = terminal;
+    }
 
-    const totalMaintenanceSchedules = await MaintenanceSchedule.countDocuments();
+    const totalWorkOrders = await WorkOrder.countDocuments(workOrderQuery);
+    const pendingWorkOrders = await WorkOrder.countDocuments({ ...workOrderQuery, status: 'pending' });
+    const inProgressWorkOrders = await WorkOrder.countDocuments({ ...workOrderQuery, status: 'in_progress' });
+    const completedWorkOrders = await WorkOrder.countDocuments({ ...workOrderQuery, status: 'completed' });
+
+    const totalMaintenanceSchedules = await MaintenanceSchedule.countDocuments(maintenanceQuery);
     const pendingMaintenanceSchedules = await MaintenanceSchedule.countDocuments({ 
+      ...maintenanceQuery,
       status: { $in: ['scheduled', 'in_progress'] } 
     });
     const overdueMaintenance = await MaintenanceSchedule.countDocuments({
+      ...maintenanceQuery,
       nextDue: { $lt: new Date() },
       status: { $ne: 'completed' }
     });
     const upcomingMaintenance = await MaintenanceSchedule.countDocuments({
+      ...maintenanceQuery,
       nextDue: { 
         $gte: new Date(),
         $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
@@ -359,17 +380,15 @@ router.get('/stats', protect, async (req, res) => {
       status: { $ne: 'completed' }
     });
 
-    const vehiclesInMaintenance = await Vehicle.countDocuments({ status: 'maintenance', isActive: true });
-    const vehiclesInGarage = await Vehicle.countDocuments({ status: 'maintenance', isActive: true });
+    const vehiclesInMaintenance = await Vehicle.countDocuments({ ...vehicleQuery, status: 'maintenance' });
+    const vehiclesInGarage = await Vehicle.countDocuments({ ...vehicleQuery, status: 'maintenance' });
     
     // Get available mechanics
-    const availableMechanics = await Personnel.countDocuments({ 
-      role: { $in: ['mechanic', 'technician'] },
-      employmentStatus: 'active'
-    });
+    const availableMechanics = await Personnel.countDocuments(personnelQuery);
 
     // Calculate critical alerts (overdue maintenance + high priority work orders)
     const criticalWorkOrders = await WorkOrder.countDocuments({ 
+      ...workOrderQuery,
       priority: 'critical',
       status: { $ne: 'completed' }
     });

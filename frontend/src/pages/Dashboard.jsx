@@ -5,7 +5,7 @@ import {
   FaChartLine, FaChartBar, FaChartPie, FaCalendarAlt,
   FaDollarSign, FaWrench, FaUserTie, FaUserCog,
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
-  FaCog, FaWarehouse, FaUserShield, FaTimesCircle
+  FaCog, FaWarehouse, FaUserShield, FaTimesCircle, FaBuilding
 } from 'react-icons/fa';
 import { assetsAPI, vehiclesAPI, equipmentAPI, personnelAPI, garageAPI, inventoryAPI } from '../services/api';
 import './Dashboard.css';
@@ -14,6 +14,12 @@ const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState('overview');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  // Terminal management
+  const userTerminal = user.terminal || 'Kigali';
+  const userRole = user.role || 'user';
+  const [activeTerminal, setActiveTerminal] = useState(userTerminal);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
 
   const [dashboardData, setDashboardData] = useState({
     garage: {},
@@ -24,6 +30,20 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Handle terminal tab change
+  const handleTerminalChange = (terminal) => {
+    setActiveTerminal(terminal);
+  };
+
+  // Get terminals available to user based on role
+  const getUserTerminals = () => {
+    // For now, show all terminals to admin users (including 'admin' role)
+    if (userRole === 'super_admin' || userRole === 'admin' || userRole === 'Admin') {
+      return availableTerminals;
+    }
+    return [userTerminal]; // Regular users only see their terminal
+  };
 
   // Fetch dashboard data from API
   useEffect(() => {
@@ -37,16 +57,17 @@ const Dashboard = () => {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         console.log('Dashboard: Token exists:', !!token);
         console.log('Dashboard: User:', user);
+        console.log('Dashboard: Active Terminal:', activeTerminal);
         
-        // Fetch data from individual APIs instead of dashboard API
+        // Fetch data from individual APIs with terminal filtering
         console.log('Fetching assets data from individual APIs...');
         const [assetsRes, vehiclesRes, equipmentRes, personnelRes, garageRes, inventoryRes] = await Promise.all([
-          assetsAPI.getStats(),
+          assetsAPI.getStats({ terminal: activeTerminal }),
           vehiclesAPI.getStats(),
           equipmentAPI.getStats(),
-          personnelAPI.getStats(),
-          garageAPI.getStats(),
-          inventoryAPI.getStats()
+          personnelAPI.getStats({ terminal: activeTerminal }),
+          garageAPI.getStats({ terminal: activeTerminal }),
+          inventoryAPI.getStats({ terminal: activeTerminal })
         ]);
         console.log('Assets response:', assetsRes);
         console.log('Vehicles response:', vehiclesRes);
@@ -248,7 +269,7 @@ const Dashboard = () => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [activeTerminal]);
 
   // Update current time every second
   useEffect(() => {
@@ -315,18 +336,35 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <div className="header-left">
           <h1>Trinity Management Dashboard</h1>
-          <p>Comprehensive overview of all operations</p>
+          <div className="terminal-info">
+            <FaBuilding className="terminal-icon" />
+            <span>Current Terminal: <strong>{activeTerminal}</strong></span>
+          </div>
         </div>
         <div className="header-right">
           <div className="real-time-clock">
             <FaClock className="clock-icon" />
             <span>{currentTime.toLocaleTimeString()}</span>
-          </div>
+        </div>
           <div className="date-display">
             <FaCalendarAlt className="date-icon" />
             <span>{currentTime.toLocaleDateString()}</span>
         </div>
         </div>
+      </div>
+
+      {/* Terminal Tabs */}
+      <div className="terminal-tabs">
+        {getUserTerminals().map((terminal) => (
+          <button
+            key={terminal}
+            className={`terminal-tab ${activeTerminal === terminal ? 'active' : ''}`}
+            onClick={() => handleTerminalChange(terminal)}
+          >
+            <FaWarehouse className="tab-icon" />
+            {terminal} Terminal
+          </button>
+        ))}
       </div>
 
       {/* Error Warning */}
@@ -1099,10 +1137,10 @@ const Dashboard = () => {
                     <div className="health-info">
                       <span className="health-label">Critical/Out of Stock</span>
                       <span className="health-count">{(dashboardData.inventory?.outOfStockItems || 0) + (dashboardData.inventory?.criticalItems || 0)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        </div>
+        </div>
+      </div>
+    </div>
 
               <div className="inventory-performance">
                 <h4>Performance Metrics</h4>
@@ -1190,8 +1228,8 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+          </div>
+        )}
 
       {/* User Management Tab */}
       {activeTab === 'users' && (
