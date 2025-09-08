@@ -38,13 +38,13 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const params = {
-        page: currentPage,
-        limit: 10,
-        search: searchTerm || undefined,
-        role: roleFilter !== 'all' ? roleFilter : undefined,
-        isActive: statusFilter !== 'all' ? statusFilter === 'active' : undefined
-      };
+      const params = {};
+      
+      // Only add parameters that have valid values
+      if (currentPage) params.page = currentPage;
+      if (searchTerm && searchTerm.trim()) params.search = searchTerm.trim();
+      if (roleFilter && roleFilter !== 'all') params.role = roleFilter;
+      if (statusFilter && statusFilter !== 'all') params.isActive = statusFilter === 'active';
 
       console.log('🔍 Fetching users with params:', params);
       console.log('👤 Current user from localStorage:', JSON.parse(localStorage.getItem('user') || '{}'));

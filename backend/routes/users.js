@@ -22,7 +22,7 @@ router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => 
     // Build query
     const query = {};
     
-    if (search) {
+    if (search && search !== 'undefined' && search.trim()) {
       query.$or = [
         { username: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
@@ -31,9 +31,11 @@ router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => 
       ];
     }
     
-    if (role && role !== 'all') query.role = role;
-    if (department && department !== 'all') query.department = department;
-    if (isActive !== undefined) query.isActive = isActive === 'true';
+    if (role && role !== 'all' && role !== 'undefined') query.role = role;
+    if (department && department !== 'all' && department !== 'undefined') query.department = department;
+    if (isActive !== undefined && isActive !== 'undefined') {
+      query.isActive = isActive === 'true' || isActive === true;
+    }
 
     // Execute query with pagination
     const users = await User.find(query)
@@ -46,10 +48,13 @@ router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => 
     // Get total count
     const count = await User.countDocuments(query);
 
+    // Debug: Check total users in database
+    const totalUsersInDB = await User.countDocuments();
     console.log('📊 Users query result:', {
       query,
       usersFound: users.length,
       totalCount: count,
+      totalUsersInDB,
       currentPage: page,
       limit
     });
