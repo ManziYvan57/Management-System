@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { FaWarehouse, FaBuilding } from 'react-icons/fa';
 import { garageAPI, vehiclesAPI, inventoryAPI, stockMovementsAPI } from '../../services/api';
 import './Garage.css';
 
 const Garage = () => {
+  // Get user information from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userTerminal = user.terminal || 'Kigali';
+  const userRole = user.role || 'user';
+  
+  // Terminal tabs state
+  const [activeTerminal, setActiveTerminal] = useState(userTerminal);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
+  
   const [workOrders, setWorkOrders] = useState([]);
   const [maintenanceSchedules, setMaintenanceSchedules] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -46,7 +56,7 @@ const Garage = () => {
     title: '',
     description: '',
     scheduledDate: '',
-    terminal: '',
+    terminal: activeTerminal,
     partsUsed: []
   });
 
@@ -58,7 +68,7 @@ const Garage = () => {
     interval: 1,
     nextDue: '',
     priority: 'medium',
-    terminal: '',
+    terminal: activeTerminal,
     requiredParts: []
   });
 
@@ -69,6 +79,20 @@ const Garage = () => {
     quantity: 1,
     unitCost: 0
   });
+
+  // Handle terminal tab change
+  const handleTerminalChange = (terminal) => {
+    setActiveTerminal(terminal);
+  };
+
+  // Get terminals available to user based on role
+  const getUserTerminals = () => {
+    // For now, show all terminals to admin users (including 'admin' role)
+    if (userRole === 'super_admin' || userRole === 'admin' || userRole === 'Admin') {
+      return availableTerminals;
+    }
+    return [userTerminal]; // Regular users only see their terminal
+  };
 
   // Fetch data from API
   useEffect(() => {
@@ -84,11 +108,11 @@ const Garage = () => {
           inventoryResponse,
           statsResponse
         ] = await Promise.all([
-          garageAPI.getWorkOrders(),
-          garageAPI.getMaintenanceSchedules(),
-          vehiclesAPI.getAll(),
-          inventoryAPI.getAll(),
-          garageAPI.getStats()
+          garageAPI.getWorkOrders({ terminal: activeTerminal }),
+          garageAPI.getMaintenanceSchedules({ terminal: activeTerminal }),
+          vehiclesAPI.getAll({ terminal: activeTerminal }),
+          inventoryAPI.getAll({ terminal: activeTerminal }),
+          garageAPI.getStats({ terminal: activeTerminal })
         ]);
         
         console.log('Vehicles Response:', vehiclesResponse);
@@ -108,15 +132,15 @@ const Garage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [activeTerminal]);
 
   // Refresh data after adding/editing
   const refreshData = async () => {
     try {
       const [workOrdersResponse, maintenanceResponse, statsResponse] = await Promise.all([
-        garageAPI.getWorkOrders(),
-        garageAPI.getMaintenanceSchedules(),
-        garageAPI.getStats()
+        garageAPI.getWorkOrders({ terminal: activeTerminal }),
+        garageAPI.getMaintenanceSchedules({ terminal: activeTerminal }),
+        garageAPI.getStats({ terminal: activeTerminal })
       ]);
       
       setWorkOrders(workOrdersResponse.data || []);
@@ -493,8 +517,30 @@ const Garage = () => {
     <div className="garage-container">
       {/* Header */}
       <div className="garage-header">
-        <h2>Garage Management</h2>
-        <p>Manage work orders, maintenance schedules, and track vehicle repairs</p>
+        <div className="header-left">
+          <h2>Garage Management</h2>
+          <div className="terminal-info">
+            <FaBuilding className="terminal-icon" />
+            <span>Current Terminal: <strong>{activeTerminal}</strong></span>
+          </div>
+        </div>
+        <div className="header-right">
+          <p>Manage work orders, maintenance schedules, and track vehicle repairs</p>
+        </div>
+      </div>
+
+      {/* Terminal Tabs */}
+      <div className="terminal-tabs">
+        {getUserTerminals().map((terminal) => (
+          <button
+            key={terminal}
+            className={`terminal-tab ${activeTerminal === terminal ? 'active' : ''}`}
+            onClick={() => handleTerminalChange(terminal)}
+          >
+            <FaWarehouse className="tab-icon" />
+            {terminal} Terminal
+          </button>
+        ))}
       </div>
 
       {/* Statistics Dashboard */}
