@@ -54,7 +54,10 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
 
   const fetchVehicles = async () => {
     try {
-      const response = await vehiclesAPI.getAll();
+      const params = {};
+      if (activeTerminal) params.terminal = activeTerminal;
+      
+      const response = await vehiclesAPI.getAll(params);
       setVehicles(response.data || []);
     } catch (err) {
       console.error('Error fetching vehicles:', err);
