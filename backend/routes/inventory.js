@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const Inventory = require('../models/Inventory');
+const Supplier = require('../models/Supplier');
 
 // @desc    Get all inventory items
 // @route   GET /api/inventory
@@ -148,7 +149,7 @@ router.get('/stats', protect, async (req, res) => {
     
     const lowStockItems = await Inventory.countDocuments({
       ...query,
-      quantity: { $lte: '$minQuantity' },
+      $expr: { $lte: ['$quantity', '$minQuantity'] },
       quantity: { $gt: 0 }
     });
     
@@ -156,6 +157,40 @@ router.get('/stats', protect, async (req, res) => {
       ...query,
       quantity: 0
     });
+    
+    const criticalItems = await Inventory.countDocuments({
+      ...query,
+      $expr: { $lte: ['$quantity', '$minQuantity'] },
+      quantity: { $lte: 0 }
+    });
+    
+    // Calculate average stock level
+    const avgStockResult = await Inventory.aggregate([
+      { $match: query },
+      { $group: { _id: null, avgStock: { $avg: '$quantity' } } }
+    ]);
+    
+    // Get supplier count
+    const totalSuppliers = await Supplier.countDocuments({ isActive: true });
+    
+    // Get unique suppliers from inventory
+    const inventorySuppliers = await Inventory.distinct('supplier', query);
+    const activeSuppliers = await Supplier.countDocuments({ 
+      isActive: true,
+      name: { $in: inventorySuppliers }
+    });
+    
+    // Recent movements (last 30 days) - placeholder for now
+    const recentMovements = 0;
+    
+    // Reorder alerts (items at or below min quantity)
+    const reorderAlerts = lowStockItems + outOfStockItems;
+    
+    // Calculate turnover rate (placeholder)
+    const turnoverRate = 0;
+    
+    // Monthly spending (placeholder)
+    const monthlySpending = 0;
     
     // Category statistics
     const categories = await Inventory.aggregate([
@@ -189,6 +224,14 @@ router.get('/stats', protect, async (req, res) => {
       totalValue: totalValue[0]?.total || 0,
       lowStockItems,
       outOfStockItems,
+      criticalItems,
+      averageStockLevel: Math.round(avgStockResult[0]?.avgStock || 0),
+      totalSuppliers,
+      activeSuppliers,
+      recentMovements,
+      reorderAlerts,
+      turnoverRate,
+      monthlySpending,
       categories: categories.map(cat => ({
         name: cat._id,
         count: cat.count,
