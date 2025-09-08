@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaUser, FaIdCard, FaPhone, FaEnvelope, FaCalendar, FaMapMarkerAlt, FaCar, FaRoute, FaExclamationTriangle, FaCheckCircle, FaClock, FaStar } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaUser, FaIdCard, FaPhone, FaEnvelope, FaCalendar, FaMapMarkerAlt, FaCar, FaRoute, FaExclamationTriangle, FaCheckCircle, FaClock, FaStar, FaWarehouse, FaBuilding } from 'react-icons/fa';
 import { personnelAPI } from '../../services/api';
 import PersonnelForm from './PersonnelForm';
 import InfractionForm from './InfractionForm';
 import './Personnel.css';
 
 const Personnel = () => {
+  // Get user information from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userTerminal = user.terminal || 'Kigali';
+  const userRole = user.role || 'user';
+  
+  // Terminal tabs state
+  const [activeTerminal, setActiveTerminal] = useState(userTerminal);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
+  
   const [personnel, setPersonnel] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,10 +33,10 @@ const Personnel = () => {
   const [terminalFilter, setTerminalFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Fetch personnel on component mount
+  // Fetch personnel on component mount and when terminal changes
   useEffect(() => {
     fetchPersonnel();
-  }, []);
+  }, [activeTerminal]);
 
   const fetchPersonnel = async () => {
     try {
@@ -38,7 +47,7 @@ const Personnel = () => {
       if (searchTerm) params.search = searchTerm;
       if (roleFilter) params.role = roleFilter;
       if (departmentFilter) params.department = departmentFilter;
-      if (terminalFilter) params.terminal = terminalFilter;
+      if (activeTerminal) params.terminal = activeTerminal; // Use activeTerminal instead of terminalFilter
       if (statusFilter) params.employmentStatus = statusFilter;
       
       const response = await personnelAPI.getAll(params);
@@ -49,6 +58,20 @@ const Personnel = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle terminal tab change
+  const handleTerminalChange = (terminal) => {
+    setActiveTerminal(terminal);
+  };
+
+  // Get terminals available to user based on role
+  const getUserTerminals = () => {
+    // For now, show all terminals to admin users (including 'admin' role)
+    if (userRole === 'super_admin' || userRole === 'admin' || userRole === 'Admin') {
+      return availableTerminals;
+    }
+    return [userTerminal]; // Regular users only see their terminal
   };
 
   const handleAddPersonnel = async (personnelData) => {
@@ -215,7 +238,10 @@ const Personnel = () => {
       <div className="personnel-header">
         <div className="header-left">
           <h2>Personnel Management</h2>
-          <span className="personnel-count">{personnel.length} personnel</span>
+          <div className="terminal-info">
+            <FaBuilding className="terminal-icon" />
+            <span>Current Terminal: <strong>{activeTerminal}</strong></span>
+          </div>
         </div>
         
         <div className="header-right">
@@ -227,6 +253,20 @@ const Personnel = () => {
             Add Personnel
           </button>
         </div>
+      </div>
+
+      {/* Terminal Tabs */}
+      <div className="terminal-tabs">
+        {getUserTerminals().map((terminal) => (
+          <button
+            key={terminal}
+            className={`terminal-tab ${activeTerminal === terminal ? 'active' : ''}`}
+            onClick={() => handleTerminalChange(terminal)}
+          >
+            <FaWarehouse className="tab-icon" />
+            {terminal} Terminal
+          </button>
+        ))}
       </div>
 
       {/* Personnel Overview */}
@@ -316,22 +356,6 @@ const Personnel = () => {
             </select>
           </div>
 
-          <div className="filter-group">
-            <label>Terminal:</label>
-            <select 
-              value={terminalFilter} 
-              onChange={(e) => {
-                setTerminalFilter(e.target.value);
-                handleFilterChange();
-              }}
-            >
-              <option value="">All Terminals</option>
-              <option value="Kigali">Kigali</option>
-              <option value="Kampala">Kampala</option>
-              <option value="Nairobi">Nairobi</option>
-              <option value="Juba">Juba</option>
-            </select>
-          </div>
 
           <div className="filter-group">
             <label>Status:</label>
