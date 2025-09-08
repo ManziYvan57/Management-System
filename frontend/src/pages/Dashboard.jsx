@@ -1193,8 +1193,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* User Management Tab - Temporarily disabled for development */}
-      {false && activeTab === 'users' && (
+      {/* User Management Tab */}
+      {activeTab === 'users' && (
         <div className="tab-content">
           <div className="users-overview">
             <h3>User Management</h3>

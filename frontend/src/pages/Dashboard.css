@@ -63,13 +63,13 @@
 }
 
 .terminal-badge {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.875rem;
   font-weight: 500;
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
 }
 
 .dashboard-tabs {
@@ -108,10 +108,10 @@
 }
 
 .tab-btn.active {
-  color: #6366f1;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #059669;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3);
 }
 
 .tab-icon {
@@ -264,7 +264,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  background: linear-gradient(90deg, #059669, #10b981);
 }
 
 .metric-card:hover {
@@ -381,7 +381,7 @@
 }
 
 .efficiency-icon {
-  color: #6366f1;
+  color: #059669;
   font-size: 1rem;
 }
 
@@ -408,7 +408,7 @@
 
 .efficiency-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  background: linear-gradient(90deg, #059669, #10b981);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -439,7 +439,7 @@
 }
 
 .stat-icon {
-  color: #6366f1;
+  color: #059669;
   font-size: 1.25rem;
 }
 
@@ -604,7 +604,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid #e2e8f0;
-  border-top: 4px solid #6366f1;
+  border-top: 4px solid #059669;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -783,7 +783,7 @@
 
 .performance-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(90deg, #059669 0%, #10b981 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -960,7 +960,7 @@
 
 .role-icon.team-leaders {
   background: #e0e7ff;
-  color: #6366f1;
+  color: #059669;
 }
 
 .role-icon.managers {

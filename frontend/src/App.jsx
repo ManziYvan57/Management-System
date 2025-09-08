@@ -7,7 +7,7 @@ import Garage from './pages/Garage/Garage';
 import Inventory from './pages/Inventory';
 import Assets from './pages/Assets';
 import Personnel from './pages/Personnel';
-import Transport from './pages/Transport';
+// import Transport from './pages/Transport'; // Temporarily disabled
 import Users from './pages/Users';
 
 // Protected Route Component
@@ -76,7 +76,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        <Route 
+        {/* Transport Operations - Temporarily disabled for future updates */}
+        {/* <Route 
           path="/transport" 
           element={
             <ProtectedRoute>
@@ -85,7 +86,7 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } 
-        />
+        /> */}
         <Route 
           path="/users" 
           element={

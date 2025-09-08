@@ -54,13 +54,14 @@ const Sidebar = ({ user }) => {
       module: 'personnel',
       action: 'view'
     },
-    { 
-      path: '/transport', 
-      icon: <FaShippingFast />, 
-      text: 'Transport Operations',
-      module: 'transport',
-      action: 'view'
-    },
+    // Transport Operations - Temporarily disabled for future updates
+    // { 
+    //   path: '/transport', 
+    //   icon: <FaShippingFast />, 
+    //   text: 'Transport Operations',
+    //   module: 'transport',
+    //   action: 'view'
+    // },
     { 
       path: '/users', 
       icon: <FaUserCog />, 

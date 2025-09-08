@@ -744,7 +744,7 @@ tr:hover {
 .role-driver { background: #dbeafe; color: #1e40af; }
 .role-team-leader { background: #fef3c7; color: #92400e; }
 .role-customer-care { background: #e0e7ff; color: #3730a3; }
-.role-mechanic { background: #f3e8ff; color: #7c3aed; }
+.role-mechanic { background: #ecfdf5; color: #059669; }
 .role-supervisor { background: #ecfdf5; color: #065f46; }
 .role-manager { background: #fef2f2; color: #991b1b; }
 .role-admin { background: #fef3c7; color: #92400e; }
@@ -753,7 +753,7 @@ tr:hover {
 .dept-operations { background: #dbeafe; color: #1e40af; }
 .dept-maintenance { background: #fef3c7; color: #92400e; }
 .dept-customer-service { background: #e0e7ff; color: #3730a3; }
-.dept-administration { background: #f3e8ff; color: #7c3aed; }
+.dept-administration { background: #ecfdf5; color: #059669; }
 .dept-finance { background: #ecfdf5; color: #065f46; }
 .dept-other { background: #f3f4f6; color: #374151; }
 
