@@ -7,7 +7,7 @@ import {
   FaFileAlt, FaClipboardList, FaTachometerAlt, FaShieldAlt,
   FaCog, FaWarehouse, FaUserShield, FaTimesCircle
 } from 'react-icons/fa';
-import { assetsAPI, vehiclesAPI, equipmentAPI, personnelAPI } from '../services/api';
+import { assetsAPI, vehiclesAPI, equipmentAPI, personnelAPI, garageAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -40,16 +40,18 @@ const Dashboard = () => {
         
         // Fetch data from individual APIs instead of dashboard API
         console.log('Fetching assets data from individual APIs...');
-        const [assetsRes, vehiclesRes, equipmentRes, personnelRes] = await Promise.all([
+        const [assetsRes, vehiclesRes, equipmentRes, personnelRes, garageRes] = await Promise.all([
           assetsAPI.getStats(),
           vehiclesAPI.getStats(),
           equipmentAPI.getStats(),
-          personnelAPI.getStats()
+          personnelAPI.getStats(),
+          garageAPI.getStats()
         ]);
         console.log('Assets response:', assetsRes);
         console.log('Vehicles response:', vehiclesRes);
         console.log('Equipment response:', equipmentRes);
         console.log('Personnel response:', personnelRes);
+        console.log('Garage response:', garageRes);
         
         // Combine data from individual APIs using standardized field names
         const combinedData = {
@@ -110,13 +112,29 @@ const Dashboard = () => {
           onLeavePersonnel: personnelRes.data?.onLeavePersonnel || 0,
           terminatedPersonnel: personnelRes.data?.terminatedPersonnel || 0
         };
+
+        // Garage data - map from API response
+        const garageData = {
+          totalWorkOrders: garageRes.data?.totalWorkOrders || 0,
+          completedWorkOrders: garageRes.data?.completedWorkOrders || 0,
+          pendingWorkOrders: garageRes.data?.pendingWorkOrders || 0,
+          inProgressWorkOrders: garageRes.data?.inProgressWorkOrders || 0,
+          totalMaintenanceSchedules: garageRes.data?.totalMaintenanceSchedules || 0,
+          overdueMaintenance: garageRes.data?.overdueMaintenance || 0,
+          upcomingMaintenance: garageRes.data?.upcomingMaintenance || 0,
+          monthlySpending: garageRes.data?.monthlySpending || 0,
+          averageRepairTime: garageRes.data?.averageRepairTime || 0,
+          criticalAlerts: garageRes.data?.criticalAlerts || 0,
+          vehiclesInGarage: garageRes.data?.vehiclesInGarage || 0,
+          availableMechanics: garageRes.data?.availableMechanics || 0
+        };
         
         setDashboardData({
           overview: combinedData,
           financial: {},
           operations: {},
           maintenance: {},
-          garage: {},
+          garage: garageData,
           inventory: {},
           assets: combinedData,
           personnel: personnelData,
@@ -126,7 +144,8 @@ const Dashboard = () => {
         console.log('Dashboard data set:', {
           combinedData,
           assets: combinedData,
-          personnel: personnelData
+          personnel: personnelData,
+          garage: garageData
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -141,7 +160,20 @@ const Dashboard = () => {
           financial: {},
           operations: {},
           maintenance: {},
-          garage: {},
+          garage: {
+            totalWorkOrders: 0,
+            completedWorkOrders: 0,
+            pendingWorkOrders: 0,
+            inProgressWorkOrders: 0,
+            totalMaintenanceSchedules: 0,
+            overdueMaintenance: 0,
+            upcomingMaintenance: 0,
+            monthlySpending: 0,
+            averageRepairTime: 0,
+            criticalAlerts: 0,
+            vehiclesInGarage: 0,
+            availableMechanics: 0
+          },
           inventory: {},
           assets: {},
           personnel: {
@@ -820,8 +852,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Garage Management Tab - Temporarily disabled for development */}
-      {false && activeTab === 'garage' && (
+      {/* Garage Management Tab */}
+      {activeTab === 'garage' && (
         <div className="tab-content">
           <div className="garage-overview">
             <h3>Garage Management</h3>
@@ -853,63 +885,67 @@ const Dashboard = () => {
                 <div className="garage-stats">
                   <div className="garage-stat">
                     <span>Total Schedules</span>
-                    <strong>{dashboardData.garage.totalSchedules || 0}</strong>
+                    <strong>{dashboardData.garage?.totalMaintenanceSchedules || 0}</strong>
                   </div>
                   <div className="garage-stat">
-                    <span>Due This Week</span>
-                    <strong className="warning">{dashboardData.garage.dueThisWeek || 0}</strong>
+                    <span>Upcoming</span>
+                    <strong className="warning">{dashboardData.garage?.upcomingMaintenance || 0}</strong>
                   </div>
                   <div className="garage-stat">
                     <span>Overdue</span>
-                    <strong className="danger">{dashboardData.garage.overdueSchedules || 0}</strong>
-                  </div>
-                  <div className="garage-stat">
-                    <span>Completed</span>
-                    <strong className="success">{dashboardData.garage.completedSchedules || 0}</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="garage-card">
-                <h4>Vehicle Status</h4>
-                <div className="garage-stats">
-                  <div className="garage-stat">
-                    <span>In Maintenance</span>
-                    <strong className="warning">{dashboardData.garage.vehiclesInMaintenance || 0}</strong>
+                    <strong className="danger">{dashboardData.garage?.overdueMaintenance || 0}</strong>
                   </div>
                   <div className="garage-stat">
                     <span>Critical Alerts</span>
-                    <strong className="danger">{dashboardData.garage.criticalAlerts || 0}</strong>
-                  </div>
-                  <div className="garage-stat">
-                    <span>Available</span>
-                    <strong className="success">{dashboardData.garage.availableVehicles || 0}</strong>
-                  </div>
-                  <div className="garage-stat">
-                    <span>Out of Service</span>
-                    <strong className="danger">{dashboardData.garage.outOfService || 0}</strong>
+                    <strong className="danger">{dashboardData.garage?.criticalAlerts || 0}</strong>
                   </div>
                 </div>
               </div>
 
               <div className="garage-card">
-                <h4>Cost Analysis</h4>
+                <h4>Garage Operations</h4>
                 <div className="garage-stats">
                   <div className="garage-stat">
+                    <span>Vehicles in Garage</span>
+                    <strong className="info">{dashboardData.garage?.vehiclesInGarage || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Available Mechanics</span>
+                    <strong className="success">{dashboardData.garage?.availableMechanics || 0}</strong>
+                  </div>
+                  <div className="garage-stat">
+                    <span>Average Repair Time</span>
+                    <strong>{dashboardData.garage?.averageRepairTime || 0} days</strong>
+                  </div>
+                  <div className="garage-stat">
                     <span>Monthly Spending</span>
-                    <strong>{formatCurrency(dashboardData.garage.monthlySpending || 0)}</strong>
+                    <strong>{formatCurrency(dashboardData.garage?.monthlySpending || 0)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="garage-card">
+                <h4>Performance Metrics</h4>
+                <div className="garage-stats">
+                  <div className="garage-stat">
+                    <span>Work Order Completion</span>
+                    <strong className="success">
+                      {Math.round(((dashboardData.garage?.completedWorkOrders || 0) / Math.max(1, dashboardData.garage?.totalWorkOrders || 1)) * 100)}%
+                    </strong>
                   </div>
                   <div className="garage-stat">
-                    <span>Average Cost per Order</span>
-                    <strong>{formatCurrency(dashboardData.garage.avgCostPerOrder || 0)}</strong>
+                    <span>Maintenance Efficiency</span>
+                    <strong className="info">
+                      {Math.round(((dashboardData.garage?.upcomingMaintenance || 0) / Math.max(1, dashboardData.garage?.totalMaintenanceSchedules || 1)) * 100)}%
+                    </strong>
                   </div>
                   <div className="garage-stat">
-                    <span>Parts Cost</span>
-                    <strong>{formatCurrency(dashboardData.garage.partsCost || 0)}</strong>
+                    <span>Critical Issues</span>
+                    <strong className="danger">{dashboardData.garage?.criticalAlerts || 0}</strong>
                   </div>
                   <div className="garage-stat">
-                    <span>Labor Cost</span>
-                    <strong>{formatCurrency(dashboardData.garage.laborCost || 0)}</strong>
+                    <span>Pending Work</span>
+                    <strong className="warning">{dashboardData.garage?.pendingWorkOrders || 0}</strong>
                   </div>
                 </div>
               </div>
