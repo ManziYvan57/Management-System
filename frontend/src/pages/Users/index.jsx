@@ -46,12 +46,17 @@ const Users = () => {
         isActive: statusFilter !== 'all' ? statusFilter === 'active' : undefined
       };
 
+      console.log('🔍 Fetching users with params:', params);
+      console.log('👤 Current user from localStorage:', JSON.parse(localStorage.getItem('user') || '{}'));
+      
       const response = await usersAPI.getAll(params);
+      console.log('📊 Users API response:', response);
+      
       setUsers(response.users || []);
       setTotalPages(response.totalPages || 1);
       setTotalUsers(response.totalUsers || 0);
     } catch (err) {
-      console.error('Error fetching users:', err);
+      console.error('❌ Error fetching users:', err);
       setError(err.message || 'Failed to fetch users');
     } finally {
       setLoading(false);

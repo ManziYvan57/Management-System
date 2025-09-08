@@ -10,6 +10,13 @@ const router = express.Router();
 // @access  Private (admin only)
 router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => {
   try {
+    console.log('🔍 GET /api/users - User making request:', {
+      id: req.user._id,
+      username: req.user.username,
+      role: req.user.role,
+      terminal: req.user.terminal
+    });
+    
     const { page = 1, limit = 10, search, role, department, isActive } = req.query;
 
     // Build query
@@ -38,6 +45,14 @@ router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => 
 
     // Get total count
     const count = await User.countDocuments(query);
+
+    console.log('📊 Users query result:', {
+      query,
+      usersFound: users.length,
+      totalCount: count,
+      currentPage: page,
+      limit
+    });
 
     res.json({
       success: true,
