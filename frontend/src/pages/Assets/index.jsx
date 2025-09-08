@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Layout from '../../components/Layout';
-import { RoleBasedAccess } from '../../components/RoleBasedAccess';
 import { FaCar, FaTools, FaFileAlt } from 'react-icons/fa';
 import VehiclesTab from './VehiclesTab';
 import EquipmentTab from './EquipmentTab';
@@ -32,8 +31,7 @@ const Assets = () => {
   ];
 
   return (
-    <RoleBasedAccess user={JSON.parse(localStorage.getItem('user') || '{}')} module="assets" action="view">
-      <div className="assets-container">
+    <div className="assets-container">
         <div className="assets-header">
           <p>Manage your fleet vehicles and equipment inventory</p>
         </div>
@@ -59,7 +57,6 @@ const Assets = () => {
           </div>
         </div>
       </div>
-    </RoleBasedAccess>
   );
 };
 
