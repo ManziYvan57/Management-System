@@ -216,6 +216,18 @@ export const garageAPI = {
       method: 'PUT',
       body: JSON.stringify(maintenanceData)
     });
+  },
+  
+  deleteWorkOrder: async (id) => {
+    return apiRequest(`/garage/work-orders/${id}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  deleteMaintenanceSchedule: async (id) => {
+    return apiRequest(`/garage/maintenance-schedules/${id}`, {
+      method: 'DELETE'
+    });
   }
 };
 

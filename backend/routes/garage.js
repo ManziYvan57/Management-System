@@ -273,6 +273,68 @@ router.put('/maintenance-schedules/:id', protect, async (req, res) => {
   }
 });
 
+// DELETE /api/garage/work-orders/:id - Delete work order
+router.delete('/work-orders/:id', protect, async (req, res) => {
+  try {
+    const workOrder = await WorkOrder.findByIdAndDelete(req.params.id);
+
+    if (!workOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Work order not found'
+      });
+    }
+
+    // If work order had a vehicle, reset its status to active
+    if (workOrder.vehicle) {
+      await Vehicle.findByIdAndUpdate(
+        workOrder.vehicle,
+        { status: 'active' },
+        { new: true }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Work order deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete work order error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete work order' });
+  }
+});
+
+// DELETE /api/garage/maintenance-schedules/:id - Delete maintenance schedule
+router.delete('/maintenance-schedules/:id', protect, async (req, res) => {
+  try {
+    const maintenanceSchedule = await MaintenanceSchedule.findByIdAndDelete(req.params.id);
+
+    if (!maintenanceSchedule) {
+      return res.status(404).json({
+        success: false,
+        message: 'Maintenance schedule not found'
+      });
+    }
+
+    // If maintenance schedule had a vehicle, reset its status to active
+    if (maintenanceSchedule.vehicle) {
+      await Vehicle.findByIdAndUpdate(
+        maintenanceSchedule.vehicle,
+        { status: 'active' },
+        { new: true }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Maintenance schedule deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete maintenance schedule error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete maintenance schedule' });
+  }
+});
+
 // GET /api/garage/stats - Get garage statistics
 router.get('/stats', protect, async (req, res) => {
   try {

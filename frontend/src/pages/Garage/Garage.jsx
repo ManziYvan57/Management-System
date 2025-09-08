@@ -365,6 +365,37 @@ const Garage = () => {
     }
   };
 
+  // Delete functions for testing
+  const handleDeleteWorkOrder = async (workOrderId) => {
+    if (!window.confirm('Are you sure you want to delete this work order? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await garageAPI.deleteWorkOrder(workOrderId);
+      await refreshData();
+      alert('Work order deleted successfully');
+    } catch (err) {
+      console.error('Error deleting work order:', err);
+      alert(err.message || 'Failed to delete work order');
+    }
+  };
+
+  const handleDeleteMaintenance = async (maintenanceId) => {
+    if (!window.confirm('Are you sure you want to delete this maintenance schedule? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await garageAPI.deleteMaintenanceSchedule(maintenanceId);
+      await refreshData();
+      alert('Maintenance schedule deleted successfully');
+    } catch (err) {
+      console.error('Error deleting maintenance schedule:', err);
+      alert(err.message || 'Failed to delete maintenance schedule');
+    }
+  };
+
   const getWorkOrderStatus = (workOrder) => {
     if (workOrder.status === 'completed') return 'completed';
     if (workOrder.status === 'in_progress') return 'in-progress';
@@ -600,6 +631,14 @@ const Garage = () => {
                            </button>
                          </>
                        )}
+                       <button 
+                         onClick={() => handleDeleteWorkOrder(workOrder._id)}
+                         className="btn-delete"
+                         title="Delete Work Order"
+                         style={{ marginLeft: '8px' }}
+                       >
+                         Delete
+                       </button>
                      </div>
                    </td>
                  </tr>
@@ -703,6 +742,14 @@ const Garage = () => {
                              </button>
                            </>
                          )}
+                         <button 
+                           onClick={() => handleDeleteMaintenance(maintenance._id)}
+                           className="btn-delete"
+                           title="Delete Maintenance Schedule"
+                           style={{ marginLeft: '8px' }}
+                         >
+                           Delete
+                         </button>
                        </div>
                      </td>
                    </tr>
