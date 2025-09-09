@@ -29,11 +29,14 @@ router.post('/register', [
     .isLength({ min: 2, max: 50 })
     .withMessage('Last name must be between 2 and 50 characters'),
   body('role')
-    .isIn(['super_admin', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff', 'driver', 'customer_care'])
+    .isIn(['super_admin', 'admin', 'HR'])
     .withMessage('Invalid role'),
   body('department')
-    .isIn(['management', 'garage', 'transport', 'inventory', 'drivers', 'customer_care'])
-    .withMessage('Invalid department')
+    .isIn(['management', 'administration'])
+    .withMessage('Invalid department'),
+  body('terminal')
+    .isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba'])
+    .withMessage('Invalid terminal')
 ], protect, authorize('super_admin', 'admin'), async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -44,7 +47,7 @@ router.post('/register', [
       });
     }
 
-    const { username, email, password, firstName, lastName, role, department, phone } = req.body;
+    const { username, email, password, firstName, lastName, role, department, terminal, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -67,6 +70,7 @@ router.post('/register', [
       lastName,
       role,
       department,
+      terminal,
       phone
     });
 
@@ -84,6 +88,7 @@ router.post('/register', [
         lastName: user.lastName,
         role: user.role,
         department: user.department,
+        terminal: user.terminal,
         permissions: user.permissions
       }
     });
@@ -179,6 +184,7 @@ router.post('/login', [
         lastName: user.lastName,
         role: user.role,
         department: user.department,
+        terminal: user.terminal,
         permissions: user.permissions,
         lastLogin: user.lastLogin
       }
@@ -209,6 +215,7 @@ router.get('/me', protect, async (req, res) => {
         lastName: user.lastName,
         role: user.role,
         department: user.department,
+        terminal: user.terminal,
         permissions: user.permissions,
         lastLogin: user.lastLogin,
         isActive: user.isActive
@@ -278,6 +285,7 @@ router.put('/profile', [
         lastName: user.lastName,
         role: user.role,
         department: user.department,
+        terminal: user.terminal,
         permissions: user.permissions,
         phone: user.phone
       }

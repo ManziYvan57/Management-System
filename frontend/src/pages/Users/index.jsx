@@ -269,11 +269,7 @@ const Users = () => {
     const roleClasses = {
       'super_admin': 'badge-super-admin',
       'admin': 'badge-manager',
-      'garage_staff': 'badge-garage',
-      'transport_staff': 'badge-transport',
-      'inventory_staff': 'badge-inventory',
-      'driver': 'badge-driver',
-      'customer_care': 'badge-customer'
+      'HR': 'badge-hr'
     };
     return roleClasses[role] || 'badge-default';
   };
@@ -341,11 +337,7 @@ const Users = () => {
                 <option value="all">All Roles</option>
                 <option value="super_admin">Super Admin</option>
                 <option value="admin">Admin</option>
-                <option value="garage_staff">Garage Staff</option>
-                <option value="transport_staff">Transport Staff</option>
-                <option value="inventory_staff">Inventory Staff</option>
-                <option value="driver">Driver</option>
-                <option value="customer_care">Customer Care</option>
+                <option value="HR">HR</option>
               </select>
               <select
                 value={statusFilter}
@@ -563,11 +555,7 @@ const Users = () => {
                     required
                   >
                     <option value="admin">Admin</option>
-                    <option value="garage_staff">Garage Staff</option>
-                    <option value="transport_staff">Transport Staff</option>
-                    <option value="inventory_staff">Inventory Staff</option>
-                    <option value="driver">Driver</option>
-                    <option value="customer_care">Customer Care</option>
+                    <option value="HR">HR</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -592,11 +580,7 @@ const Users = () => {
                     required
                   >
                     <option value="management">Management</option>
-                    <option value="garage">Garage</option>
-                    <option value="transport">Transport</option>
-                    <option value="inventory">Inventory</option>
-                    <option value="drivers">Drivers</option>
-                    <option value="customer_care">Customer Care</option>
+                    <option value="administration">Administration</option>
                   </select>
                 </div>
                 <div className="form-actions">
@@ -687,11 +671,7 @@ const Users = () => {
                     required
                   >
                     <option value="admin">Admin</option>
-                    <option value="garage_staff">Garage Staff</option>
-                    <option value="transport_staff">Transport Staff</option>
-                    <option value="inventory_staff">Inventory Staff</option>
-                    <option value="driver">Driver</option>
-                    <option value="customer_care">Customer Care</option>
+                    <option value="HR">HR</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -724,11 +704,7 @@ const Users = () => {
                     required
                   >
                     <option value="management">Management</option>
-                    <option value="garage">Garage</option>
-                    <option value="transport">Transport</option>
-                    <option value="inventory">Inventory</option>
-                    <option value="drivers">Drivers</option>
-                    <option value="customer_care">Customer Care</option>
+                    <option value="administration">Administration</option>
                   </select>
                 </div>
                 <div className="form-group">

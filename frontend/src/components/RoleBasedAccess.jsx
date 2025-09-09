@@ -7,8 +7,8 @@ const RoleBasedAccess = ({ user, module, action = 'view', children, fallback = n
     return fallback;
   }
 
-  // Admin can access everything
-  if (user.role === 'admin') {
+  // Super admin and admin can access everything
+  if (user.role === 'super_admin' || user.role === 'admin') {
     return children;
   }
 
@@ -31,8 +31,8 @@ const TerminalBasedAccess = ({ user, allowedTerminals = [], children, fallback =
     return fallback;
   }
 
-  // Admin can access all terminals
-  if (user.role === 'admin') {
+  // Super admin and admin can access all terminals
+  if (user.role === 'super_admin' || user.role === 'admin') {
     return children;
   }
 

@@ -5,6 +5,31 @@ const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
+// @desc    Get all terminals
+// @route   GET /api/terminals
+// @access  Public
+router.get('/terminals', (req, res) => {
+  try {
+    const terminals = [
+      { id: 'Kigali', name: 'Kigali', country: 'Rwanda' },
+      { id: 'Kampala', name: 'Kampala', country: 'Uganda' },
+      { id: 'Nairobi', name: 'Nairobi', country: 'Kenya' },
+      { id: 'Juba', name: 'Juba', country: 'South Sudan' }
+    ];
+
+    res.json({
+      success: true,
+      terminals
+    });
+  } catch (error) {
+    console.error('Get terminals error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+});
+
 // @desc    Get all users
 // @route   GET /api/users
 // @access  Private (admin only)
@@ -114,10 +139,10 @@ router.post('/', [
     .normalizeEmail()
     .withMessage('Please provide a valid email'),
   body('role')
-    .isIn(['super_admin', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff', 'driver', 'customer_care','HR'])
+    .isIn(['super_admin', 'admin', 'HR'])
     .withMessage('Invalid role'),
   body('department')
-    .isIn(['management', 'garage', 'transport', 'inventory', 'drivers', 'customer_care'])
+    .isIn(['management', 'administration'])
     .withMessage('Invalid department'),
   body('terminal')
     .isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba'])
@@ -257,11 +282,11 @@ router.put('/:id', [
     .withMessage('Please provide a valid email'),
   body('role')
     .optional()
-    .isIn(['super_admin', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff', 'driver', 'customer_care'])
+    .isIn(['super_admin', 'admin', 'HR'])
     .withMessage('Invalid role'),
   body('department')
     .optional()
-    .isIn(['management', 'garage', 'transport', 'inventory', 'drivers', 'customer_care'])
+    .isIn(['management', 'administration'])
     .withMessage('Invalid department'),
   body('phone')
     .optional()
