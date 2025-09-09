@@ -65,7 +65,7 @@
   margin-bottom: 20px;
 }
 
-.form-group label {
+.login-card .form-group label {
   display: block;
   margin-bottom: 6px;
   color: #cbd5e1;
@@ -73,7 +73,7 @@
   font-size: 0.9rem;
 }
 
-.form-group input {
+.login-card .form-group input {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -86,15 +86,13 @@
   caret-color: #ffffff;
 }
 
-.form-group input::placeholder {
+.login-card .form-group input::placeholder {
   color: #94a3b8;
 }
 
-.form-group #username, #password {
-  color: #ffffff;
-}
+.login-card #username, .login-card #password { color: #ffffff; }
 
-.form-group input:focus {
+.login-card .form-group input:focus {
   outline: none;
   border-color: rgba(59, 130, 246, 0.7);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
