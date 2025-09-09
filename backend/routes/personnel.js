@@ -69,7 +69,7 @@ const validatePersonnel = [
 // @desc    Get all personnel
 // @route   GET /api/personnel
 // @access  Private
-router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
     const {
       search,
@@ -141,7 +141,7 @@ router.get('/', protect, authorize('personnel', 'read'), async (req, res) => {
 // @desc    Get personnel by ID
 // @route   GET /api/personnel/:id
 // @access  Private
-router.get('/:id', protect, authorize('personnel', 'read'), async (req, res) => {
+router.get('/:id', protect, async (req, res) => {
   try {
     const personnel = await Personnel.findById(req.params.id)
       .populate('assignedVehicle', 'plateNumber make model year')
@@ -361,7 +361,7 @@ router.delete('/:id', protect, authorize('personnel', 'delete'), async (req, res
 // @desc    Get personnel statistics
 // @route   GET /api/personnel/stats/overview
 // @access  Private
-router.get('/stats/overview', protect, authorize('personnel', 'read'), async (req, res) => {
+router.get('/stats/overview', protect, async (req, res) => {
   try {
     const { terminal } = req.query;
     const query = {};
@@ -517,7 +517,7 @@ router.get('/stats/overview', protect, authorize('personnel', 'read'), async (re
 // @desc    Get drivers only
 // @route   GET /api/personnel/drivers
 // @access  Private
-router.get('/drivers', protect, authorize('personnel', 'read'), async (req, res) => {
+router.get('/drivers', protect, async (req, res) => {
   try {
     const {
       search,

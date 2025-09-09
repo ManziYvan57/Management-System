@@ -56,15 +56,19 @@ const authorize = (...permissions) => {
     if (permissions.length === 2 && typeof permissions[0] === 'string' && typeof permissions[1] === 'string') {
       const [module, action] = permissions;
       
-      // For now, allow admin role to access all modules
-      if (req.user.role === 'admin') {
+      // Allow super_admin and admin to access all modules
+      if (req.user.role === 'super_admin' || req.user.role === 'admin') {
         return next();
       }
       
-      // For other roles, you can add specific module-based permissions here
+      // Check user permissions for the specific module and action
+      if (req.user.permissions && req.user.permissions[module] && req.user.permissions[module][action]) {
+        return next();
+      }
+      
       return res.status(403).json({
         success: false,
-        error: `User role '${req.user.role}' is not authorized to ${action} in ${module} module`
+        error: `You do not have permission to ${action} in ${module} module`
       });
     }
 

@@ -192,7 +192,7 @@ UserSchema.pre('save', async function(next) {
 
 // Set default permissions based on role
 UserSchema.pre('save', function(next) {
-  if (this.isModified('role')) {
+  if (this.isModified('role') || this.isNew) {
     this.setDefaultPermissions();
   }
   next();
