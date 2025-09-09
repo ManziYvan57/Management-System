@@ -13,6 +13,19 @@ const Personnel = () => {
   const userTerminalId = user.terminalId || user?.terminal?._id || user?.terminal_id;
   const userRole = user.role || 'user';
   
+  // Helper function to check if user has permission for an action
+  const hasPermission = (module, action) => {
+    if (userRole === 'super_admin' || userRole === 'admin') {
+      return true; // Admin and super admin have all permissions
+    }
+    
+    if (user.permissions && user.permissions[module]) {
+      return user.permissions[module][action] || false;
+    }
+    
+    return false; // Default to no permission
+  };
+  
   // Terminal tabs state
   const [activeTerminal, setActiveTerminal] = useState(userTerminal);
   const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
@@ -249,13 +262,15 @@ const Personnel = () => {
         </div>
         
         <div className="header-right">
-          <button 
-            className="add-button"
-            onClick={() => setShowAddForm(true)}
-          >
-            <FaPlus />
-            Add Personnel
-          </button>
+          {hasPermission('personnel', 'create') && (
+            <button 
+              className="add-button"
+              onClick={() => setShowAddForm(true)}
+            >
+              <FaPlus />
+              Add Personnel
+            </button>
+          )}
         </div>
       </div>
 
@@ -388,13 +403,15 @@ const Personnel = () => {
             <FaUser className="empty-icon" />
             <h3>No personnel found</h3>
             <p>Add your first personnel member to get started</p>
-            <button 
-              className="add-button"
-              onClick={() => setShowAddForm(true)}
-            >
-              <FaPlus />
-              Add Personnel
-            </button>
+            {hasPermission('personnel', 'create') && (
+              <button 
+                className="add-button"
+                onClick={() => setShowAddForm(true)}
+              >
+                <FaPlus />
+                Add Personnel
+              </button>
+            )}
           </div>
         ) : (
           <table className="personnel-table">
@@ -489,23 +506,27 @@ const Personnel = () => {
                       >
                         <FaEye />
                       </button>
-                      <button
-                        className="action-btn edit-btn"
-                        title="Edit Personnel"
-                        onClick={() => {
-                          setEditingPersonnel(person);
-                          setShowEditForm(true);
-                        }}
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        className="action-btn delete-btn"
-                        title="Delete Personnel"
-                        onClick={() => handleDeletePersonnel(person._id)}
-                      >
-                        <FaTrash />
-                      </button>
+                      {hasPermission('personnel', 'edit') && (
+                        <button
+                          className="action-btn edit-btn"
+                          title="Edit Personnel"
+                          onClick={() => {
+                            setEditingPersonnel(person);
+                            setShowEditForm(true);
+                          }}
+                        >
+                          <FaEdit />
+                        </button>
+                      )}
+                      {hasPermission('personnel', 'delete') && (
+                        <button
+                          className="action-btn delete-btn"
+                          title="Delete Personnel"
+                          onClick={() => handleDeletePersonnel(person._id)}
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -631,16 +652,18 @@ const Personnel = () => {
                       >
                             <FaEdit />
                       </button>
-                        <button
-                          className="action-btn infraction-btn"
-                            title="Add Infraction"
-                          onClick={() => {
-                            setSelectedPersonnel(person);
-                            setShowInfractionForm(true);
-                          }}
-                        >
-                            <FaExclamationTriangle />
-                      </button>
+                        {hasPermission('personnel', 'edit') && (
+                          <button
+                            className="action-btn infraction-btn"
+                              title="Add Infraction"
+                            onClick={() => {
+                              setSelectedPersonnel(person);
+                              setShowInfractionForm(true);
+                            }}
+                          >
+                              <FaExclamationTriangle />
+                        </button>
+                        )}
                     </div>
                   </td>
                 </tr>
@@ -703,24 +726,28 @@ const Personnel = () => {
                             </td>
                             <td>
                               <div className="action-buttons">
-                                <button
-                                  className="action-btn edit-btn"
-                                  title="Edit Infraction"
-                                  onClick={() => {
-                                    setSelectedPersonnel(person);
-                                    setEditingInfraction(infraction);
-                                    setShowInfractionForm(true);
-                                  }}
-                                >
-                                  <FaEdit />
-                                </button>
-                                <button
-                                  className="action-btn delete-btn"
-                                  title="Delete Infraction"
-                                  onClick={() => handleDeleteInfraction(person._id, infraction._id)}
-                                >
-                                  <FaTrash />
-                                </button>
+                                {hasPermission('personnel', 'edit') && (
+                                  <button
+                                    className="action-btn edit-btn"
+                                    title="Edit Infraction"
+                                    onClick={() => {
+                                      setSelectedPersonnel(person);
+                                      setEditingInfraction(infraction);
+                                      setShowInfractionForm(true);
+                                    }}
+                                  >
+                                    <FaEdit />
+                                  </button>
+                                )}
+                                {hasPermission('personnel', 'delete') && (
+                                  <button
+                                    className="action-btn delete-btn"
+                                    title="Delete Infraction"
+                                    onClick={() => handleDeleteInfraction(person._id, infraction._id)}
+                                  >
+                                    <FaTrash />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>

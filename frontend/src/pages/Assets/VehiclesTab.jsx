@@ -6,6 +6,23 @@ import './Assets.css';
 import './VehiclesTab.css';
 
 const VehiclesTab = ({ activeTerminal }) => {
+  // Get user information from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user.role || 'user';
+  
+  // Helper function to check if user has permission for an action
+  const hasPermission = (module, action) => {
+    if (userRole === 'super_admin' || userRole === 'admin') {
+      return true; // Admin and super admin have all permissions
+    }
+    
+    if (user.permissions && user.permissions[module]) {
+      return user.permissions[module][action] || false;
+    }
+    
+    return false; // Default to no permission
+  };
+
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -135,13 +152,15 @@ const VehiclesTab = ({ activeTerminal }) => {
         </div>
         
         <div className="header-right">
-          <button 
-            className="add-button"
-            onClick={() => setShowAddForm(true)}
-          >
-            <FaPlus />
-            Add Vehicle
-          </button>
+          {hasPermission('assets', 'create') && (
+            <button 
+              className="add-button"
+              onClick={() => setShowAddForm(true)}
+            >
+              <FaPlus />
+              Add Vehicle
+            </button>
+          )}
         </div>
       </div>
 
@@ -207,13 +226,15 @@ const VehiclesTab = ({ activeTerminal }) => {
                      <FaBus className="empty-icon" />
                      <h3>No vehicles found</h3>
             <p>Add your first vehicle to get started</p>
-            <button 
-              className="add-button"
-              onClick={() => setShowAddForm(true)}
-            >
-              <FaPlus />
-              Add Vehicle
-            </button>
+            {hasPermission('assets', 'create') && (
+              <button 
+                className="add-button"
+                onClick={() => setShowAddForm(true)}
+              >
+                <FaPlus />
+                Add Vehicle
+              </button>
+            )}
           </div>
         ) : (
           <table className="vehicles-table">
@@ -295,23 +316,27 @@ const VehiclesTab = ({ activeTerminal }) => {
                        >
                          <FaEye />
                        </button>
-                       <button
-                         className="action-btn edit-btn"
-                         title="Edit Vehicle"
-                         onClick={() => {
-                           setEditingVehicle(vehicle);
-                           setShowEditForm(true);
-                         }}
-                       >
-                         <FaEdit />
-                       </button>
-                       <button
-                         className="action-btn delete-btn"
-                         title="Delete Vehicle"
-                         onClick={() => handleDeleteVehicle(vehicle._id)}
-                       >
-                         <FaTrash />
-                       </button>
+                       {hasPermission('assets', 'edit') && (
+                         <button
+                           className="action-btn edit-btn"
+                           title="Edit Vehicle"
+                           onClick={() => {
+                             setEditingVehicle(vehicle);
+                             setShowEditForm(true);
+                           }}
+                         >
+                           <FaEdit />
+                         </button>
+                       )}
+                       {hasPermission('assets', 'delete') && (
+                         <button
+                           className="action-btn delete-btn"
+                           title="Delete Vehicle"
+                           onClick={() => handleDeleteVehicle(vehicle._id)}
+                         >
+                           <FaTrash />
+                         </button>
+                       )}
                      </div>
                   </td>
                 </tr>

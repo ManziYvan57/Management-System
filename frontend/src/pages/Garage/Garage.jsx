@@ -9,6 +9,19 @@ const Garage = () => {
   const userTerminal = user.terminal || 'Kigali';
   const userRole = user.role || 'user';
   
+  // Helper function to check if user has permission for an action
+  const hasPermission = (module, action) => {
+    if (userRole === 'super_admin' || userRole === 'admin') {
+      return true; // Admin and super admin have all permissions
+    }
+    
+    if (user.permissions && user.permissions[module]) {
+      return user.permissions[module][action] || false;
+    }
+    
+    return false; // Default to no permission
+  };
+  
   // Terminal tabs state
   const [activeTerminal, setActiveTerminal] = useState(userTerminal);
   const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
@@ -581,18 +594,22 @@ const Garage = () => {
 
       {/* Action Buttons */}
       <div className="action-buttons">
-        <button 
-          className="btn-primary"
-          onClick={() => setShowWorkOrderForm(true)}
-        >
-          Create Work Order
-        </button>
-        <button 
-          className="btn-secondary"
-          onClick={() => setShowMaintenanceForm(true)}
-        >
-          Schedule Maintenance
-        </button>
+        {hasPermission('garage', 'create') && (
+          <button 
+            className="btn-primary"
+            onClick={() => setShowWorkOrderForm(true)}
+          >
+            Create Work Order
+          </button>
+        )}
+        {hasPermission('garage', 'create') && (
+          <button 
+            className="btn-secondary"
+            onClick={() => setShowMaintenanceForm(true)}
+          >
+            Schedule Maintenance
+          </button>
+        )}
       </div>
 
       {/* Work Orders Section */}
@@ -657,7 +674,7 @@ const Garage = () => {
                    </td>
                    <td>
                      <div className="action-controls">
-                       {workOrder.status !== 'completed' && (
+                       {workOrder.status !== 'completed' && hasPermission('garage', 'edit') && (
                          <>
                            <button 
                              onClick={() => handleSetWorkOrderComplete(workOrder._id)}
@@ -677,14 +694,16 @@ const Garage = () => {
                            </button>
                          </>
                        )}
-                       <button 
-                         onClick={() => handleDeleteWorkOrder(workOrder._id)}
-                         className="btn-delete"
-                         title="Delete Work Order"
-                         style={{ marginLeft: '8px' }}
-                       >
-                         Delete
-                       </button>
+                       {hasPermission('garage', 'delete') && (
+                         <button 
+                           onClick={() => handleDeleteWorkOrder(workOrder._id)}
+                           className="btn-delete"
+                           title="Delete Work Order"
+                           style={{ marginLeft: '8px' }}
+                         >
+                           Delete
+                         </button>
+                       )}
                      </div>
                    </td>
                  </tr>
@@ -768,7 +787,7 @@ const Garage = () => {
                      </td>
                      <td>
                        <div className="action-controls">
-                         {maintenance.status !== 'completed' && (
+                         {maintenance.status !== 'completed' && hasPermission('garage', 'edit') && (
                            <>
                              <button 
                                onClick={() => handleSetMaintenanceComplete(maintenance._id)}
@@ -788,14 +807,16 @@ const Garage = () => {
                              </button>
                            </>
                          )}
-                         <button 
-                           onClick={() => handleDeleteMaintenance(maintenance._id)}
-                           className="btn-delete"
-                           title="Delete Maintenance Schedule"
-                           style={{ marginLeft: '8px' }}
-                         >
-                           Delete
-                         </button>
+                         {hasPermission('garage', 'delete') && (
+                           <button 
+                             onClick={() => handleDeleteMaintenance(maintenance._id)}
+                             className="btn-delete"
+                             title="Delete Maintenance Schedule"
+                             style={{ marginLeft: '8px' }}
+                           >
+                             Delete
+                           </button>
+                         )}
                        </div>
                      </td>
                    </tr>

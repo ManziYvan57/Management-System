@@ -27,7 +27,6 @@ const Users = () => {
     role: 'admin',
     terminal: 'Kigali',
     terminalId: '',
-    department: 'management',
     phone: ''
   });
 
@@ -167,7 +166,6 @@ const Users = () => {
           role: 'admin',
           terminal: 'Kigali',
           terminalId: '',
-          department: 'management',
           phone: ''
         });
         setShowAddForm(false);
@@ -337,7 +335,7 @@ const Users = () => {
                 <option value="all">All Roles</option>
                 <option value="super_admin">Super Admin</option>
                 <option value="admin">Admin</option>
-                <option value="HR">HR</option>
+                <option value="managers">Managers</option>
               </select>
               <select
                 value={statusFilter}
@@ -385,7 +383,6 @@ const Users = () => {
                   <th>Email</th>
                   <th>Role</th>
                   <th>Terminal</th>
-                  <th>Department</th>
                   <th>Status</th>
                   <th>Created</th>
                   <th>Password</th>
@@ -408,7 +405,6 @@ const Users = () => {
                         {user.terminal}
                       </span>
                     </td>
-                    <td>{user.department || 'N/A'}</td>
                     <td>
                       <span className={`status-badge ${user.isActive ? 'active' : 'inactive'}`}>
                         {user.isActive ? 'Active' : 'Inactive'}
@@ -555,7 +551,7 @@ const Users = () => {
                     required
                   >
                     <option value="admin">Admin</option>
-                    <option value="HR">HR</option>
+                    <option value="managers">Managers</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -569,18 +565,6 @@ const Users = () => {
                     {terminals.map(t => (
                       <option key={String(t._id)} value={String(t._id)}>{t.name}</option>
                     ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Department:</label>
-                  <select
-                    name="department"
-                    value={newUser.department}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="management">Management</option>
-                    <option value="administration">Administration</option>
                   </select>
                 </div>
                 <div className="form-actions">
@@ -671,7 +655,7 @@ const Users = () => {
                     required
                   >
                     <option value="admin">Admin</option>
-                    <option value="HR">HR</option>
+                    <option value="managers">Managers</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -693,18 +677,6 @@ const Users = () => {
                     {terminals.map(t => (
                       <option key={String(t._id)} value={String(t._id)}>{t.name}</option>
                     ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Department:</label>
-                  <select
-                    name="department"
-                    value={editingUser.department}
-                    onChange={(e) => setEditingUser({...editingUser, department: e.target.value})}
-                    required
-                  >
-                    <option value="management">Management</option>
-                    <option value="administration">Administration</option>
                   </select>
                 </div>
                 <div className="form-group">

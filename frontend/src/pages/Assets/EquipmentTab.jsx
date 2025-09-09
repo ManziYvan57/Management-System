@@ -6,6 +6,23 @@ import './Assets.css';
 import './EquipmentTab.css';
 
 const EquipmentTab = ({ activeTerminal }) => {
+  // Get user information from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user.role || 'user';
+  
+  // Helper function to check if user has permission for an action
+  const hasPermission = (module, action) => {
+    if (userRole === 'super_admin' || userRole === 'admin') {
+      return true; // Admin and super admin have all permissions
+    }
+    
+    if (user.permissions && user.permissions[module]) {
+      return user.permissions[module][action] || false;
+    }
+    
+    return false; // Default to no permission
+  };
+
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -124,13 +141,15 @@ const EquipmentTab = ({ activeTerminal }) => {
         </div>
         
         <div className="header-right">
-          <button 
-            className="add-button"
-            onClick={() => setShowAddForm(true)}
-          >
-            <FaPlus />
-            Add Equipment
-          </button>
+          {hasPermission('assets', 'create') && (
+            <button 
+              className="add-button"
+              onClick={() => setShowAddForm(true)}
+            >
+              <FaPlus />
+              Add Equipment
+            </button>
+          )}
         </div>
       </div>
 
@@ -195,13 +214,15 @@ const EquipmentTab = ({ activeTerminal }) => {
             <FaTools className="empty-icon" />
             <h3>No equipment found</h3>
             <p>Add your first equipment item to get started</p>
-            <button 
-              className="add-button"
-              onClick={() => setShowAddForm(true)}
-            >
-              <FaPlus />
-              Add Equipment
-            </button>
+            {hasPermission('assets', 'create') && (
+              <button 
+                className="add-button"
+                onClick={() => setShowAddForm(true)}
+              >
+                <FaPlus />
+                Add Equipment
+              </button>
+            )}
           </div>
         ) : (
           <table className="vehicles-table">
@@ -249,23 +270,27 @@ const EquipmentTab = ({ activeTerminal }) => {
                         >
                           <FaEye />
                         </button>
-                        <button
-                          className="action-btn edit-btn"
-                          title="Edit Equipment"
-                          onClick={() => {
-                            setEditingEquipment(item);
-                            setShowEditForm(true);
-                          }}
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          className="action-btn delete-btn"
-                          title="Delete Equipment"
-                          onClick={() => handleDeleteEquipment(item._id)}
-                        >
-                          <FaTrash />
-                        </button>
+                        {hasPermission('assets', 'edit') && (
+                          <button
+                            className="action-btn edit-btn"
+                            title="Edit Equipment"
+                            onClick={() => {
+                              setEditingEquipment(item);
+                              setShowEditForm(true);
+                            }}
+                          >
+                            <FaEdit />
+                          </button>
+                        )}
+                        {hasPermission('assets', 'delete') && (
+                          <button
+                            className="action-btn delete-btn"
+                            title="Delete Equipment"
+                            onClick={() => handleDeleteEquipment(item._id)}
+                          >
+                            <FaTrash />
+                          </button>
+                        )}
                      </div>
                   </td>
                 </tr>

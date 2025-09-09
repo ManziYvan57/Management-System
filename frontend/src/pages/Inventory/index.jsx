@@ -10,6 +10,19 @@ const Inventory = () => {
   const userTerminal = user.terminal || 'Kigali';
   const userRole = user.role || 'user';
   
+  // Helper function to check if user has permission for an action
+  const hasPermission = (module, action) => {
+    if (userRole === 'super_admin' || userRole === 'admin') {
+      return true; // Admin and super admin have all permissions
+    }
+    
+    if (user.permissions && user.permissions[module]) {
+      return user.permissions[module][action] || false;
+    }
+    
+    return false; // Default to no permission
+  };
+  
   // Debug user information
   console.log('🔍 Inventory - User data:', user);
   console.log('🔍 Inventory - User role:', userRole);
@@ -725,18 +738,26 @@ const Inventory = () => {
       
       {/* Quick Actions */}
       <div className="quick-actions">
-        <button onClick={() => setShowAddItemForm(true)} className="action-btn">
-          Add Item
-        </button>
-        <button onClick={() => setShowPurchaseOrderForm(true)} className="action-btn">
-          Purchase Order
-        </button>
-        <button onClick={() => setShowSupplierForm(true)} className="action-btn">
-          Add Supplier
-        </button>
-        <button onClick={() => setShowStockMovementForm(true)} className="action-btn">
-           Stock Usage
-        </button>
+        {hasPermission('inventory', 'create') && (
+          <button onClick={() => setShowAddItemForm(true)} className="action-btn">
+            Add Item
+          </button>
+        )}
+        {hasPermission('inventory', 'create') && (
+          <button onClick={() => setShowPurchaseOrderForm(true)} className="action-btn">
+            Purchase Order
+          </button>
+        )}
+        {hasPermission('inventory', 'create') && (
+          <button onClick={() => setShowSupplierForm(true)} className="action-btn">
+            Add Supplier
+          </button>
+        )}
+        {hasPermission('inventory', 'create') && (
+          <button onClick={() => setShowStockMovementForm(true)} className="action-btn">
+             Stock Usage
+          </button>
+        )}
       </div>
 
             {/* Inventory List */}
@@ -800,22 +821,26 @@ const Inventory = () => {
                    </td>
                    <td>
                      <div className="action-controls">
-                                               <button 
-                          onClick={() => handleEditItem(item)}
-                          className="edit-btn"
-                          title="Edit Item"
-                          disabled={isUpdatingItem || isDeletingItem}
-                        >
-                          {isUpdatingItem ? 'Editing...' : 'Edit'}
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteItem(item._id)}
-                          className="delete-btn"
-                          title="Delete Item"
-                          disabled={isUpdatingItem || isDeletingItem}
-                        >
-                          {isDeletingItem ? 'Deleting...' : 'Delete'}
-                        </button>
+                       {hasPermission('inventory', 'edit') && (
+                         <button 
+                           onClick={() => handleEditItem(item)}
+                           className="edit-btn"
+                           title="Edit Item"
+                           disabled={isUpdatingItem || isDeletingItem}
+                         >
+                           {isUpdatingItem ? 'Editing...' : 'Edit'}
+                         </button>
+                       )}
+                       {hasPermission('inventory', 'delete') && (
+                         <button 
+                           onClick={() => handleDeleteItem(item._id)}
+                           className="delete-btn"
+                           title="Delete Item"
+                           disabled={isUpdatingItem || isDeletingItem}
+                         >
+                           {isDeletingItem ? 'Deleting...' : 'Delete'}
+                         </button>
+                       )}
                      </div>
                    </td>
                 </tr>
@@ -953,7 +978,7 @@ const Inventory = () => {
                     </span>
                   </td>
                   <td>
-                    {order.status === 'pending' && (
+                    {order.status === 'pending' && hasPermission('inventory', 'edit') && (
                                              <button 
                          onClick={() => handleMarkOrderReceived(order._id)} 
                          className="status-btn"
@@ -1033,22 +1058,26 @@ const Inventory = () => {
                    </td>
                                        <td>
                       <div className="action-controls">
-                        <button 
-                          onClick={() => handleEditSupplier(supplier)}
-                          className="edit-btn"
-                          title="Edit Supplier"
-                          disabled={isEditingSupplier || isDeletingSupplier}
-                        >
-                          {isEditingSupplier ? 'Editing...' : 'Edit'}
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteSupplier(supplier._id)}
-                          className="delete-btn"
-                          title="Delete Supplier"
-                          disabled={isEditingSupplier || isDeletingSupplier}
-                        >
-                          {isDeletingSupplier ? 'Deleting...' : 'Delete'}
-                        </button>
+                        {hasPermission('inventory', 'edit') && (
+                          <button 
+                            onClick={() => handleEditSupplier(supplier)}
+                            className="edit-btn"
+                            title="Edit Supplier"
+                            disabled={isEditingSupplier || isDeletingSupplier}
+                          >
+                            {isEditingSupplier ? 'Editing...' : 'Edit'}
+                          </button>
+                        )}
+                        {hasPermission('inventory', 'delete') && (
+                          <button 
+                            onClick={() => handleDeleteSupplier(supplier._id)}
+                            className="delete-btn"
+                            title="Delete Supplier"
+                            disabled={isEditingSupplier || isDeletingSupplier}
+                          >
+                            {isDeletingSupplier ? 'Deleting...' : 'Delete'}
+                          </button>
+                        )}
                       </div>
                     </td>
                  </tr>
