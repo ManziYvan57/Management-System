@@ -55,7 +55,7 @@ const migrateRolesAndRemoveDepartments = async () => {
             personnel: { view: true, create: false, edit: false, delete: false },
             transport: { view: true, create: false, edit: false, delete: false },
             reports: { view: true, create: false, export: false },
-            users: { view: true, create: false, edit: false, delete: false }
+            users: { view: false, create: false, edit: false, delete: false }
           },
           managers: {
             garage: { view: true, create: false, edit: false, delete: false },
