@@ -8,7 +8,8 @@ import './Personnel.css';
 const Personnel = () => {
   // Get user information from localStorage
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userTerminal = user.terminal || 'Kigali';
+  const storedSelectedTerminal = localStorage.getItem('selectedTerminal');
+  const userTerminal = storedSelectedTerminal || user.terminal || 'Kigali';
   const userTerminalId = user.terminalId || user?.terminal?._id || user?.terminal_id;
   const userRole = user.role || 'user';
   
@@ -65,6 +66,7 @@ const Personnel = () => {
   // Handle terminal tab change
   const handleTerminalChange = (terminal) => {
     setActiveTerminal(terminal);
+    localStorage.setItem('selectedTerminal', terminal);
   };
 
   // Get terminals available to user based on role

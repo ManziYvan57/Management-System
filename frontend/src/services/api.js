@@ -19,6 +19,8 @@ export const apiRequest = async (endpoint, options = {}) => {
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
+      // Optional terminal header for backends that read terminal from headers
+      ...(localStorage.getItem('selectedTerminal') ? { 'X-Terminal': localStorage.getItem('selectedTerminal') } : {}),
       ...options.headers
     },
     ...options
@@ -724,6 +726,13 @@ export const stockMovementsAPI = {
   getStats: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/stock-movements/stats${queryString ? `?${queryString}` : ''}`);
+  }
+};
+
+// Terminals API functions
+export const terminalsAPI = {
+  getAll: async () => {
+    return apiRequest('/terminals');
   }
 };
 

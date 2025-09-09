@@ -16,7 +16,8 @@ const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Terminal management
-  const userTerminal = (typeof user.terminal === 'string' ? user.terminal : user.terminal?.name) || user.terminal || 'Kigali';
+  const storedSelectedTerminal = localStorage.getItem('selectedTerminal');
+  const userTerminal = storedSelectedTerminal || (typeof user.terminal === 'string' ? user.terminal : user.terminal?.name) || user.terminal || 'Kigali';
   const userTerminalId = user.terminalId || user?.terminal?._id || user?.terminal_id;
   const userRole = user.role || 'user';
   const [activeTerminal, setActiveTerminal] = useState(userTerminal);
@@ -35,6 +36,7 @@ const Dashboard = () => {
   // Handle terminal tab change
   const handleTerminalChange = (terminal) => {
     setActiveTerminal(terminal);
+    localStorage.setItem('selectedTerminal', terminal);
   };
 
   // Get terminals available to user based on role
