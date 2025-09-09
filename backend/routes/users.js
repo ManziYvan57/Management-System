@@ -114,7 +114,7 @@ router.post('/', [
     .normalizeEmail()
     .withMessage('Please provide a valid email'),
   body('role')
-    .isIn(['super_admin', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff', 'driver', 'customer_care'])
+    .isIn(['super_admin', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff', 'driver', 'customer_care','HR'])
     .withMessage('Invalid role'),
   body('department')
     .isIn(['management', 'garage', 'transport', 'inventory', 'drivers', 'customer_care'])
