@@ -39,8 +39,11 @@ const LoginPage = () => {
       // Navigate to dashboard
       navigate('/');
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message || 'Network error. Please check your connection and try again.');
+      console.error('Login error');
+      // Avoid leaking details from server error responses
+      setError('Invalid credentials or network issue. Please try again.');
+      // Clear password field on failure
+      setCredentials(prev => ({ ...prev, password: '' }));
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +59,7 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username" id='username'>Username</label>
             <input
               type="text"
               id="username"
@@ -65,11 +68,12 @@ const LoginPage = () => {
               onChange={handleInputChange}
               required
               placeholder="Enter your username"
+              autoComplete="username"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password" id='password'>Password</label>
             <input
               type="password"
               id="password"
@@ -78,6 +82,7 @@ const LoginPage = () => {
               onChange={handleInputChange}
               required
               placeholder="Enter your password"
+              autoComplete="current-password"
             />
           </div>
 
@@ -92,15 +97,7 @@ const LoginPage = () => {
           </button>
         </form>
 
-        <div className="test-accounts">
-          <h3>🧪 Test Account</h3>
-          <div className="account-list">
-            <div className="account-item">
-              <strong>Super Admin:</strong> admin / Admin123!
-            </div>
-          </div>
-          <p className="test-note">Use this account to test all features of the system.</p>
-        </div>
+        
       </div>
     </div>
   );

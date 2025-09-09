@@ -619,7 +619,7 @@ tr:hover {
   border-bottom: 2px solid #e5e7eb;
 }
 
-.header-left h2 {
+.personnel-header .header-left h2 {
   margin: 0;
   color: #1f2937;
   font-size: 1.875rem;
@@ -633,7 +633,7 @@ tr:hover {
   display: block;
 }
 
-.header-right .add-button {
+.personnel-header .header-right .add-button {
   background: #10b981;
   color: white;
   border: none;
@@ -647,7 +647,7 @@ tr:hover {
   gap: 0.5rem;
 }
 
-.header-right .add-button:hover {
+.personnel-header .header-right .add-button:hover {
   background: #059669;
   transform: translateY(-1px);
 }

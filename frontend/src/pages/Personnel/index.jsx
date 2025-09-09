@@ -9,6 +9,7 @@ const Personnel = () => {
   // Get user information from localStorage
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userTerminal = user.terminal || 'Kigali';
+  const userTerminalId = user.terminalId || user?.terminal?._id || user?.terminal_id;
   const userRole = user.role || 'user';
   
   // Terminal tabs state
@@ -48,6 +49,7 @@ const Personnel = () => {
       if (roleFilter) params.role = roleFilter;
       if (departmentFilter) params.department = departmentFilter;
       if (activeTerminal) params.terminal = activeTerminal; // Use activeTerminal instead of terminalFilter
+      if (userTerminalId) params.terminalId = userTerminalId; // Include id when backend expects it
       if (statusFilter) params.employmentStatus = statusFilter;
       
       const response = await personnelAPI.getAll(params);

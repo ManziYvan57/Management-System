@@ -10,13 +10,13 @@
   width: 100%;
 }
 
-.header-left {
+.vehicle-documents-header .header-left {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.header-right {
+.vehicle-documents-header .header-right {
   display: flex;
   align-items: center;
 }

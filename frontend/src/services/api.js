@@ -64,6 +64,18 @@ export const apiRequest = async (endpoint, options = {}) => {
         window.location.href = '/login';
       }
       
+      if (response.status === 403) {
+        // Forbidden: show a clear, actionable error but do not log the user out
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const terminal = user?.terminal || 'N/A';
+        const reason = data?.message || 'You do not have permission to access this resource.';
+        const msg = `Access denied (403). Terminal: ${terminal}. ${reason}`;
+        console.warn('🚫 Forbidden:', msg);
+        const err = new Error(msg);
+        err.status = 403;
+        throw err;
+      }
+      
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
     
