@@ -48,7 +48,7 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['super_admin', 'admin', 'HR'],
+    enum: ['super_admin', 'admin', 'managers'],
     default: 'admin'
   },
   route: {
@@ -60,11 +60,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'maintenance', 'both'],
     default: 'both'
-  },
-  department: {
-    type: String,
-    enum: ['management', 'administration'],
-    required: [true, 'Please specify department']
   },
   terminal: {
     type: String,
@@ -162,7 +157,6 @@ UserSchema.virtual('fullName').get(function() {
 UserSchema.index({ email: 1 });
 UserSchema.index({ username: 1 });
 UserSchema.index({ role: 1 });
-UserSchema.index({ department: 1 });
 UserSchema.index({ isActive: 1 });
 
 // Auto-generate password for new users (must happen before password hashing)
@@ -257,15 +251,15 @@ UserSchema.methods.resetLoginAttempts = function() {
         users: { view: true, create: true, edit: true, delete: true }
       },
       admin: {
-        garage: { view: true, create: true, edit: true, delete: true },
-        inventory: { view: true, create: true, edit: true, delete: true },
-        assets: { view: true, create: true, edit: true, delete: true },
-        personnel: { view: true, create: true, edit: true, delete: true },
-        transport: { view: true, create: true, edit: true, delete: true },
-        reports: { view: true, create: true, export: true },
-        users: { view: true, create: true, edit: true, delete: true }
+        garage: { view: true, create: false, edit: false, delete: false },
+        inventory: { view: true, create: false, edit: false, delete: false },
+        assets: { view: true, create: false, edit: false, delete: false },
+        personnel: { view: true, create: false, edit: false, delete: false },
+        transport: { view: true, create: false, edit: false, delete: false },
+        reports: { view: true, create: false, export: false },
+        users: { view: true, create: false, edit: false, delete: false }
       },
-      HR: {
+      managers: {
         garage: { view: true, create: false, edit: false, delete: false },
         inventory: { view: true, create: false, edit: false, delete: false },
         assets: { view: true, create: false, edit: false, delete: false },
@@ -276,7 +270,7 @@ UserSchema.methods.resetLoginAttempts = function() {
       }
     };
 
-    this.permissions = rolePermissions[this.role] || rolePermissions.HR;
+    this.permissions = rolePermissions[this.role] || rolePermissions.managers;
   };
 
 // Check if user has permission for a specific action

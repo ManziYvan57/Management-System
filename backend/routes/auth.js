@@ -29,11 +29,8 @@ router.post('/register', [
     .isLength({ min: 2, max: 50 })
     .withMessage('Last name must be between 2 and 50 characters'),
   body('role')
-    .isIn(['super_admin', 'admin', 'HR'])
+    .isIn(['super_admin', 'admin', 'managers'])
     .withMessage('Invalid role'),
-  body('department')
-    .isIn(['management', 'administration'])
-    .withMessage('Invalid department'),
   body('terminal')
     .isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba'])
     .withMessage('Invalid terminal')
@@ -47,7 +44,7 @@ router.post('/register', [
       });
     }
 
-    const { username, email, password, firstName, lastName, role, department, terminal, phone } = req.body;
+    const { username, email, password, firstName, lastName, role, terminal, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -69,7 +66,6 @@ router.post('/register', [
       firstName,
       lastName,
       role,
-      department,
       terminal,
       phone
     });
@@ -87,7 +83,6 @@ router.post('/register', [
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        department: user.department,
         terminal: user.terminal,
         permissions: user.permissions
       }
@@ -183,7 +178,6 @@ router.post('/login', [
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        department: user.department,
         terminal: user.terminal,
         permissions: user.permissions,
         lastLogin: user.lastLogin
@@ -214,7 +208,6 @@ router.get('/me', protect, async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        department: user.department,
         terminal: user.terminal,
         permissions: user.permissions,
         lastLogin: user.lastLogin,
@@ -284,7 +277,6 @@ router.put('/profile', [
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        department: user.department,
         terminal: user.terminal,
         permissions: user.permissions,
         phone: user.phone

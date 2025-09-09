@@ -42,7 +42,7 @@ router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => 
       terminal: req.user.terminal
     });
     
-    const { page = 1, limit = 10, search, role, department, isActive } = req.query;
+    const { page = 1, limit = 10, search, role, isActive } = req.query;
 
     // Build query
     const query = {};
@@ -57,7 +57,6 @@ router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => 
     }
     
     if (role && role !== 'all' && role !== 'undefined') query.role = role;
-    if (department && department !== 'all' && department !== 'undefined') query.department = department;
     if (isActive !== undefined && isActive !== 'undefined') {
       query.isActive = isActive === 'true' || isActive === true;
     }
@@ -139,11 +138,8 @@ router.post('/', [
     .normalizeEmail()
     .withMessage('Please provide a valid email'),
   body('role')
-    .isIn(['super_admin', 'admin', 'HR'])
+    .isIn(['super_admin', 'admin', 'managers'])
     .withMessage('Invalid role'),
-  body('department')
-    .isIn(['management', 'administration'])
-    .withMessage('Invalid department'),
   body('terminal')
     .isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba'])
     .withMessage('Invalid terminal'),
@@ -162,7 +158,7 @@ router.post('/', [
       });
     }
 
-    const { username, firstName, lastName, email, role, department, terminal, phone } = req.body;
+    const { username, firstName, lastName, email, role, terminal, phone } = req.body;
 
     // Check if username already exists
     const existingUser = await User.findOne({ username });
@@ -193,7 +189,6 @@ router.post('/', [
       email,
       password: tempPassword, // Required field, will be replaced by pre-save hook
       role,
-      department,
       terminal,
       phone: phone || '',
       isActive: true
@@ -216,7 +211,6 @@ router.post('/', [
         lastName: user.lastName,
         email: user.email,
         role: user.role,
-        department: user.department,
         terminal: user.terminal,
         phone: user.phone,
         isActive: user.isActive,
@@ -282,12 +276,8 @@ router.put('/:id', [
     .withMessage('Please provide a valid email'),
   body('role')
     .optional()
-    .isIn(['super_admin', 'admin', 'HR'])
+    .isIn(['super_admin', 'admin', 'managers'])
     .withMessage('Invalid role'),
-  body('department')
-    .optional()
-    .isIn(['management', 'administration'])
-    .withMessage('Invalid department'),
   body('phone')
     .optional()
     .trim()
@@ -303,7 +293,7 @@ router.put('/:id', [
       });
     }
 
-    const { firstName, lastName, email, role, department, phone, isActive } = req.body;
+    const { firstName, lastName, email, role, phone, isActive } = req.body;
 
     // Check if user exists
     const user = await User.findById(req.params.id);
@@ -332,7 +322,6 @@ router.put('/:id', [
     if (lastName !== undefined) updateFields.lastName = lastName;
     if (email !== undefined) updateFields.email = email;
     if (role !== undefined) updateFields.role = role;
-    if (department !== undefined) updateFields.department = department;
     if (phone !== undefined) updateFields.phone = phone;
     if (isActive !== undefined) updateFields.isActive = isActive;
 
