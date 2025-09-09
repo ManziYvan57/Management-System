@@ -11,8 +11,8 @@ const Garage = () => {
   
   // Helper function to check if user has permission for an action
   const hasPermission = (module, action) => {
-    if (userRole === 'super_admin' || userRole === 'admin') {
-      return true; // Admin and super admin have all permissions
+    if (userRole === 'super_admin') {
+      return true; // Only super admin has all permissions
     }
     
     if (user.permissions && user.permissions[module]) {
@@ -100,11 +100,11 @@ const Garage = () => {
 
   // Get terminals available to user based on role
   const getUserTerminals = () => {
-    // For now, show all terminals to admin users (including 'admin' role)
-    if (userRole === 'super_admin' || userRole === 'admin' || userRole === 'Admin') {
+    // Super admin and admin can see all terminals
+    if (userRole === 'super_admin' || userRole === 'admin') {
       return availableTerminals;
     }
-    return [userTerminal]; // Regular users only see their terminal
+    return [userTerminal]; // Managers only see their terminal
   };
 
   // Fetch data from API
