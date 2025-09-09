@@ -343,7 +343,9 @@ const Users = () => {
                 <option value="admin">Admin</option>
                 <option value="garage_staff">Garage Staff</option>
                 <option value="transport_staff">Transport Staff</option>
-                <option value="hr">HR</option>
+                <option value="inventory_staff">Inventory Staff</option>
+                <option value="driver">Driver</option>
+                <option value="customer_care">Customer Care</option>
               </select>
               <select
                 value={statusFilter}
@@ -563,7 +565,9 @@ const Users = () => {
                     <option value="admin">Admin</option>
                     <option value="garage_staff">Garage Staff</option>
                     <option value="transport_staff">Transport Staff</option>
-                    <option value="hr">HR</option>
+                    <option value="inventory_staff">Inventory Staff</option>
+                    <option value="driver">Driver</option>
+                    <option value="customer_care">Customer Care</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -587,7 +591,12 @@ const Users = () => {
                     onChange={handleInputChange}
                     required
                   >
-                    <option value="administration">Administration</option>
+                    <option value="management">Management</option>
+                    <option value="garage">Garage</option>
+                    <option value="transport">Transport</option>
+                    <option value="inventory">Inventory</option>
+                    <option value="drivers">Drivers</option>
+                    <option value="customer_care">Customer Care</option>
                   </select>
                 </div>
                 <div className="form-actions">
@@ -680,7 +689,9 @@ const Users = () => {
                     <option value="admin">Admin</option>
                     <option value="garage_staff">Garage Staff</option>
                     <option value="transport_staff">Transport Staff</option>
-                    <option value="hr">HR</option>
+                    <option value="inventory_staff">Inventory Staff</option>
+                    <option value="driver">Driver</option>
+                    <option value="customer_care">Customer Care</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -712,7 +723,12 @@ const Users = () => {
                     onChange={(e) => setEditingUser({...editingUser, department: e.target.value})}
                     required
                   >
-                    <option value="administration">Administration</option>
+                    <option value="management">Management</option>
+                    <option value="garage">Garage</option>
+                    <option value="transport">Transport</option>
+                    <option value="inventory">Inventory</option>
+                    <option value="drivers">Drivers</option>
+                    <option value="customer_care">Customer Care</option>
                   </select>
                 </div>
                 <div className="form-group">

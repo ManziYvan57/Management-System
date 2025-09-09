@@ -7,8 +7,8 @@ const RoleBasedAccess = ({ user, module, action = 'view', children, fallback = n
     return fallback;
   }
 
-  // Super admin or admin can access everything
-  if (user.role === 'super_admin' || user.role === 'admin' || user.role === 'Admin') {
+  // Admin can access everything
+  if (user.role === 'admin') {
     return children;
   }
 
@@ -16,13 +16,6 @@ const RoleBasedAccess = ({ user, module, action = 'view', children, fallback = n
   const hasPermission = user.permissions && 
     user.permissions[module] && 
     user.permissions[module][action];
-
-  // HR role: read-only, no access to Users
-  if (user.role === 'hr' || user.role === 'HR') {
-    if (module === 'users') return fallback;
-    if (action !== 'view' && action !== 'export') return fallback;
-    return children;
-  }
 
   if (hasPermission) {
     return children;

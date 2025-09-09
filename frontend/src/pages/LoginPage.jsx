@@ -35,13 +35,6 @@ const LoginPage = () => {
       // Store user data and token
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('token', data.token);
-      // Persist selected terminal from user if present
-      const terminalFromUser = (typeof data.user?.terminal === 'string'
-        ? data.user.terminal
-        : (data.user?.terminal?.name || data.user?.terminalCode || data.user?.terminal_id || data.user?.terminalId));
-      if (terminalFromUser) {
-        localStorage.setItem('selectedTerminal', String(terminalFromUser));
-      }
       
       // Navigate to dashboard
       navigate('/');
