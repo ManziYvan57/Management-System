@@ -7,7 +7,7 @@ const { body, validationResult } = require('express-validator');
 // @desc    Get all equipment
 // @route   GET /api/equipment
 // @access  Private
-router.get('/', protect, authorize('equipment', 'read'), async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
     const { search, status, category, terminal } = req.query;
     
@@ -61,7 +61,7 @@ router.get('/', protect, authorize('equipment', 'read'), async (req, res) => {
 // @desc    Get equipment statistics overview
 // @route   GET /api/equipment/stats/overview
 // @access  Private
-router.get('/stats/overview', protect, authorize('equipment', 'read'), async (req, res) => {
+router.get('/stats/overview', protect, async (req, res) => {
   try {
     const { terminal } = req.query;
     const query = { isActive: true };
@@ -123,7 +123,7 @@ router.get('/stats/overview', protect, authorize('equipment', 'read'), async (re
 // @desc    Get equipment statistics
 // @route   GET /api/equipment/stats
 // @access  Private
-router.get('/stats', protect, authorize('equipment', 'read'), async (req, res) => {
+router.get('/stats', protect, async (req, res) => {
   try {
     const query = { isActive: true };
     
@@ -193,7 +193,7 @@ router.get('/stats', protect, authorize('equipment', 'read'), async (req, res) =
 // @desc    Get single equipment
 // @route   GET /api/equipment/:id
 // @access  Private
-router.get('/:id', protect, authorize('equipment', 'read'), async (req, res) => {
+router.get('/:id', protect, async (req, res) => {
   try {
     const equipment = await Equipment.findById(req.params.id)
       .populate('createdBy', 'username firstName lastName')
@@ -417,7 +417,7 @@ router.delete('/:id', protect, authorize('equipment', 'delete'), async (req, res
 // @desc    Get available equipment
 // @route   GET /api/equipment/available
 // @access  Private
-router.get('/available', protect, authorize('equipment', 'read'), async (req, res) => {
+router.get('/available', protect, async (req, res) => {
   try {
     const query = { 
       isActive: true,
