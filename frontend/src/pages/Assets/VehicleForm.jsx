@@ -49,10 +49,27 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
   const fetchDrivers = async () => {
     try {
       setLoadingDrivers(true);
-      const response = await personnelAPI.getDrivers({ 
-        terminal: activeTerminal,
-        role: 'driver'
-      });
+      console.log('Fetching drivers for terminal:', activeTerminal);
+      
+      // Try both approaches - first the drivers endpoint, then fallback to general personnel
+      let response;
+      try {
+        response = await personnelAPI.getDrivers({ 
+          terminal: activeTerminal,
+          employmentStatus: 'active'
+        });
+        console.log('Drivers API response:', response);
+      } catch (driversError) {
+        console.log('Drivers API failed, trying general personnel API:', driversError);
+        // Fallback to general personnel API with role filter
+        response = await personnelAPI.getAll({ 
+          terminal: activeTerminal,
+          role: 'driver',
+          employmentStatus: 'active'
+        });
+        console.log('Personnel API response:', response);
+      }
+      
       setDrivers(response.data || []);
     } catch (error) {
       console.error('Error fetching drivers:', error);
