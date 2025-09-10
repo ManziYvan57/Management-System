@@ -280,11 +280,9 @@ const Reports = () => {
       const filename = `${reportName.replace(/\s+/g, '_')}_${timestamp}`;
 
       if (format === 'csv') {
-        exportToCSV(reportInfo.data, filename);
-      } else if (format === 'json') {
-        exportToJSON(reportInfo.data, filename);
+        exportToCSV(reportInfo.data, filename, reportId, categoryId);
       } else if (format === 'pdf') {
-        exportToPDF(reportInfo.data, reportName, filename);
+        exportToPDF(reportInfo.data, reportName, filename, reportId, categoryId);
       }
 
       alert(`Report exported as ${format.toUpperCase()} successfully!`);
@@ -294,7 +292,7 @@ const Reports = () => {
     }
   };
 
-  const exportToCSV = (data, filename) => {
+  const exportToCSV = (data, filename, reportId, categoryId) => {
     if (!data || !data.data) {
       throw new Error('No data available for export');
     }
@@ -304,24 +302,23 @@ const Reports = () => {
       throw new Error('No data items to export');
     }
 
-    const headers = Object.keys(items[0]);
+    // Get filtered headers based on report type
+    const filteredItems = items.map(item => filterItemForExport(item, reportId, categoryId));
+    const headers = Object.keys(filteredItems[0]);
+    
     const csvContent = [
       headers.join(','),
-      ...items.map(item => headers.map(header => `"${item[header] || ''}"`).join(','))
+      ...filteredItems.map(item => headers.map(header => `"${item[header] || ''}"`).join(','))
     ].join('\n');
 
     downloadFile(csvContent, `${filename}.csv`, 'text/csv');
   };
 
-  const exportToJSON = (data, filename) => {
-    const jsonContent = JSON.stringify(data, null, 2);
-    downloadFile(jsonContent, `${filename}.json`, 'application/json');
-  };
 
-  const exportToPDF = (data, reportName, filename) => {
+  const exportToPDF = (data, reportName, filename, reportId, categoryId) => {
     // Simple PDF generation using browser's print functionality
     const printWindow = window.open('', '_blank');
-    const content = generatePDFContent(data, reportName);
+    const content = generatePDFContent(data, reportName, reportId, categoryId);
     
     printWindow.document.write(`
       <html>
@@ -345,13 +342,15 @@ const Reports = () => {
     printWindow.print();
   };
 
-  const generatePDFContent = (data, reportName) => {
+  const generatePDFContent = (data, reportName, reportId, categoryId) => {
     if (!data || !data.data) return '<p>No data available</p>';
 
     const items = Array.isArray(data.data) ? data.data : [data.data];
     if (items.length === 0) return '<p>No data items available</p>';
 
-    const headers = Object.keys(items[0]);
+    // Filter items for export
+    const filteredItems = items.map(item => filterItemForExport(item, reportId, categoryId));
+    const headers = Object.keys(filteredItems[0]);
     
     return `
       <h1>${reportName}</h1>
@@ -361,12 +360,117 @@ const Reports = () => {
           <tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr>
         </thead>
         <tbody>
-          ${items.map(item => 
+          ${filteredItems.map(item => 
             `<tr>${headers.map(header => `<td>${item[header] || ''}</td>`).join('')}</tr>`
           ).join('')}
         </tbody>
       </table>
     `;
+  };
+
+  const filterItemForExport = (item, reportId, categoryId) => {
+    // Filter out internal fields and complex objects, keep only essential fields
+    const filteredItem = { ...item };
+    
+    // Remove internal MongoDB fields
+    delete filteredItem._id;
+    delete filteredItem.__v;
+    delete filteredItem.createdAt;
+    delete filteredItem.updatedAt;
+    delete filteredItem.createdBy;
+    delete filteredItem.updatedBy;
+    
+    // Remove complex objects that show as [object Object]
+    delete filteredItem.address;
+    delete filteredItem.emergencyContact;
+    delete filteredItem.workSchedule;
+    delete filteredItem.supervisor;
+    delete filteredItem.assignedVehicle;
+    delete filteredItem.infractions;
+    delete filteredItem.trainingCompleted;
+    delete filteredItem.certifications;
+    delete filteredItem.vehicle;
+    delete filteredItem.supplier;
+    delete filteredItem.inventoryItem;
+    
+    // Format specific fields
+    if (filteredItem.dateOfBirth) {
+      filteredItem.dateOfBirth = new Date(filteredItem.dateOfBirth).toLocaleDateString();
+    }
+    if (filteredItem.hireDate) {
+      filteredItem.hireDate = new Date(filteredItem.hireDate).toLocaleDateString();
+    }
+    if (filteredItem.licenseExpiryDate) {
+      filteredItem.licenseExpiryDate = new Date(filteredItem.licenseExpiryDate).toLocaleDateString();
+    }
+    if (filteredItem.dateCreated) {
+      filteredItem.dateCreated = new Date(filteredItem.dateCreated).toLocaleDateString();
+    }
+    if (filteredItem.startDate) {
+      filteredItem.startDate = new Date(filteredItem.startDate).toLocaleDateString();
+    }
+    if (filteredItem.completedDate) {
+      filteredItem.completedDate = new Date(filteredItem.completedDate).toLocaleDateString();
+    }
+    
+    // Format names for better readability
+    const fieldNameMap = {
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      employeeId: 'Employee ID',
+      phoneNumber: 'Phone Number',
+      dateOfBirth: 'Date of Birth',
+      workSchedule: 'Work Schedule',
+      emergencyContact: 'Emergency Contact',
+      plateNumber: 'Plate Number',
+      workOrderNumber: 'Work Order #',
+      workType: 'Work Type',
+      workPerformed: 'Work Performed',
+      problemReported: 'Problem Reported',
+      assignedMechanic: 'Assigned Mechanic',
+      approvedBy: 'Approved By',
+      dateCreated: 'Date Created',
+      startDate: 'Start Date',
+      completedDate: 'Completed Date',
+      actualDuration: 'Actual Duration',
+      estimatedDuration: 'Estimated Duration',
+      totalCost: 'Total Cost',
+      partsUsed: 'Parts Used',
+      currentValue: 'Current Value',
+      purchasePrice: 'Purchase Price',
+      totalMileage: 'Total Mileage',
+      fuelType: 'Fuel Type',
+      licenseNumber: 'License Number',
+      licenseType: 'License Type',
+      licenseExpiryDate: 'License Expiry',
+      drivingPoints: 'Driving Points',
+      assignedRoute: 'Assigned Route',
+      performanceRating: 'Performance Rating',
+      lastEvaluationDate: 'Last Evaluation',
+      hireDate: 'Hire Date',
+      employmentStatus: 'Employment Status',
+      salary: 'Salary',
+      unitCost: 'Unit Cost',
+      quantity: 'Quantity',
+      minQuantity: 'Min Quantity',
+      maxQuantity: 'Max Quantity',
+      location: 'Location',
+      supplier: 'Supplier',
+      category: 'Category',
+      description: 'Description',
+      notes: 'Notes',
+      skills: 'Skills',
+      languages: 'Languages'
+    };
+    
+    // Rename fields for better readability
+    const renamedItem = {};
+    Object.keys(filteredItem).forEach(key => {
+      const newKey = fieldNameMap[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+      renamedItem[newKey] = filteredItem[key];
+    });
+    
+    return renamedItem;
   };
 
   const downloadFile = (content, filename, mimeType) => {
@@ -878,7 +982,6 @@ const Reports = () => {
                         </button>
                         <div className="export-menu">
                           <button onClick={() => handleExportReport('pdf', report.id, category.id)}>PDF</button>
-                          <button onClick={() => handleExportReport('json', report.id, category.id)}>JSON</button>
                           <button onClick={() => handleExportReport('csv', report.id, category.id)}>CSV</button>
                         </div>
                       </div>
@@ -980,14 +1083,6 @@ const Reports = () => {
                   }}
                 >
                   <FaDownload /> Export CSV
-                </button>
-                <button 
-                  className="export-btn"
-                  onClick={() => {
-                    handleExportReport('json', previewReport.reportId, previewReport.categoryId);
-                  }}
-                >
-                  <FaDownload /> Export JSON
                 </button>
               </div>
             </div>
