@@ -24,11 +24,18 @@ router.get('/overview', protect, async (req, res) => {
     
     // Build query based on user role and terminal
     let query = {};
-    
     if (req.user.role !== 'super_admin') {
       query.terminal = req.user.terminal;
     } else if (terminal) {
       query.terminal = terminal;
+    }
+    
+    // Build vehicle-specific query for multi-terminal support
+    let vehicleQuery = { isActive: true };
+    if (req.user.role !== 'super_admin') {
+      vehicleQuery.terminals = { $in: [req.user.terminal] };
+    } else if (terminal) {
+      vehicleQuery.terminals = { $in: [terminal] };
     }
     
     // Get real data from database
@@ -74,10 +81,10 @@ router.get('/overview', protect, async (req, res) => {
       jubaUsers
     ] = await Promise.all([
       // Assets - Vehicles
-      Vehicle.countDocuments({ ...query, type: 'vehicle' }),
-      Vehicle.countDocuments({ ...query, type: 'vehicle', status: 'active' }),
-      Vehicle.countDocuments({ ...query, type: 'vehicle', status: 'maintenance' }),
-      Vehicle.countDocuments({ ...query, type: 'vehicle', status: 'out_of_service' }),
+      Vehicle.countDocuments({ ...vehicleQuery, type: 'vehicle' }),
+      Vehicle.countDocuments({ ...vehicleQuery, type: 'vehicle', status: 'active' }),
+      Vehicle.countDocuments({ ...vehicleQuery, type: 'vehicle', status: 'maintenance' }),
+      Vehicle.countDocuments({ ...vehicleQuery, type: 'vehicle', status: 'out_of_service' }),
       
       // Assets - Equipment
       Equipment.countDocuments(query),
@@ -143,7 +150,7 @@ router.get('/overview', protect, async (req, res) => {
     
     // Calculate financial data
     const totalAssetValue = await Vehicle.aggregate([
-      { $match: { ...query, type: 'vehicle' } },
+      { $match: { ...vehicleQuery, type: 'vehicle' } },
       { $group: { _id: null, total: { $sum: '$purchaseCost' } } }
     ]).then(result => result[0]?.total || 0);
     
@@ -244,11 +251,18 @@ router.get('/financial', protect, async (req, res) => {
     
     // Build query based on user role and terminal
     let query = {};
-    
     if (req.user.role !== 'super_admin') {
       query.terminal = req.user.terminal;
     } else if (terminal) {
       query.terminal = terminal;
+    }
+    
+    // Build vehicle-specific query for multi-terminal support
+    let vehicleQuery = { isActive: true };
+    if (req.user.role !== 'super_admin') {
+      vehicleQuery.terminals = { $in: [req.user.terminal] };
+    } else if (terminal) {
+      vehicleQuery.terminals = { $in: [terminal] };
     }
     
     // Get real financial data
@@ -262,7 +276,7 @@ router.get('/financial', protect, async (req, res) => {
     ] = await Promise.all([
       // Total asset value
       Vehicle.aggregate([
-        { $match: { ...query, type: 'vehicle' } },
+        { $match: { ...vehicleQuery, type: 'vehicle' } },
         { $group: { _id: null, total: { $sum: '$purchaseCost' } } }
       ]).then(result => result[0]?.total || 0),
       
@@ -448,6 +462,14 @@ router.get('/maintenance', protect, async (req, res) => {
       query.terminal = terminal;
     }
     
+    // Build vehicle-specific query for multi-terminal support
+    let vehicleQuery = { isActive: true };
+    if (req.user.role !== 'super_admin') {
+      vehicleQuery.terminals = { $in: [req.user.terminal] };
+    } else if (terminal) {
+      vehicleQuery.terminals = { $in: [terminal] };
+    }
+    
     // Get real maintenance data
     const [
       totalWorkOrders,
@@ -486,10 +508,10 @@ router.get('/maintenance', protect, async (req, res) => {
       MaintenanceSchedule.countDocuments({ ...query, status: 'completed' }),
       
       // Vehicle Status
-      Vehicle.countDocuments({ ...query, type: 'vehicle', status: 'maintenance' }),
-      Vehicle.countDocuments({ ...query, type: 'vehicle', status: 'active' }),
-      Vehicle.countDocuments({ ...query, type: 'vehicle', status: 'out_of_service' }),
-      Vehicle.countDocuments({ ...query, type: 'vehicle', status: 'critical' }),
+      Vehicle.countDocuments({ ...vehicleQuery, type: 'vehicle', status: 'maintenance' }),
+      Vehicle.countDocuments({ ...vehicleQuery, type: 'vehicle', status: 'active' }),
+      Vehicle.countDocuments({ ...vehicleQuery, type: 'vehicle', status: 'out_of_service' }),
+      Vehicle.countDocuments({ ...vehicleQuery, type: 'vehicle', status: 'critical' }),
       
       // Financial data
       WorkOrder.aggregate([
