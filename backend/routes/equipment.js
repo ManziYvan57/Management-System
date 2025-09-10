@@ -9,7 +9,7 @@ const { body, validationResult } = require('express-validator');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const { search, status, category, terminal } = req.query;
+    const { search, status, category, terminal, page = 1, limit = 10 } = req.query;
     
     // Build query
     const query = { isActive: true };
@@ -38,14 +38,28 @@ router.get('/', protect, async (req, res) => {
       query.category = category;
     }
     
+    // Execute query with pagination
+    const skip = (page - 1) * limit;
+    
     const equipment = await Equipment.find(query)
       .populate('createdBy', 'username firstName lastName')
       .populate('assignedTo', 'username firstName lastName')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Equipment.countDocuments(query);
     
     res.status(200).json({
       success: true,
       count: equipment.length,
+      total,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      },
       data: equipment
     });
   } catch (error) {
