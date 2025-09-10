@@ -49,9 +49,16 @@ app.use(xss());
 // Rate limiting - More lenient for development
 const limiter = rateLimit({
   windowMs: (process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000, // 15 minutes
-  max: process.env.RATE_LIMIT_MAX || 1000, // Increased limit for development
+  max: process.env.RATE_LIMIT_MAX || 10000, // Much higher limit for development
   message: {
     error: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for localhost in development
+    return process.env.NODE_ENV === 'development' && 
+           (req.ip === '127.0.0.1' || req.ip === '::1' || req.ip.includes('localhost'));
   }
 });
 app.use('/api/', limiter);
@@ -59,8 +66,13 @@ app.use('/api/', limiter);
 // CORS configuration - More permissive for development
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log('🌐 CORS Origin check:', origin);
+    
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ Allowing request with no origin');
+      return callback(null, true);
+    }
     
     const allowedOrigins = [
       'http://localhost:3002', 
@@ -71,12 +83,15 @@ const corsOptions = {
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ Origin allowed:', origin);
       callback(null, true);
     } else {
       // For development, allow any localhost origin
       if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        console.log('✅ Localhost origin allowed:', origin);
         callback(null, true);
       } else {
+        console.log('❌ Origin blocked:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     }
@@ -145,6 +160,16 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // API routes
 const apiPrefix = process.env.API_PREFIX || '/api';
 app.use(`${apiPrefix}/auth`, authRoutes);
@@ -161,7 +186,6 @@ app.use(`${apiPrefix}/vehicle-documents`, vehicleDocumentRoutes);
 app.use(`${apiPrefix}/suppliers`, supplierRoutes);
 app.use(`${apiPrefix}/purchase-orders`, purchaseOrderRoutes);
 app.use(`${apiPrefix}/stock-movements`, stockMovementRoutes);
-app.use(`${apiPrefix}/garage`, garageRoutes);
 
 // Error handling middleware
 app.use(notFound);
