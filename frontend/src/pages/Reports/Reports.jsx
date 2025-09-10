@@ -32,6 +32,8 @@ const Reports = () => {
   const [loading, setLoading] = useState({});
   const [reportData, setReportData] = useState({});
   const [recentReports, setRecentReports] = useState([]);
+  const [previewReport, setPreviewReport] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const reportCategories = [
     {
@@ -129,62 +131,82 @@ const Reports = () => {
         endDate: dateRange.endDate
       };
 
+      console.log(`🔄 Generating ${categoryId} report: ${reportId}`);
+      console.log('📊 API Parameters:', params);
+
       // Generate report based on category and report ID
       switch (categoryId) {
         case 'vehicles':
           if (reportId === 'vehicle-overview') {
+            console.log('🚗 Calling vehiclesAPI.getStats...');
             data = await vehiclesAPI.getStats(params);
           } else if (reportId === 'vehicle-performance') {
+            console.log('🚗 Calling vehiclesAPI.getAll...');
             data = await vehiclesAPI.getAll(params);
           } else if (reportId === 'vehicle-maintenance') {
+            console.log('🔧 Calling garageAPI.getWorkOrders...');
             data = await garageAPI.getWorkOrders(params);
           }
           break;
           
         case 'personnel':
           if (reportId === 'personnel-overview') {
+            console.log('👥 Calling personnelAPI.getAll...');
             data = await personnelAPI.getAll(params);
           } else if (reportId === 'driver-performance') {
+            console.log('👥 Calling personnelAPI.getDrivers...');
             data = await personnelAPI.getDrivers(params);
           } else if (reportId === 'personnel-stats') {
+            console.log('👥 Calling personnelAPI.getStats...');
             data = await personnelAPI.getStats(params);
           }
           break;
           
         case 'financial':
           if (reportId === 'financial-overview') {
+            console.log('💰 Calling dashboardAPI.getFinancials...');
             data = await dashboardAPI.getFinancials();
           } else if (reportId === 'maintenance-costs') {
+            console.log('💰 Calling garageAPI.getStats...');
             data = await garageAPI.getStats(params);
           } else if (reportId === 'inventory-costs') {
+            console.log('💰 Calling inventoryAPI.getStats...');
             data = await inventoryAPI.getStats(params);
           }
           break;
           
         case 'maintenance':
           if (reportId === 'work-orders') {
+            console.log('🔧 Calling garageAPI.getWorkOrders...');
             data = await garageAPI.getWorkOrders(params);
           } else if (reportId === 'maintenance-stats') {
+            console.log('🔧 Calling garageAPI.getStats...');
             data = await garageAPI.getStats(params);
           } else if (reportId === 'garage-overview') {
+            console.log('🔧 Calling garageAPI.getStats...');
             data = await garageAPI.getStats(params);
           }
           break;
           
         case 'inventory':
           if (reportId === 'inventory-overview') {
+            console.log('📦 Calling inventoryAPI.getAll...');
             data = await inventoryAPI.getAll(params);
           } else if (reportId === 'inventory-stats') {
+            console.log('📦 Calling inventoryAPI.getStats...');
             data = await inventoryAPI.getStats(params);
           } else if (reportId === 'low-stock') {
+            console.log('📦 Calling inventoryAPI.getAll with lowStock filter...');
             data = await inventoryAPI.getAll({ ...params, lowStock: true });
           }
           break;
           
         case 'equipment':
           if (reportId === 'equipment-overview') {
+            console.log('⚙️ Calling equipmentAPI.getAll...');
             data = await equipmentAPI.getAll(params);
           } else if (reportId === 'equipment-stats') {
+            console.log('⚙️ Calling equipmentAPI.getStats...');
             data = await equipmentAPI.getStats(params);
           }
           break;
@@ -193,16 +215,20 @@ const Reports = () => {
           throw new Error('Unknown report category');
       }
 
+      console.log('✅ API Response received:', data);
+
       // Store the report data
+      const reportInfo = {
+        data,
+        generatedAt: new Date().toISOString(),
+        reportId,
+        categoryId,
+        params
+      };
+
       setReportData(prev => ({
         ...prev,
-        [loadingKey]: {
-          data,
-          generatedAt: new Date().toISOString(),
-          reportId,
-          categoryId,
-          params
-        }
+        [loadingKey]: reportInfo
       }));
 
       // Add to recent reports
@@ -210,21 +236,25 @@ const Reports = () => {
         .find(cat => cat.id === categoryId)
         ?.reports.find(rep => rep.id === reportId)?.name || 'Unknown Report';
       
+      const recentReport = {
+        id: loadingKey,
+        name: reportName,
+        category: categoryId,
+        generatedAt: new Date().toISOString(),
+        data
+      };
+
       setRecentReports(prev => [
-        {
-          id: loadingKey,
-          name: reportName,
-          category: categoryId,
-          generatedAt: new Date().toISOString(),
-          data
-        },
+        recentReport,
         ...prev.slice(0, 4) // Keep only last 5 reports
       ]);
 
-      alert(`Report "${reportName}" generated successfully!`);
+      // Show preview
+      setPreviewReport(reportInfo);
+      setShowPreview(true);
       
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('❌ Error generating report:', error);
       alert(`Error generating report: ${error.message}`);
     } finally {
       // Clear loading state for this specific report
@@ -232,10 +262,123 @@ const Reports = () => {
     }
   };
 
-  const handleExportReport = (format) => {
-    // Simulate export functionality
-    console.log(`Exporting report as ${format}`);
-    alert(`Report exported as ${format.toUpperCase()} successfully! (This is a demo)`);
+  const handleExportReport = (format, reportId, categoryId) => {
+    const loadingKey = `${categoryId}-${reportId}`;
+    const reportInfo = reportData[loadingKey];
+    
+    if (!reportInfo) {
+      alert('No report data available to export. Please generate the report first.');
+      return;
+    }
+
+    try {
+      const reportName = reportCategories
+        .find(cat => cat.id === categoryId)
+        ?.reports.find(rep => rep.id === reportId)?.name || 'Unknown Report';
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `${reportName.replace(/\s+/g, '_')}_${timestamp}`;
+
+      if (format === 'csv') {
+        exportToCSV(reportInfo.data, filename);
+      } else if (format === 'json') {
+        exportToJSON(reportInfo.data, filename);
+      } else if (format === 'pdf') {
+        exportToPDF(reportInfo.data, reportName, filename);
+      }
+
+      alert(`Report exported as ${format.toUpperCase()} successfully!`);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert(`Error exporting report: ${error.message}`);
+    }
+  };
+
+  const exportToCSV = (data, filename) => {
+    if (!data || !data.data) {
+      throw new Error('No data available for export');
+    }
+
+    const items = Array.isArray(data.data) ? data.data : [data.data];
+    if (items.length === 0) {
+      throw new Error('No data items to export');
+    }
+
+    const headers = Object.keys(items[0]);
+    const csvContent = [
+      headers.join(','),
+      ...items.map(item => headers.map(header => `"${item[header] || ''}"`).join(','))
+    ].join('\n');
+
+    downloadFile(csvContent, `${filename}.csv`, 'text/csv');
+  };
+
+  const exportToJSON = (data, filename) => {
+    const jsonContent = JSON.stringify(data, null, 2);
+    downloadFile(jsonContent, `${filename}.json`, 'application/json');
+  };
+
+  const exportToPDF = (data, reportName, filename) => {
+    // Simple PDF generation using browser's print functionality
+    const printWindow = window.open('', '_blank');
+    const content = generatePDFContent(data, reportName);
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${reportName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          ${content}
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const generatePDFContent = (data, reportName) => {
+    if (!data || !data.data) return '<p>No data available</p>';
+
+    const items = Array.isArray(data.data) ? data.data : [data.data];
+    if (items.length === 0) return '<p>No data items available</p>';
+
+    const headers = Object.keys(items[0]);
+    
+    return `
+      <h1>${reportName}</h1>
+      <p>Generated on: ${new Date().toLocaleString()}</p>
+      <table>
+        <thead>
+          <tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr>
+        </thead>
+        <tbody>
+          ${items.map(item => 
+            `<tr>${headers.map(header => `<td>${item[header] || ''}</td>`).join('')}</tr>`
+          ).join('')}
+        </tbody>
+      </table>
+    `;
+  };
+
+  const downloadFile = (content, filename, mimeType) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -368,9 +511,9 @@ const Reports = () => {
                           <FaDownload />
                         </button>
                         <div className="export-menu">
-                          <button onClick={() => handleExportReport('pdf')}>PDF</button>
-                          <button onClick={() => handleExportReport('excel')}>Excel</button>
-                          <button onClick={() => handleExportReport('csv')}>CSV</button>
+                          <button onClick={() => handleExportReport('pdf', report.id, category.id)}>PDF</button>
+                          <button onClick={() => handleExportReport('json', report.id, category.id)}>JSON</button>
+                          <button onClick={() => handleExportReport('csv', report.id, category.id)}>CSV</button>
                         </div>
                       </div>
                     </div>
@@ -412,6 +555,114 @@ const Reports = () => {
           )}
         </div>
       </div>
+
+      {/* Report Preview Modal */}
+      {showPreview && previewReport && (
+        <div className="modal-overlay" onClick={() => setShowPreview(false)}>
+          <div className="modal-content report-preview-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <FaFileAlt />
+                Report Preview
+              </h2>
+              <button className="close-button" onClick={() => setShowPreview(false)}>
+                ×
+              </button>
+            </div>
+            
+            <div className="report-preview-content">
+              <div className="report-preview-info">
+                <h3>
+                  {reportCategories
+                    .find(cat => cat.id === previewReport.categoryId)
+                    ?.reports.find(rep => rep.id === previewReport.reportId)?.name || 'Unknown Report'}
+                </h3>
+                <p>Generated: {new Date(previewReport.generatedAt).toLocaleString()}</p>
+                <p>Terminal: {previewReport.params.terminal || 'All Terminals'}</p>
+                <p>Date Range: {previewReport.params.startDate} to {previewReport.params.endDate}</p>
+              </div>
+
+              <div className="report-preview-data">
+                {previewReport.data && previewReport.data.data ? (
+                  <div className="data-preview">
+                    <h4>Data Preview:</h4>
+                    {Array.isArray(previewReport.data.data) ? (
+                      <div>
+                        <p><strong>Total Records:</strong> {previewReport.data.data.length}</p>
+                        {previewReport.data.data.length > 0 && (
+                          <div className="data-table">
+                            <table>
+                              <thead>
+                                <tr>
+                                  {Object.keys(previewReport.data.data[0]).slice(0, 5).map(key => (
+                                    <th key={key}>{key}</th>
+                                  ))}
+                                  {Object.keys(previewReport.data.data[0]).length > 5 && <th>...</th>}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {previewReport.data.data.slice(0, 10).map((item, index) => (
+                                  <tr key={index}>
+                                    {Object.keys(item).slice(0, 5).map(key => (
+                                      <td key={key}>{String(item[key] || '').substring(0, 50)}</td>
+                                    ))}
+                                    {Object.keys(item).length > 5 && <td>...</td>}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {previewReport.data.data.length > 10 && (
+                              <p className="data-note">... and {previewReport.data.data.length - 10} more records</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="data-object">
+                        <pre>{JSON.stringify(previewReport.data.data, null, 2)}</pre>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="no-data">
+                    <p>No data available in this report.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="report-preview-actions">
+                <button 
+                  className="export-btn"
+                  onClick={() => {
+                    const reportName = reportCategories
+                      .find(cat => cat.id === previewReport.categoryId)
+                      ?.reports.find(rep => rep.id === previewReport.reportId)?.name || 'Unknown Report';
+                    handleExportReport('pdf', previewReport.reportId, previewReport.categoryId);
+                  }}
+                >
+                  <FaDownload /> Export PDF
+                </button>
+                <button 
+                  className="export-btn"
+                  onClick={() => {
+                    handleExportReport('csv', previewReport.reportId, previewReport.categoryId);
+                  }}
+                >
+                  <FaDownload /> Export CSV
+                </button>
+                <button 
+                  className="export-btn"
+                  onClick={() => {
+                    handleExportReport('json', previewReport.reportId, previewReport.categoryId);
+                  }}
+                >
+                  <FaDownload /> Export JSON
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
