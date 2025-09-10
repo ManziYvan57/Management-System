@@ -392,6 +392,7 @@ const VehiclesTab = ({ activeTerminal }) => {
           onClose={() => setShowAddForm(false)}
           onSubmit={handleAddVehicle}
           mode="add"
+          activeTerminal={activeTerminal}
         />
       )}
 
@@ -406,6 +407,7 @@ const VehiclesTab = ({ activeTerminal }) => {
           onSubmit={(data) => handleEditVehicle(editingVehicle._id, data)}
           mode="edit"
           vehicle={editingVehicle}
+          activeTerminal={activeTerminal}
         />
       )}
 
@@ -420,6 +422,7 @@ const VehiclesTab = ({ activeTerminal }) => {
           onSubmit={() => {}}
           mode="view"
           vehicle={editingVehicle}
+          activeTerminal={activeTerminal}
         />
       )}
     </div>

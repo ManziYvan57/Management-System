@@ -1638,6 +1638,13 @@ label {
   font-size: 0.875rem;
   margin-top: 0.25rem;
   font-style: italic;
+}
+
+/* Loading state for select */
+.form-group select.loading {
+  background-color: #f9f9f9;
+  color: #999;
+  cursor: wait;
 }"" 
 "/* Standard Loading and Error States */" 
 ".loading-state," 

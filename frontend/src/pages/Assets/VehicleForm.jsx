@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaBus, FaSave } from 'react-icons/fa';
+import { personnelAPI } from '../../services/api';
 import './Assets.css';
 
-const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }) => {
+const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, activeTerminal = 'Kigali' }) => {
   const [formData, setFormData] = useState({
     plateNumber: '',
     make: '',
@@ -24,6 +25,8 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [availableRoutes, setAvailableRoutes] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [loadingDrivers, setLoadingDrivers] = useState(false);
 
   // Generate route options based on selected terminals
   const generateRoutes = (terminals) => {
@@ -40,6 +43,23 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
       }
     }
     return routes;
+  };
+
+  // Fetch drivers from the current terminal
+  const fetchDrivers = async () => {
+    try {
+      setLoadingDrivers(true);
+      const response = await personnelAPI.getDrivers({ 
+        terminal: activeTerminal,
+        role: 'driver'
+      });
+      setDrivers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching drivers:', error);
+      setDrivers([]);
+    } finally {
+      setLoadingDrivers(false);
+    }
   };
 
   useEffect(() => {
@@ -71,6 +91,13 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
       }
     }
   }, [mode, vehicle]);
+
+  // Fetch drivers when component loads
+  useEffect(() => {
+    if (isOpen) {
+      fetchDrivers();
+    }
+  }, [isOpen, activeTerminal]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -381,15 +408,27 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
 
              <div className="form-group">
                <label htmlFor="assignedDriver">Assigned Driver</label>
-               <input
-                 type="text"
+               <select
                  id="assignedDriver"
                  name="assignedDriver"
                  value={formData.assignedDriver}
                  onChange={handleInputChange}
-                 placeholder="Driver ID or name"
-                 disabled={mode === 'view'}
-               />
+                 disabled={mode === 'view' || loadingDrivers}
+                 className={loadingDrivers ? 'loading' : ''}
+               >
+                 <option value="">Select a driver (optional)</option>
+                 {drivers.map((driver) => (
+                   <option key={driver._id} value={driver._id}>
+                     {driver.firstName} {driver.lastName} ({driver.employeeId || 'N/A'})
+                   </option>
+                 ))}
+               </select>
+               {loadingDrivers && (
+                 <small className="form-hint">Loading drivers...</small>
+               )}
+               {!loadingDrivers && drivers.length === 0 && (
+                 <small className="form-hint">No drivers available in {activeTerminal} terminal</small>
+               )}
              </div>
            </div>
 
