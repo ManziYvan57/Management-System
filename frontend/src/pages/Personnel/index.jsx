@@ -3,6 +3,7 @@ import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaUser, FaIdCard, F
 import { personnelAPI } from '../../services/api';
 import PersonnelForm from './PersonnelForm';
 import InfractionForm from './InfractionForm';
+import Pagination from '../../components/Pagination';
 import './Personnel.css';
 
 const Personnel = () => {
@@ -47,18 +48,27 @@ const Personnel = () => {
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [terminalFilter, setTerminalFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalPersonnel, setTotalPersonnel] = useState(0);
+  const [itemsPerPage] = useState(10);
 
-  // Fetch personnel on component mount and when terminal changes
+  // Fetch personnel on component mount and when dependencies change
   useEffect(() => {
     fetchPersonnel();
-  }, [activeTerminal]);
+  }, [activeTerminal, currentPage, searchTerm, roleFilter, departmentFilter, statusFilter]);
 
   const fetchPersonnel = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage
+      };
       if (searchTerm) params.search = searchTerm;
       if (roleFilter) params.role = roleFilter;
       if (departmentFilter) params.department = departmentFilter;
@@ -68,6 +78,12 @@ const Personnel = () => {
       
       const response = await personnelAPI.getAll(params);
       setPersonnel(response.data || []);
+      
+      // Update pagination info
+      if (response.pagination) {
+        setTotalPages(response.pagination.pages);
+        setTotalPersonnel(response.pagination.total);
+      }
     } catch (err) {
       console.error('Error fetching personnel:', err);
       setError(err.message || 'Failed to fetch personnel');
@@ -167,11 +183,17 @@ const Personnel = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setCurrentPage(1); // Reset to first page when searching
     fetchPersonnel();
   };
 
   const handleFilterChange = () => {
+    setCurrentPage(1); // Reset to first page when filtering
     fetchPersonnel();
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   const handleTabChange = (tab) => {
@@ -534,6 +556,15 @@ const Personnel = () => {
             </tbody>
           </table>
         )}
+        
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          totalItems={totalPersonnel}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
         </>
       )}

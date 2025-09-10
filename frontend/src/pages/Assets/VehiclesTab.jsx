@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaBus, FaUser, FaRoute, FaCalendar, FaDollarSign } from 'react-icons/fa';
 import { vehiclesAPI } from '../../services/api';
 import VehicleForm from './VehicleForm';
+import Pagination from '../../components/Pagination';
 import './Assets.css';
 import './VehiclesTab.css';
 
@@ -33,18 +34,27 @@ const VehiclesTab = ({ activeTerminal }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [fuelTypeFilter, setFuelTypeFilter] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalVehicles, setTotalVehicles] = useState(0);
+  const [itemsPerPage] = useState(10);
 
-  // Fetch vehicles on component mount and when terminal changes
+  // Fetch vehicles on component mount and when dependencies change
   useEffect(() => {
     fetchVehicles();
-  }, [activeTerminal]);
+  }, [activeTerminal, currentPage, searchTerm, statusFilter, fuelTypeFilter]);
 
   const fetchVehicles = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage
+      };
       if (searchTerm) params.search = searchTerm;
       if (statusFilter) params.status = statusFilter;
       if (fuelTypeFilter) params.fuelType = fuelTypeFilter;
@@ -52,6 +62,12 @@ const VehiclesTab = ({ activeTerminal }) => {
       
       const response = await vehiclesAPI.getAll(params);
       setVehicles(response.data || []);
+      
+      // Update pagination info
+      if (response.pagination) {
+        setTotalPages(response.pagination.totalPages);
+        setTotalVehicles(response.total || 0);
+      }
     } catch (err) {
       console.error('Error fetching vehicles:', err);
       setError(err.message || 'Failed to fetch vehicles');
@@ -97,11 +113,17 @@ const VehiclesTab = ({ activeTerminal }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setCurrentPage(1); // Reset to first page when searching
     fetchVehicles();
   };
 
   const handleFilterChange = () => {
+    setCurrentPage(1); // Reset to first page when filtering
     fetchVehicles();
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   const getStatusBadgeClass = (status) => {
@@ -344,6 +366,15 @@ const VehiclesTab = ({ activeTerminal }) => {
             </tbody>
           </table>
         )}
+        
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          totalItems={totalVehicles}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
       {/* Add Vehicle Modal */}

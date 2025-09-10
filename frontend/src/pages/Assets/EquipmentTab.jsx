@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaTools } from 'react-icons/fa';
 import { equipmentAPI } from '../../services/api';
 import EquipmentForm from './EquipmentForm';
+import Pagination from '../../components/Pagination';
 import './Assets.css';
 import './EquipmentTab.css';
 
@@ -33,6 +34,12 @@ const EquipmentTab = ({ activeTerminal }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEquipment, setTotalEquipment] = useState(0);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     fetchEquipment();
