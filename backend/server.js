@@ -170,6 +170,29 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Terminals endpoint - moved here for direct access
+app.get('/api/terminals', (req, res) => {
+  try {
+    const terminals = [
+      { id: 'Kigali', name: 'Kigali', country: 'Rwanda' },
+      { id: 'Kampala', name: 'Kampala', country: 'Uganda' },
+      { id: 'Nairobi', name: 'Nairobi', country: 'Kenya' },
+      { id: 'Juba', name: 'Juba', country: 'South Sudan' }
+    ];
+
+    res.json({
+      success: true,
+      terminals
+    });
+  } catch (error) {
+    console.error('Get terminals error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+});
+
 // API routes
 const apiPrefix = process.env.API_PREFIX || '/api';
 app.use(`${apiPrefix}/auth`, authRoutes);
