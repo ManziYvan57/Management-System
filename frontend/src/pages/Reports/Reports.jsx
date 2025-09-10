@@ -381,6 +381,372 @@ const Reports = () => {
     URL.revokeObjectURL(url);
   };
 
+  const renderReportSummary = (reportInfo) => {
+    const { data, reportId, categoryId } = reportInfo;
+    const reportData = data?.data;
+
+    if (!reportData) {
+      return <div className="no-data"><p>No data available</p></div>;
+    }
+
+    // Handle different report types
+    switch (categoryId) {
+      case 'vehicles':
+        return renderVehicleSummary(reportData, reportId);
+      case 'personnel':
+        return renderPersonnelSummary(reportData, reportId);
+      case 'financial':
+        return renderFinancialSummary(reportData, reportId);
+      case 'maintenance':
+        return renderMaintenanceSummary(reportData, reportId);
+      case 'inventory':
+        return renderInventorySummary(reportData, reportId);
+      case 'equipment':
+        return renderEquipmentSummary(reportData, reportId);
+      default:
+        return renderGenericSummary(reportData);
+    }
+  };
+
+  const renderVehicleSummary = (data, reportId) => {
+    if (reportId === 'vehicle-overview') {
+      return (
+        <div className="summary-cards">
+          <div className="summary-card">
+            <h5>Total Vehicles</h5>
+            <span className="summary-number">{data.totalVehicles || 0}</span>
+          </div>
+          <div className="summary-card">
+            <h5>Active Vehicles</h5>
+            <span className="summary-number success">{data.activeVehicles || 0}</span>
+          </div>
+          <div className="summary-card">
+            <h5>In Maintenance</h5>
+            <span className="summary-number warning">{data.maintenanceVehicles || 0}</span>
+          </div>
+          <div className="summary-card">
+            <h5>Out of Service</h5>
+            <span className="summary-number danger">{data.outOfServiceVehicles || 0}</span>
+          </div>
+          <div className="summary-card">
+            <h5>Total Value</h5>
+            <span className="summary-number">${(data.totalValue || 0).toLocaleString()}</span>
+          </div>
+          <div className="summary-card">
+            <h5>Total Mileage</h5>
+            <span className="summary-number">{(data.totalMileage || 0).toLocaleString()} km</span>
+          </div>
+        </div>
+      );
+    } else if (reportId === 'vehicle-performance') {
+      const vehicles = Array.isArray(data) ? data : data.data || [];
+      return (
+        <div>
+          <p><strong>Total Vehicles:</strong> {vehicles.length}</p>
+          {vehicles.length > 0 && (
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Plate Number</th>
+                    <th>Make</th>
+                    <th>Model</th>
+                    <th>Status</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vehicles.slice(0, 10).map((vehicle, index) => (
+                    <tr key={index}>
+                      <td>{vehicle.plateNumber || 'N/A'}</td>
+                      <td>{vehicle.make || 'N/A'}</td>
+                      <td>{vehicle.model || 'N/A'}</td>
+                      <td><span className={`status-badge ${vehicle.status}`}>{vehicle.status || 'N/A'}</span></td>
+                      <td>${(vehicle.currentValue || 0).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {vehicles.length > 10 && (
+                <p className="data-note">... and {vehicles.length - 10} more vehicles</p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return renderGenericSummary(data);
+  };
+
+  const renderPersonnelSummary = (data, reportId) => {
+    if (reportId === 'personnel-overview') {
+      const personnel = Array.isArray(data) ? data : data.data || [];
+      return (
+        <div>
+          <p><strong>Total Personnel:</strong> {personnel.length}</p>
+          {personnel.length > 0 && (
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Terminal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {personnel.slice(0, 10).map((person, index) => (
+                    <tr key={index}>
+                      <td>{person.firstName} {person.lastName}</td>
+                      <td>{person.role || 'N/A'}</td>
+                      <td>{person.department || 'N/A'}</td>
+                      <td><span className={`status-badge ${person.employmentStatus}`}>{person.employmentStatus || 'N/A'}</span></td>
+                      <td>{person.terminal || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {personnel.length > 10 && (
+                <p className="data-note">... and {personnel.length - 10} more personnel</p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    } else if (reportId === 'driver-performance') {
+      const drivers = Array.isArray(data) ? data : data.data || [];
+      return (
+        <div>
+          <p><strong>Total Drivers:</strong> {drivers.length}</p>
+          {drivers.length > 0 && (
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>License Number</th>
+                    <th>Points</th>
+                    <th>Vehicle</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drivers.slice(0, 10).map((driver, index) => (
+                    <tr key={index}>
+                      <td>{driver.firstName} {driver.lastName}</td>
+                      <td>{driver.licenseNumber || 'N/A'}</td>
+                      <td>{driver.drivingPoints || 0}</td>
+                      <td>{driver.assignedVehicle?.plateNumber || 'Unassigned'}</td>
+                      <td><span className={`status-badge ${driver.employmentStatus}`}>{driver.employmentStatus || 'N/A'}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {drivers.length > 10 && (
+                <p className="data-note">... and {drivers.length - 10} more drivers</p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return renderGenericSummary(data);
+  };
+
+  const renderFinancialSummary = (data, reportId) => {
+    if (reportId === 'financial-overview') {
+      return (
+        <div className="summary-cards">
+          <div className="summary-card">
+            <h5>Total Asset Value</h5>
+            <span className="summary-number">${(data.totalAssetValue || 0).toLocaleString()}</span>
+          </div>
+          <div className="summary-card">
+            <h5>Monthly Maintenance</h5>
+            <span className="summary-number">${(data.monthlyMaintenanceCosts || 0).toLocaleString()}</span>
+          </div>
+          <div className="summary-card">
+            <h5>Inventory Value</h5>
+            <span className="summary-number">${(data.totalInventoryValue || 0).toLocaleString()}</span>
+          </div>
+          <div className="summary-card">
+            <h5>Avg Item Cost</h5>
+            <span className="summary-number">${(data.avgItemCost || 0).toFixed(2)}</span>
+          </div>
+        </div>
+      );
+    }
+    return renderGenericSummary(data);
+  };
+
+  const renderMaintenanceSummary = (data, reportId) => {
+    if (reportId === 'work-orders') {
+      const workOrders = Array.isArray(data) ? data : data.data || [];
+      return (
+        <div>
+          <p><strong>Total Work Orders:</strong> {workOrders.length}</p>
+          {workOrders.length > 0 && (
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Work Order #</th>
+                    <th>Vehicle</th>
+                    <th>Type</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {workOrders.slice(0, 10).map((order, index) => (
+                    <tr key={index}>
+                      <td>{order.workOrderNumber || 'N/A'}</td>
+                      <td>{order.vehicle?.plateNumber || 'N/A'}</td>
+                      <td>{order.workType || 'N/A'}</td>
+                      <td><span className={`priority-badge ${order.priority}`}>{order.priority || 'N/A'}</span></td>
+                      <td><span className={`status-badge ${order.status}`}>{order.status || 'N/A'}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {workOrders.length > 10 && (
+                <p className="data-note">... and {workOrders.length - 10} more work orders</p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return renderGenericSummary(data);
+  };
+
+  const renderInventorySummary = (data, reportId) => {
+    if (reportId === 'inventory-overview') {
+      const inventory = Array.isArray(data) ? data : data.data || [];
+      return (
+        <div>
+          <p><strong>Total Items:</strong> {inventory.length}</p>
+          {inventory.length > 0 && (
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Unit Cost</th>
+                    <th>Total Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inventory.slice(0, 10).map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.name || 'N/A'}</td>
+                      <td>{item.category || 'N/A'}</td>
+                      <td>{item.quantity || 0}</td>
+                      <td>${(item.unitCost || 0).toFixed(2)}</td>
+                      <td>${((item.quantity || 0) * (item.unitCost || 0)).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {inventory.length > 10 && (
+                <p className="data-note">... and {inventory.length - 10} more items</p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return renderGenericSummary(data);
+  };
+
+  const renderEquipmentSummary = (data, reportId) => {
+    if (reportId === 'equipment-overview') {
+      const equipment = Array.isArray(data) ? data : data.data || [];
+      return (
+        <div>
+          <p><strong>Total Equipment:</strong> {equipment.length}</p>
+          {equipment.length > 0 && (
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Value</th>
+                    <th>Location</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {equipment.slice(0, 10).map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.name || 'N/A'}</td>
+                      <td>{item.category || 'N/A'}</td>
+                      <td><span className={`status-badge ${item.status}`}>{item.status || 'N/A'}</span></td>
+                      <td>${(item.currentValue || 0).toLocaleString()}</td>
+                      <td>{item.location || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {equipment.length > 10 && (
+                <p className="data-note">... and {equipment.length - 10} more equipment</p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return renderGenericSummary(data);
+  };
+
+  const renderGenericSummary = (data) => {
+    if (Array.isArray(data)) {
+      return (
+        <div>
+          <p><strong>Total Records:</strong> {data.length}</p>
+          {data.length > 0 && (
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    {Object.keys(data[0]).slice(0, 5).map(key => (
+                      <th key={key}>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</th>
+                    ))}
+                    {Object.keys(data[0]).length > 5 && <th>...</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.slice(0, 10).map((item, index) => (
+                    <tr key={index}>
+                      {Object.keys(item).slice(0, 5).map(key => (
+                        <td key={key}>{String(item[key] || '').substring(0, 50)}</td>
+                      ))}
+                      {Object.keys(item).length > 5 && <td>...</td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {data.length > 10 && (
+                <p className="data-note">... and {data.length - 10} more records</p>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <div className="data-object">
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="reports-container">
       <div className="reports-header">
@@ -585,43 +951,8 @@ const Reports = () => {
               <div className="report-preview-data">
                 {previewReport.data && previewReport.data.data ? (
                   <div className="data-preview">
-                    <h4>Data Preview:</h4>
-                    {Array.isArray(previewReport.data.data) ? (
-                      <div>
-                        <p><strong>Total Records:</strong> {previewReport.data.data.length}</p>
-                        {previewReport.data.data.length > 0 && (
-                          <div className="data-table">
-                            <table>
-                              <thead>
-                                <tr>
-                                  {Object.keys(previewReport.data.data[0]).slice(0, 5).map(key => (
-                                    <th key={key}>{key}</th>
-                                  ))}
-                                  {Object.keys(previewReport.data.data[0]).length > 5 && <th>...</th>}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {previewReport.data.data.slice(0, 10).map((item, index) => (
-                                  <tr key={index}>
-                                    {Object.keys(item).slice(0, 5).map(key => (
-                                      <td key={key}>{String(item[key] || '').substring(0, 50)}</td>
-                                    ))}
-                                    {Object.keys(item).length > 5 && <td>...</td>}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                            {previewReport.data.data.length > 10 && (
-                              <p className="data-note">... and {previewReport.data.data.length - 10} more records</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="data-object">
-                        <pre>{JSON.stringify(previewReport.data.data, null, 2)}</pre>
-                      </div>
-                    )}
+                    <h4>Report Summary:</h4>
+                    {renderReportSummary(previewReport)}
                   </div>
                 ) : (
                   <div className="no-data">
