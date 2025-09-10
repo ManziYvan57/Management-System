@@ -20,10 +20,22 @@ router.get('/work-orders', protect, async (req, res) => {
     if (priority && priority !== 'all') query.priority = priority;
     if (workType && workType !== 'all') query.workType = workType;
     if (vehicle && vehicle !== 'all') query.vehicle = vehicle;
-    if (terminal && terminal !== 'all') query.terminal = terminal;
 
-    const workOrders = await WorkOrder.find(query)
-      .populate('vehicle', 'plateNumber make model assignedRoute')
+    // Filter by terminal through vehicle terminals
+    let workOrders;
+    if (terminal && terminal !== 'all') {
+      // Find vehicles that operate in this terminal
+      const vehiclesInTerminal = await Vehicle.find({ 
+        terminals: { $in: [terminal] },
+        isActive: true 
+      }).select('_id');
+      
+      const vehicleIds = vehiclesInTerminal.map(v => v._id);
+      query.vehicle = { $in: vehicleIds };
+    }
+
+    workOrders = await WorkOrder.find(query)
+      .populate('vehicle', 'plateNumber make model assignedRoute terminals')
       .sort({ dateCreated: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -125,10 +137,22 @@ router.get('/maintenance-schedules', protect, async (req, res) => {
     if (priority && priority !== 'all') query.priority = priority;
     if (maintenanceType && maintenanceType !== 'all') query.maintenanceType = maintenanceType;
     if (vehicle && vehicle !== 'all') query.vehicle = vehicle;
-    if (terminal && terminal !== 'all') query.terminal = terminal;
 
-    const maintenanceSchedules = await MaintenanceSchedule.find(query)
-      .populate('vehicle', 'plateNumber make model assignedRoute')
+    // Filter by terminal through vehicle terminals
+    let maintenanceSchedules;
+    if (terminal && terminal !== 'all') {
+      // Find vehicles that operate in this terminal
+      const vehiclesInTerminal = await Vehicle.find({ 
+        terminals: { $in: [terminal] },
+        isActive: true 
+      }).select('_id');
+      
+      const vehicleIds = vehiclesInTerminal.map(v => v._id);
+      query.vehicle = { $in: vehicleIds };
+    }
+
+    maintenanceSchedules = await MaintenanceSchedule.find(query)
+      .populate('vehicle', 'plateNumber make model assignedRoute terminals')
       .sort({ nextDue: 1 })
       .skip(skip)
       .limit(parseInt(limit));

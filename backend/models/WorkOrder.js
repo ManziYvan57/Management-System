@@ -16,11 +16,7 @@ const workOrderSchema = new mongoose.Schema({
     required: [true, 'Vehicle is required']
   },
   
-  terminal: {
-    type: String,
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
-    required: [true, 'Terminal is required']
-  },
+  // Terminal is inherited from vehicle - no need for separate field
   
   // Work order details
   workType: {
