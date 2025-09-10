@@ -23,10 +23,30 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [availableRoutes, setAvailableRoutes] = useState([]);
+
+  // Generate route options based on selected terminals
+  const generateRoutes = (terminals) => {
+    if (!terminals || terminals.length < 2) {
+      return [];
+    }
+    
+    const routes = [];
+    // Generate all possible combinations between selected terminals
+    for (let i = 0; i < terminals.length; i++) {
+      for (let j = 0; j < terminals.length; j++) {
+        if (i !== j) {
+          const route = `${terminals[i]}-${terminals[j]}`;
+          routes.push(route);
+        }
+      }
+    }
+    return routes;
+  };
 
   useEffect(() => {
     if ((mode === 'edit' || mode === 'view') && vehicle) {
-      setFormData({
+      const vehicleData = {
         plateNumber: vehicle.plateNumber || '',
         make: vehicle.make || '',
         model: vehicle.model || '',
@@ -42,7 +62,15 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
         purchaseCost: vehicle.purchaseCost || 0,
         purchaseDate: vehicle.purchaseDate ? new Date(vehicle.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         currentValue: vehicle.currentValue || 0
-      });
+      };
+      
+      setFormData(vehicleData);
+      
+      // Generate routes for existing vehicle terminals
+      if (vehicle.terminals && vehicle.terminals.length >= 2) {
+        const routes = generateRoutes(vehicle.terminals);
+        setAvailableRoutes(routes);
+      }
     }
   }, [mode, vehicle]);
 
@@ -66,6 +94,18 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
       ...prev,
       terminals: selectedTerminals
     }));
+    
+    // Generate routes based on selected terminals
+    const routes = generateRoutes(selectedTerminals);
+    setAvailableRoutes(routes);
+    
+    // Clear assigned route if it's not valid for new terminals
+    if (formData.assignedRoute && !routes.includes(formData.assignedRoute)) {
+      setFormData(prev => ({
+        ...prev,
+        assignedRoute: ''
+      }));
+    }
     
     // Clear error when user selects terminals
     if (errors.terminals) {
@@ -358,15 +398,24 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
            <div className="form-row">
              <div className="form-group">
                <label htmlFor="assignedRoute">Assigned Route</label>
-               <input
-                 type="text"
+               <select
                  id="assignedRoute"
                  name="assignedRoute"
                  value={formData.assignedRoute}
                  onChange={handleInputChange}
-                 placeholder="Route name or ID"
-                 disabled={mode === 'view'}
-               />
+                 disabled={mode === 'view' || availableRoutes.length === 0}
+                 className={availableRoutes.length === 0 ? 'disabled' : ''}
+               >
+                 <option value="">Select a route</option>
+                 {availableRoutes.map((route, index) => (
+                   <option key={index} value={route}>
+                     {route.replace('-', ' → ')}
+                   </option>
+                 ))}
+               </select>
+               {availableRoutes.length === 0 && (
+                 <small className="form-hint">Select at least 2 terminals to see available routes</small>
+               )}
              </div>
            </div>
 

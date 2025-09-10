@@ -1624,6 +1624,20 @@ label {
   .cancel-button {
     width: 100%;
   }
+}
+
+/* Route Selection Styles */
+.form-group select.disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.form-hint {
+  color: #666;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-style: italic;
 }"" 
 "/* Standard Loading and Error States */" 
 ".loading-state," 

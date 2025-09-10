@@ -170,7 +170,7 @@ const VehiclesTab = ({ activeTerminal }) => {
       <div className="tab-header">
         <div className="header-left">
           <h2>Vehicle Fleet</h2>
-          <span className="vehicle-count">{vehicles.length} vehicles</span>
+          <span className="vehicle-count">{totalVehicles} vehicles</span>
         </div>
         
         <div className="header-right">

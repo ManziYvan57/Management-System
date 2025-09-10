@@ -159,7 +159,7 @@ const EquipmentTab = ({ activeTerminal }) => {
       <div className="tab-header">
         <div className="header-left">
           <h2>Equipment Inventory</h2>
-          <span className="vehicle-count">{equipment.length} items</span>
+          <span className="vehicle-count">{totalEquipment} items</span>
         </div>
         
         <div className="header-right">
