@@ -54,6 +54,13 @@ const Sidebar = ({ user }) => {
       module: 'personnel',
       action: 'view'
     },
+    { 
+      path: '/reports', 
+      icon: <FaChartBar />, 
+      text: 'Reports',
+      module: 'reports',
+      action: 'view'
+    },
     // Transport Operations - Temporarily disabled for future updates
     // { 
     //   path: '/transport', 

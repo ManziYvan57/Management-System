@@ -7,6 +7,7 @@ import Garage from './pages/Garage/Garage';
 import Inventory from './pages/Inventory';
 import Assets from './pages/Assets';
 import Personnel from './pages/Personnel';
+import Reports from './pages/Reports/Reports';
 // import Transport from './pages/Transport'; // Temporarily disabled
 import Users from './pages/Users';
 
@@ -72,6 +73,16 @@ function App() {
             <ProtectedRoute>
               <Layout title="Personnel Management">
                 <Personnel />
+              </Layout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/reports" 
+          element={
+            <ProtectedRoute>
+              <Layout title="Reports & Analytics">
+                <Reports />
               </Layout>
             </ProtectedRoute>
           } 
