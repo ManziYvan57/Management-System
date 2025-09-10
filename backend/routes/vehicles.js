@@ -14,9 +14,9 @@ router.get('/', protect, async (req, res) => {
     // Build query based on user role
     let query = { isActive: true };
     
-    // Filter by terminal
+    // Filter by terminal - check if terminal is in terminals array
     if (terminal) {
-      query.terminal = terminal;
+      query.terminals = { $in: [terminal] };
     }
     
     // Search functionality
@@ -111,7 +111,8 @@ router.post('/', protect, authorize('vehicles', 'create'), [
   body('model').notEmpty().withMessage('Model is required'),
   body('year').isInt({ min: 1900, max: new Date().getFullYear() + 1 }).withMessage('Valid year is required'),
   body('seatingCapacity').isInt({ min: 1 }).withMessage('Seating capacity must be at least 1'),
-  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
+  body('terminals').isArray({ min: 1 }).withMessage('At least one terminal is required'),
+  body('terminals.*').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -274,9 +275,9 @@ router.get('/stats/overview', protect, async (req, res) => {
     // Build query based on user role and terminal
     let query = { isActive: true };
     
-    // Filter by terminal
+    // Filter by terminal - check if terminal is in terminals array
     if (terminal) {
-      query.terminal = terminal;
+      query.terminals = { $in: [terminal] };
     }
     
     const [

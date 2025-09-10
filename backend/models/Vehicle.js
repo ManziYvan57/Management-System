@@ -105,10 +105,16 @@ const VehicleSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  terminal: {
-    type: String,
+  terminals: {
+    type: [String],
     enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
-    required: [true, 'Terminal is required']
+    required: [true, 'At least one terminal is required'],
+    validate: {
+      validator: function(v) {
+        return v && v.length > 0;
+      },
+      message: 'At least one terminal must be selected'
+    }
   },
   
   // Document management
