@@ -32,13 +32,11 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
     }
     
     const routes = [];
-    // Generate all possible combinations between selected terminals
+    // Generate unique bidirectional routes between selected terminals
     for (let i = 0; i < terminals.length; i++) {
-      for (let j = 0; j < terminals.length; j++) {
-        if (i !== j) {
-          const route = `${terminals[i]}-${terminals[j]}`;
-          routes.push(route);
-        }
+      for (let j = i + 1; j < terminals.length; j++) {
+        const route = `${terminals[i]}-${terminals[j]}`;
+        routes.push(route);
       }
     }
     return routes;
@@ -409,7 +407,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
                  <option value="">Select a route</option>
                  {availableRoutes.map((route, index) => (
                    <option key={index} value={route}>
-                     {route.replace('-', ' → ')}
+                     {route.replace('-', ' ⇄ ')}
                    </option>
                  ))}
                </select>
