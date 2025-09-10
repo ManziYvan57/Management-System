@@ -322,9 +322,17 @@ const VehiclesTab = ({ activeTerminal }) => {
                     )}
                   </td>
                   <td>
-                    <span className="terminal-badge">
-                      {vehicle.terminal}
-                    </span>
+                    <div className="terminals-container">
+                      {vehicle.terminals && vehicle.terminals.length > 0 ? (
+                        vehicle.terminals.map((terminal, index) => (
+                          <span key={index} className="terminal-badge">
+                            {terminal}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="terminal-badge">N/A</span>
+                      )}
+                    </div>
                   </td>
                   <td>
                                          <div className="action-buttons">

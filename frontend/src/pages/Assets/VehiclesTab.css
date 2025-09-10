@@ -1,5 +1,22 @@
 /* Vehicles Tab Specific Styles - Compact Button Overrides */
 
+.terminals-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.terminal-badge {
+  background-color: #e5e7eb;
+  color: #374151;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .vehicles-tab .action-buttons {
   display: flex;
   gap: 8px;

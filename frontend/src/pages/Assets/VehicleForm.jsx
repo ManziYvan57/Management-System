@@ -9,7 +9,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
     model: '',
     year: new Date().getFullYear(),
     status: 'active',
-    terminal: '',
+    terminals: [],
     seatingCapacity: 0,
     fuelType: 'Diesel',
     mileage: 0,
@@ -32,7 +32,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
         model: vehicle.model || '',
         year: vehicle.year || new Date().getFullYear(),
         status: vehicle.status || 'active',
-        terminal: vehicle.terminal || '',
+        terminals: vehicle.terminals || [],
         seatingCapacity: vehicle.seatingCapacity || 0,
         fuelType: vehicle.fuelType || 'Diesel',
         mileage: vehicle.mileage || 0,
@@ -60,12 +60,28 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
     }
   };
 
+  const handleTerminalChange = (e) => {
+    const selectedTerminals = Array.from(e.target.selectedOptions, option => option.value);
+    setFormData(prev => ({
+      ...prev,
+      terminals: selectedTerminals
+    }));
+    
+    // Clear error when user selects terminals
+    if (errors.terminals) {
+      setErrors(prev => ({
+        ...prev,
+        terminals: ''
+      }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.plateNumber.trim()) newErrors.plateNumber = 'Plate number is required';
     if (!formData.make.trim()) newErrors.make = 'Make is required';
     if (!formData.model.trim()) newErrors.model = 'Model is required';
-    if (!formData.terminal.trim()) newErrors.terminal = 'Terminal is required';
+    if (!formData.terminals || formData.terminals.length === 0) newErrors.terminals = 'At least one terminal is required';
     if (formData.seatingCapacity <= 0) newErrors.seatingCapacity = 'Seating capacity must be greater than 0';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -197,22 +213,24 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null }
             </div>
 
             <div className="form-group">
-              <label htmlFor="terminal">Terminal *</label>
+              <label htmlFor="terminals">Terminals * (Select multiple for cross-border vehicles)</label>
               <select
-                id="terminal"
-                name="terminal"
-                value={formData.terminal}
-                onChange={handleInputChange}
-                className={errors.terminal ? 'error' : ''}
+                id="terminals"
+                name="terminals"
+                multiple
+                value={formData.terminals}
+                onChange={handleTerminalChange}
+                className={errors.terminals ? 'error' : ''}
                 disabled={mode === 'view'}
+                style={{ minHeight: '100px' }}
               >
-                <option value="">Select Terminal</option>
                 <option value="Kigali">Kigali</option>
                 <option value="Kampala">Kampala</option>
                 <option value="Juba">Juba</option>
                 <option value="Nairobi">Nairobi</option>
               </select>
-              {errors.terminal && <span className="error-message">{errors.terminal}</span>}
+              <small className="form-hint">Hold Ctrl (or Cmd on Mac) to select multiple terminals</small>
+              {errors.terminals && <span className="error-message">{errors.terminals}</span>}
             </div>
           </div>
 
