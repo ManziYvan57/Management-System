@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaWarehouse, FaBuilding } from 'react-icons/fa';
 import { garageAPI, vehiclesAPI, inventoryAPI, stockMovementsAPI } from '../../services/api';
+import Pagination from '../../components/Pagination';
 import './Garage.css';
 
 const Garage = () => {
@@ -32,6 +33,15 @@ const Garage = () => {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Pagination state
+  const [workOrdersPage, setWorkOrdersPage] = useState(1);
+  const [maintenancePage, setMaintenancePage] = useState(1);
+  const [workOrdersTotalPages, setWorkOrdersTotalPages] = useState(1);
+  const [maintenanceTotalPages, setMaintenanceTotalPages] = useState(1);
+  const [workOrdersTotal, setWorkOrdersTotal] = useState(0);
+  const [maintenanceTotal, setMaintenanceTotal] = useState(0);
+  const [itemsPerPage] = useState(10);
   const [stats, setStats] = useState({
     totalWorkOrders: 0,
     pendingWorkOrders: 0,
@@ -96,6 +106,16 @@ const Garage = () => {
   // Handle terminal tab change
   const handleTerminalChange = (terminal) => {
     setActiveTerminal(terminal);
+    setWorkOrdersPage(1); // Reset to first page when changing terminal
+    setMaintenancePage(1); // Reset to first page when changing terminal
+  };
+
+  const handleWorkOrdersPageChange = (page) => {
+    setWorkOrdersPage(page);
+  };
+
+  const handleMaintenancePageChange = (page) => {
+    setMaintenancePage(page);
   };
 
   // Get terminals available to user based on role
@@ -121,8 +141,8 @@ const Garage = () => {
           inventoryResponse,
           statsResponse
         ] = await Promise.all([
-          garageAPI.getWorkOrders({ terminal: activeTerminal }),
-          garageAPI.getMaintenanceSchedules({ terminal: activeTerminal }),
+          garageAPI.getWorkOrders({ terminal: activeTerminal, page: workOrdersPage, limit: itemsPerPage }),
+          garageAPI.getMaintenanceSchedules({ terminal: activeTerminal, page: maintenancePage, limit: itemsPerPage }),
           vehiclesAPI.getAll({ terminal: activeTerminal }),
           inventoryAPI.getAll({ terminal: activeTerminal }),
           garageAPI.getStats({ terminal: activeTerminal })
@@ -132,7 +152,21 @@ const Garage = () => {
         console.log('Vehicles Data:', vehiclesResponse.data);
         
         setWorkOrders(workOrdersResponse.data || []);
+        
+        // Update work orders pagination
+        if (workOrdersResponse.pagination) {
+          setWorkOrdersTotalPages(workOrdersResponse.pagination.total);
+          setWorkOrdersTotal(workOrdersResponse.pagination.totalItems);
+        }
+        
         setMaintenanceSchedules(maintenanceResponse.data || []);
+        
+        // Update maintenance pagination
+        if (maintenanceResponse.pagination) {
+          setMaintenanceTotalPages(maintenanceResponse.pagination.total);
+          setMaintenanceTotal(maintenanceResponse.pagination.totalItems);
+        }
+        
         setVehicles(vehiclesResponse.data || []);
         setInventoryItems(inventoryResponse.data || []);
         setStats(statsResponse.data || {});
@@ -145,7 +179,7 @@ const Garage = () => {
     };
 
     fetchData();
-  }, [activeTerminal]);
+  }, [activeTerminal, workOrdersPage, maintenancePage]);
 
   // Refresh data after adding/editing
   const refreshData = async () => {
@@ -711,6 +745,15 @@ const Garage = () => {
             </tbody>
           </table>
           
+          {/* Work Orders Pagination */}
+          <Pagination
+            currentPage={workOrdersPage}
+            totalPages={workOrdersTotalPages}
+            onPageChange={handleWorkOrdersPageChange}
+            totalItems={workOrdersTotal}
+            itemsPerPage={itemsPerPage}
+          />
+          
           {workOrders.length === 0 && (
             <div className="no-results">
               <p>No work orders found.</p>
@@ -824,6 +867,15 @@ const Garage = () => {
                })}
             </tbody>
           </table>
+          
+          {/* Maintenance Schedules Pagination */}
+          <Pagination
+            currentPage={maintenancePage}
+            totalPages={maintenanceTotalPages}
+            onPageChange={handleMaintenancePageChange}
+            totalItems={maintenanceTotal}
+            itemsPerPage={itemsPerPage}
+          />
           
           {maintenanceSchedules.length === 0 && (
             <div className="no-results">

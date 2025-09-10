@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { inventoryAPI, suppliersAPI, purchaseOrdersAPI, stockMovementsAPI } from '../../services/api';
 import { FaEye, FaEdit, FaTrash, FaWarehouse, FaBuilding } from 'react-icons/fa';
+import Pagination from '../../components/Pagination';
 import './Inventory.css';
 
 const Inventory = () => {
@@ -43,6 +44,12 @@ const Inventory = () => {
     lowStockItems: 0,
     outOfStockItems: 0
   });
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalInventory, setTotalInventory] = useState(0);
+  const [itemsPerPage] = useState(10);
 
   const [suppliers, setSuppliers] = useState([]);
   const [purchaseOrders, setPurchaseOrders] = useState([]);
@@ -136,19 +143,32 @@ const Inventory = () => {
         setLoading(true);
         setError(null);
         
-                 const [inventoryResponse, statsResponse, suppliersResponse, purchaseOrdersResponse, stockMovementsResponse] = await Promise.all([
-           inventoryAPI.getAll(),
-           inventoryAPI.getStats(),
-           suppliersAPI.getAll(),
-           purchaseOrdersAPI.getAll(),
-           stockMovementsAPI.getAll()
-         ]);
+        const params = {
+          page: currentPage,
+          limit: itemsPerPage,
+          terminal: activeTerminal
+        };
         
-                 setInventory(inventoryResponse.data || []);
-         setStats(statsResponse.data || {});
-         setSuppliers(suppliersResponse.data || []);
-         setPurchaseOrders(purchaseOrdersResponse.data || []);
-         setStockMovements(stockMovementsResponse.data || []);
+        const [inventoryResponse, statsResponse, suppliersResponse, purchaseOrdersResponse, stockMovementsResponse] = await Promise.all([
+          inventoryAPI.getAll(params),
+          inventoryAPI.getStats(),
+          suppliersAPI.getAll(),
+          purchaseOrdersAPI.getAll(),
+          stockMovementsAPI.getAll()
+        ]);
+        
+        setInventory(inventoryResponse.data || []);
+        
+        // Update pagination info
+        if (inventoryResponse.pagination) {
+          setTotalPages(inventoryResponse.pagination.totalPages);
+          setTotalInventory(inventoryResponse.total || 0);
+        }
+        
+        setStats(statsResponse.data || {});
+        setSuppliers(suppliersResponse.data || []);
+        setPurchaseOrders(purchaseOrdersResponse.data || []);
+        setStockMovements(stockMovementsResponse.data || []);
       } catch (err) {
         console.error('Error fetching inventory data:', err);
         setError(err.message || 'Failed to fetch inventory data');
@@ -158,14 +178,19 @@ const Inventory = () => {
     };
 
     fetchData();
-  }, []);
+  }, [activeTerminal, currentPage]);
 
   // Handle terminal tab change
   const handleTerminalChange = (terminal) => {
     setActiveTerminal(terminal);
+    setCurrentPage(1); // Reset to first page when changing terminal
     // Update form terminals when switching tabs
     setNewPurchaseOrder(prev => ({ ...prev, terminal }));
     setNewStockMovement(prev => ({ ...prev, terminal }));
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   // Get terminals available to user based on role
@@ -847,6 +872,15 @@ const Inventory = () => {
               ))}
             </tbody>
           </table>
+          
+          {/* Pagination */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={totalInventory}
+            itemsPerPage={itemsPerPage}
+          />
             </>
           )}
         </div>

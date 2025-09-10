@@ -43,14 +43,17 @@ const EquipmentTab = ({ activeTerminal }) => {
 
   useEffect(() => {
     fetchEquipment();
-  }, [activeTerminal]);
+  }, [activeTerminal, currentPage, searchTerm, statusFilter, categoryFilter]);
 
   const fetchEquipment = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage
+      };
       if (searchTerm) params.search = searchTerm;
       if (activeTerminal) params.terminal = activeTerminal;
       if (statusFilter) params.status = statusFilter;
@@ -58,6 +61,12 @@ const EquipmentTab = ({ activeTerminal }) => {
       
       const response = await equipmentAPI.getAll(params);
       setEquipment(response.data || []);
+      
+      // Update pagination info
+      if (response.pagination) {
+        setTotalPages(response.pagination.pages);
+        setTotalEquipment(response.total || 0);
+      }
     } catch (err) {
       console.error('Error fetching equipment:', err);
       setError(err.message || 'Failed to fetch equipment');
@@ -68,6 +77,7 @@ const EquipmentTab = ({ activeTerminal }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    setCurrentPage(1); // Reset to first page when searching
     fetchEquipment();
   };
 
@@ -107,7 +117,12 @@ const EquipmentTab = ({ activeTerminal }) => {
   };
 
   const handleFilterChange = () => {
+    setCurrentPage(1); // Reset to first page when filtering
     fetchEquipment();
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   const getStatusBadgeClass = (status) => {
@@ -305,6 +320,15 @@ const EquipmentTab = ({ activeTerminal }) => {
             </tbody>
           </table>
         )}
+        
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          totalItems={totalEquipment}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
       {/* Add Equipment Modal */}
