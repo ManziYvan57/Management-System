@@ -9,10 +9,17 @@ import {
   FaUsers,
   FaDollarSign,
   FaWrench,
-  FaRoute,
-  FaWarehouse,
+  FaBoxes,
   FaClipboardList
 } from 'react-icons/fa';
+import { 
+  vehiclesAPI, 
+  personnelAPI, 
+  dashboardAPI, 
+  garageAPI, 
+  inventoryAPI,
+  equipmentAPI
+} from '../../services/api';
 import './Reports.css';
 
 const Reports = () => {
@@ -22,7 +29,9 @@ const Reports = () => {
     endDate: new Date().toISOString().split('T')[0]
   });
   const [selectedTerminal, setSelectedTerminal] = useState('all');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({});
+  const [reportData, setReportData] = useState({});
+  const [recentReports, setRecentReports] = useState([]);
 
   const reportCategories = [
     {
@@ -32,75 +41,68 @@ const Reports = () => {
       description: 'Vehicle utilization, maintenance, and performance reports',
       color: '#3B82F6',
       reports: [
-        { id: 'vehicle-utilization', name: 'Vehicle Utilization Report', description: 'Track vehicle usage and efficiency' },
-        { id: 'maintenance-summary', name: 'Maintenance Summary', description: 'Vehicle maintenance history and costs' },
-        { id: 'fuel-consumption', name: 'Fuel Consumption Report', description: 'Fuel usage and efficiency analysis' },
-        { id: 'vehicle-performance', name: 'Vehicle Performance', description: 'Performance metrics and reliability' }
+        { id: 'vehicle-overview', name: 'Vehicle Overview', description: 'Vehicle status, counts, and basic metrics' },
+        { id: 'vehicle-performance', name: 'Vehicle Performance', description: 'Vehicle utilization and efficiency metrics' },
+        { id: 'vehicle-maintenance', name: 'Vehicle Maintenance', description: 'Maintenance history and costs by vehicle' }
       ]
     },
     {
       id: 'personnel',
       title: 'Personnel Reports',
       icon: FaUsers,
-      description: 'Staff performance, attendance, and training reports',
+      description: 'Staff performance and driver metrics',
       color: '#10B981',
       reports: [
-        { id: 'personnel-performance', name: 'Performance Report', description: 'Staff performance and evaluation metrics' },
-        { id: 'attendance-summary', name: 'Attendance Summary', description: 'Staff attendance and leave tracking' },
-        { id: 'training-compliance', name: 'Training Compliance', description: 'Training completion and certification status' },
-        { id: 'driver-efficiency', name: 'Driver Efficiency', description: 'Driver performance and safety metrics' }
+        { id: 'personnel-overview', name: 'Personnel Overview', description: 'Staff counts, roles, and status breakdown' },
+        { id: 'driver-performance', name: 'Driver Performance', description: 'Driver efficiency and safety metrics' },
+        { id: 'personnel-stats', name: 'Personnel Statistics', description: 'Detailed personnel analytics and trends' }
       ]
     },
     {
       id: 'financial',
       title: 'Financial Reports',
       icon: FaDollarSign,
-      description: 'Revenue, expenses, and profitability analysis',
+      description: 'Financial overview and cost analysis',
       color: '#F59E0B',
       reports: [
-        { id: 'revenue-analysis', name: 'Revenue Analysis', description: 'Income tracking and revenue trends' },
-        { id: 'expense-breakdown', name: 'Expense Breakdown', description: 'Detailed expense categorization' },
-        { id: 'profit-loss', name: 'Profit & Loss Statement', description: 'Comprehensive P&L analysis' },
-        { id: 'cost-per-mile', name: 'Cost Per Mile', description: 'Operational cost efficiency metrics' }
+        { id: 'financial-overview', name: 'Financial Overview', description: 'Asset values, costs, and financial metrics' },
+        { id: 'maintenance-costs', name: 'Maintenance Costs', description: 'Maintenance spending and cost analysis' },
+        { id: 'inventory-costs', name: 'Inventory Costs', description: 'Inventory value and spending analysis' }
       ]
     },
     {
       id: 'maintenance',
       title: 'Maintenance Reports',
       icon: FaWrench,
-      description: 'Work orders, schedules, and maintenance costs',
+      description: 'Work orders and maintenance tracking',
       color: '#EF4444',
       reports: [
-        { id: 'work-order-summary', name: 'Work Order Summary', description: 'Maintenance work order tracking' },
-        { id: 'preventive-maintenance', name: 'Preventive Maintenance', description: 'Scheduled maintenance compliance' },
-        { id: 'parts-usage', name: 'Parts Usage Report', description: 'Inventory usage and costs' },
-        { id: 'maintenance-costs', name: 'Maintenance Costs', description: 'Detailed maintenance cost analysis' }
-      ]
-    },
-    {
-      id: 'operations',
-      title: 'Operations Reports',
-      icon: FaRoute,
-      description: 'Route performance, trips, and operational metrics',
-      color: '#8B5CF6',
-      reports: [
-        { id: 'route-performance', name: 'Route Performance', description: 'Route efficiency and profitability' },
-        { id: 'trip-summary', name: 'Trip Summary', description: 'Trip completion and timing analysis' },
-        { id: 'customer-satisfaction', name: 'Customer Satisfaction', description: 'Service quality and feedback metrics' },
-        { id: 'operational-efficiency', name: 'Operational Efficiency', description: 'Overall operational performance' }
+        { id: 'work-orders', name: 'Work Orders', description: 'Work order status and completion tracking' },
+        { id: 'maintenance-stats', name: 'Maintenance Statistics', description: 'Maintenance performance and efficiency' },
+        { id: 'garage-overview', name: 'Garage Overview', description: 'Garage operations and work order summary' }
       ]
     },
     {
       id: 'inventory',
       title: 'Inventory Reports',
-      icon: FaWarehouse,
-      description: 'Stock levels, usage, and procurement reports',
+      icon: FaBoxes,
+      description: 'Stock levels and inventory management',
       color: '#06B6D4',
       reports: [
-        { id: 'stock-levels', name: 'Stock Levels', description: 'Current inventory levels and status' },
-        { id: 'usage-analysis', name: 'Usage Analysis', description: 'Parts and supplies usage patterns' },
-        { id: 'reorder-alerts', name: 'Reorder Alerts', description: 'Items requiring restocking' },
-        { id: 'procurement-summary', name: 'Procurement Summary', description: 'Purchase orders and supplier analysis' }
+        { id: 'inventory-overview', name: 'Inventory Overview', description: 'Stock levels and inventory status' },
+        { id: 'inventory-stats', name: 'Inventory Statistics', description: 'Inventory analytics and trends' },
+        { id: 'low-stock', name: 'Low Stock Alert', description: 'Items requiring restocking' }
+      ]
+    },
+    {
+      id: 'equipment',
+      title: 'Equipment Reports',
+      icon: FaClipboardList,
+      description: 'Equipment status and utilization',
+      color: '#8B5CF6',
+      reports: [
+        { id: 'equipment-overview', name: 'Equipment Overview', description: 'Equipment status and basic metrics' },
+        { id: 'equipment-stats', name: 'Equipment Statistics', description: 'Equipment utilization and performance' }
       ]
     }
   ];
@@ -114,23 +116,119 @@ const Reports = () => {
   ];
 
   const handleGenerateReport = async (reportId, categoryId) => {
-    setLoading(true);
+    const loadingKey = `${categoryId}-${reportId}`;
+    
+    // Set loading state for this specific report
+    setLoading(prev => ({ ...prev, [loadingKey]: true }));
+    
     try {
-      // Simulate report generation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      let data = null;
+      const params = {
+        terminal: selectedTerminal !== 'all' ? selectedTerminal : undefined,
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate
+      };
+
+      // Generate report based on category and report ID
+      switch (categoryId) {
+        case 'vehicles':
+          if (reportId === 'vehicle-overview') {
+            data = await vehiclesAPI.getStats(params);
+          } else if (reportId === 'vehicle-performance') {
+            data = await vehiclesAPI.getAll(params);
+          } else if (reportId === 'vehicle-maintenance') {
+            data = await garageAPI.getWorkOrders(params);
+          }
+          break;
+          
+        case 'personnel':
+          if (reportId === 'personnel-overview') {
+            data = await personnelAPI.getAll(params);
+          } else if (reportId === 'driver-performance') {
+            data = await personnelAPI.getDrivers(params);
+          } else if (reportId === 'personnel-stats') {
+            data = await personnelAPI.getStats(params);
+          }
+          break;
+          
+        case 'financial':
+          if (reportId === 'financial-overview') {
+            data = await dashboardAPI.getFinancials();
+          } else if (reportId === 'maintenance-costs') {
+            data = await garageAPI.getStats(params);
+          } else if (reportId === 'inventory-costs') {
+            data = await inventoryAPI.getStats(params);
+          }
+          break;
+          
+        case 'maintenance':
+          if (reportId === 'work-orders') {
+            data = await garageAPI.getWorkOrders(params);
+          } else if (reportId === 'maintenance-stats') {
+            data = await garageAPI.getStats(params);
+          } else if (reportId === 'garage-overview') {
+            data = await garageAPI.getStats(params);
+          }
+          break;
+          
+        case 'inventory':
+          if (reportId === 'inventory-overview') {
+            data = await inventoryAPI.getAll(params);
+          } else if (reportId === 'inventory-stats') {
+            data = await inventoryAPI.getStats(params);
+          } else if (reportId === 'low-stock') {
+            data = await inventoryAPI.getAll({ ...params, lowStock: true });
+          }
+          break;
+          
+        case 'equipment':
+          if (reportId === 'equipment-overview') {
+            data = await equipmentAPI.getAll(params);
+          } else if (reportId === 'equipment-stats') {
+            data = await equipmentAPI.getStats(params);
+          }
+          break;
+          
+        default:
+          throw new Error('Unknown report category');
+      }
+
+      // Store the report data
+      setReportData(prev => ({
+        ...prev,
+        [loadingKey]: {
+          data,
+          generatedAt: new Date().toISOString(),
+          reportId,
+          categoryId,
+          params
+        }
+      }));
+
+      // Add to recent reports
+      const reportName = reportCategories
+        .find(cat => cat.id === categoryId)
+        ?.reports.find(rep => rep.id === reportId)?.name || 'Unknown Report';
       
-      // Here you would call your API to generate the actual report
-      console.log('Generating report:', reportId, 'for category:', categoryId);
-      console.log('Date range:', dateRange);
-      console.log('Terminal:', selectedTerminal);
+      setRecentReports(prev => [
+        {
+          id: loadingKey,
+          name: reportName,
+          category: categoryId,
+          generatedAt: new Date().toISOString(),
+          data
+        },
+        ...prev.slice(0, 4) // Keep only last 5 reports
+      ]);
+
+      alert(`Report "${reportName}" generated successfully!`);
       
-      // For now, just show success message
-      alert('Report generated successfully! (This is a demo)');
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('Error generating report. Please try again.');
+      alert(`Error generating report: ${error.message}`);
     } finally {
-      setLoading(false);
+      // Clear loading state for this specific report
+      setLoading(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
 
@@ -206,7 +304,9 @@ const Reports = () => {
             <FaFileAlt />
           </div>
           <div className="stat-content">
-            <span className="stat-number">24</span>
+            <span className="stat-number">
+              {reportCategories.reduce((total, category) => total + category.reports.length, 0)}
+            </span>
             <span className="stat-label">Available Reports</span>
           </div>
         </div>
@@ -215,7 +315,9 @@ const Reports = () => {
             <FaCalendarAlt />
           </div>
           <div className="stat-content">
-            <span className="stat-number">7</span>
+            <span className="stat-number">
+              {Math.ceil((new Date(dateRange.endDate) - new Date(dateRange.startDate)) / (1000 * 60 * 60 * 24))}
+            </span>
             <span className="stat-label">Days Range</span>
           </div>
         </div>
@@ -224,8 +326,8 @@ const Reports = () => {
             <FaDownload />
           </div>
           <div className="stat-content">
-            <span className="stat-number">3</span>
-            <span className="stat-label">Export Formats</span>
+            <span className="stat-number">{recentReports.length}</span>
+            <span className="stat-label">Generated Reports</span>
           </div>
         </div>
       </div>
@@ -257,9 +359,9 @@ const Reports = () => {
                       <button
                         className="generate-btn"
                         onClick={() => handleGenerateReport(report.id, category.id)}
-                        disabled={loading}
+                        disabled={loading[`${category.id}-${report.id}`]}
                       >
-                        {loading ? 'Generating...' : 'Generate'}
+                        {loading[`${category.id}-${report.id}`] ? 'Generating...' : 'Generate'}
                       </button>
                       <div className="export-dropdown">
                         <button className="export-btn">
@@ -284,36 +386,30 @@ const Reports = () => {
       <div className="recent-reports">
         <h3>Recent Reports</h3>
         <div className="recent-reports-list">
-          <div className="recent-report-item">
-            <div className="report-icon">
-              <FaCar />
+          {recentReports.length > 0 ? (
+            recentReports.map((report, index) => {
+              const category = reportCategories.find(cat => cat.id === report.category);
+              const IconComponent = category?.icon || FaFileAlt;
+              const timeAgo = new Date(report.generatedAt).toLocaleString();
+              
+              return (
+                <div key={report.id} className="recent-report-item">
+                  <div className="report-icon">
+                    <IconComponent />
+                  </div>
+                  <div className="report-details">
+                    <h4>{report.name}</h4>
+                    <p>Generated {timeAgo}</p>
+                  </div>
+                  <div className="report-status success">Completed</div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="no-reports">
+              <p>No reports generated yet. Generate your first report above!</p>
             </div>
-            <div className="report-details">
-              <h4>Vehicle Utilization Report</h4>
-              <p>Generated 2 hours ago</p>
-            </div>
-            <div className="report-status success">Completed</div>
-          </div>
-          <div className="recent-report-item">
-            <div className="report-icon">
-              <FaUsers />
-            </div>
-            <div className="report-details">
-              <h4>Personnel Performance Report</h4>
-              <p>Generated 1 day ago</p>
-            </div>
-            <div className="report-status success">Completed</div>
-          </div>
-          <div className="recent-report-item">
-            <div className="report-icon">
-              <FaDollarSign />
-            </div>
-            <div className="report-details">
-              <h4>Financial Summary Report</h4>
-              <p>Generated 3 days ago</p>
-            </div>
-            <div className="report-status success">Completed</div>
-          </div>
+          )}
         </div>
       </div>
     </div>
