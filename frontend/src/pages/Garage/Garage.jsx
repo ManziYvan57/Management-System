@@ -689,9 +689,17 @@ const Garage = () => {
                    </td>
                    <td>{formatDate(workOrder.scheduledDate)}</td>
                    <td>
-                     <span className="terminal-badge">
-                       {workOrder.terminal || 'N/A'}
-                     </span>
+                     <div className="terminals-container">
+                       {workOrder.vehicle && workOrder.vehicle.terminals && workOrder.vehicle.terminals.length > 0 ? (
+                         workOrder.vehicle.terminals.map((terminal, index) => (
+                           <span key={index} className="terminal-badge">
+                             {terminal}
+                           </span>
+                         ))
+                       ) : (
+                         <span className="terminal-badge">N/A</span>
+                       )}
+                     </div>
                    </td>
                    <td>
                      {workOrder.partsUsed && workOrder.partsUsed.length > 0 ? (
@@ -811,9 +819,17 @@ const Garage = () => {
                        </span>
                      </td>
                      <td>
-                       <span className="terminal-badge">
-                         {maintenance.terminal || 'N/A'}
-                       </span>
+                       <div className="terminals-container">
+                         {maintenance.vehicle && maintenance.vehicle.terminals && maintenance.vehicle.terminals.length > 0 ? (
+                           maintenance.vehicle.terminals.map((terminal, index) => (
+                             <span key={index} className="terminal-badge">
+                               {terminal}
+                             </span>
+                           ))
+                         ) : (
+                           <span className="terminal-badge">N/A</span>
+                         )}
+                       </div>
                      </td>
                      <td>
                        {maintenance.requiredParts && maintenance.requiredParts.length > 0 ? (
