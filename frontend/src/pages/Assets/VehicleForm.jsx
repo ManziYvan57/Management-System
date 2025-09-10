@@ -49,8 +49,10 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
   const fetchDrivers = async () => {
     try {
       setLoadingDrivers(true);
-      const response = await personnelAPI.getDrivers({ 
+      // Use general personnel API with role filter as workaround
+      const response = await personnelAPI.getAll({ 
         terminal: activeTerminal,
+        role: 'driver',
         employmentStatus: 'active'
       });
       setDrivers(response.data || []);
