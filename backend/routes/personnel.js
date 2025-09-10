@@ -138,6 +138,82 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
+// @desc    Get drivers only
+// @route   GET /api/personnel/drivers
+// @access  Private
+router.get('/drivers', protect, async (req, res) => {
+  try {
+    const {
+      search,
+      employmentStatus,
+      licenseStatus,
+      terminal,
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    const query = { role: 'driver' };
+    
+    // Filter by terminal
+    if (terminal) {
+      query.terminal = terminal;
+    }
+    
+    if (search) {
+      query.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { licenseNumber: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+
+    if (employmentStatus && employmentStatus !== 'all') query.employmentStatus = employmentStatus;
+
+    // Filter by license status
+    if (licenseStatus) {
+      const today = new Date();
+      const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      
+      switch (licenseStatus) {
+        case 'expired':
+          query.licenseExpiryDate = { $lt: today };
+          break;
+        case 'expiring_soon':
+          query.licenseExpiryDate = { $gte: today, $lte: thirtyDaysFromNow };
+          break;
+        case 'valid':
+          query.licenseExpiryDate = { $gt: thirtyDaysFromNow };
+          break;
+      }
+    }
+
+    const skip = (page - 1) * limit;
+    
+    const drivers = await Personnel.find(query)
+      .populate('assignedVehicle', 'plateNumber make model')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Personnel.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: drivers,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching drivers:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // @desc    Get personnel by ID
 // @route   GET /api/personnel/:id
 // @access  Private
@@ -510,82 +586,6 @@ router.get('/stats/overview', protect, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching personnel statistics:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-// @desc    Get drivers only
-// @route   GET /api/personnel/drivers
-// @access  Private
-router.get('/drivers', protect, async (req, res) => {
-  try {
-    const {
-      search,
-      employmentStatus,
-      licenseStatus,
-      terminal,
-      page = 1,
-      limit = 10
-    } = req.query;
-
-    const query = { role: 'driver' };
-    
-    // Filter by terminal
-    if (terminal) {
-      query.terminal = terminal;
-    }
-    
-    if (search) {
-      query.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { licenseNumber: { $regex: search, $options: 'i' } }
-      ];
-    }
-    
-
-    if (employmentStatus && employmentStatus !== 'all') query.employmentStatus = employmentStatus;
-
-    // Filter by license status
-    if (licenseStatus) {
-      const today = new Date();
-      const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      
-      switch (licenseStatus) {
-        case 'expired':
-          query.licenseExpiryDate = { $lt: today };
-          break;
-        case 'expiring_soon':
-          query.licenseExpiryDate = { $gte: today, $lte: thirtyDaysFromNow };
-          break;
-        case 'valid':
-          query.licenseExpiryDate = { $gt: thirtyDaysFromNow };
-          break;
-      }
-    }
-
-    const skip = (page - 1) * limit;
-    
-    const drivers = await Personnel.find(query)
-      .populate('assignedVehicle', 'plateNumber make model')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const total = await Personnel.countDocuments(query);
-
-    res.json({
-      success: true,
-      data: drivers,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching drivers:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
