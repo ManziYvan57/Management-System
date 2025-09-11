@@ -87,7 +87,7 @@ const VehicleSchema = new mongoose.Schema({
   // Assignment information
   assignedDriver: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Personnel',
     validate: {
       validator: function(v) {
         return v === null || v === undefined || (typeof v === 'string' && v.trim() === '') || mongoose.Types.ObjectId.isValid(v);

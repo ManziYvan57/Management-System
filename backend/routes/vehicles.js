@@ -145,7 +145,7 @@ router.post('/', protect, authorize('vehicles', 'create'), [
     
     const populatedVehicle = await Vehicle.findById(vehicle._id)
       .populate('createdBy', 'username firstName lastName')
-      .populate('assignedDriver', 'username firstName lastName');
+      .populate('assignedDriver', 'firstName lastName employeeId');
     
     res.status(201).json({
       success: true,
@@ -215,7 +215,7 @@ router.put('/:id', protect, authorize('vehicles', 'edit'), async (req, res) => {
       runValidators: true
     })
     .populate('createdBy', 'username firstName lastName')
-    .populate('assignedDriver', 'username firstName lastName');
+    .populate('assignedDriver', 'firstName lastName employeeId');
     
     res.status(200).json({
       success: true,
