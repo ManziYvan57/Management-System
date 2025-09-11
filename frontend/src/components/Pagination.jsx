@@ -13,8 +13,8 @@ const Pagination = ({
   // Handle inconsistent pagination props by deriving total pages when missing
   const derivedTotalPages = totalPages || Math.max(1, Math.ceil((totalItems || 0) / itemsPerPage));
 
-  // Don't render if there's only one page or no pages
-  if (derivedTotalPages <= 1) return null;
+  // If there are no items at all, don't render
+  if (!totalItems || totalItems === 0) return null;
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -69,6 +69,11 @@ const Pagination = ({
         }
         pages.push(derivedTotalPages);
       }
+    }
+    
+    // Ensure at least page 1 is shown when there's only one page
+    if (pages.length === 0) {
+      pages.push(1);
     }
     
     return pages;
