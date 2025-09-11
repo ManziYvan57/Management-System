@@ -10,8 +10,11 @@ const Pagination = ({
   itemsPerPage = 10,
   showInfo = true 
 }) => {
+  // Handle inconsistent pagination props by deriving total pages when missing
+  const derivedTotalPages = totalPages || Math.max(1, Math.ceil((totalItems || 0) / itemsPerPage));
+
   // Don't render if there's only one page or no pages
-  if (totalPages <= 1) return null;
+  if (derivedTotalPages <= 1) return null;
 
   const handlePrevious = () => {
     if (currentPage > 1) {
@@ -20,7 +23,7 @@ const Pagination = ({
   };
 
   const handleNext = () => {
-    if (currentPage < totalPages) {
+    if (currentPage < derivedTotalPages) {
       onPageChange(currentPage + 1);
     }
   };
@@ -36,15 +39,15 @@ const Pagination = ({
     const pages = [];
     const maxVisiblePages = 5;
     
-    if (totalPages <= maxVisiblePages) {
+    if (derivedTotalPages <= maxVisiblePages) {
       // Show all pages if total is small
-      for (let i = 1; i <= totalPages; i++) {
+      for (let i = 1; i <= derivedTotalPages; i++) {
         pages.push(i);
       }
     } else {
       // Show pages around current page
       const start = Math.max(1, currentPage - 2);
-      const end = Math.min(totalPages, currentPage + 2);
+      const end = Math.min(derivedTotalPages, currentPage + 2);
       
       // Always show first page
       if (start > 1) {
@@ -60,11 +63,11 @@ const Pagination = ({
       }
       
       // Always show last page
-      if (end < totalPages) {
-        if (end < totalPages - 1) {
+      if (end < derivedTotalPages) {
+        if (end < derivedTotalPages - 1) {
           pages.push('...');
         }
-        pages.push(totalPages);
+        pages.push(derivedTotalPages);
       }
     }
     
@@ -108,7 +111,7 @@ const Pagination = ({
 
         <button 
           onClick={handleNext}
-          disabled={currentPage === totalPages}
+          disabled={currentPage === derivedTotalPages}
           className="pagination-btn next-btn"
           title="Next page"
         >
