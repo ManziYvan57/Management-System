@@ -14,7 +14,7 @@ const Assets = () => {
   
   // Terminal tabs state
   const [activeTerminal, setActiveTerminal] = useState(userTerminal);
-  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']);
   
   const [activeTab, setActiveTab] = useState('vehicles');
 

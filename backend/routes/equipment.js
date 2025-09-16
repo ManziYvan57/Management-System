@@ -249,7 +249,7 @@ router.post('/', protect, authorize('equipment', 'create'), [
   body('name').notEmpty().withMessage('Equipment name is required'),
   body('category').isIn(['tools', 'electronics', 'safety', 'office', 'maintenance']).withMessage('Valid category is required'),
   body('status').isIn(['active', 'inactive', 'maintenance', 'out_of_service']).withMessage('Valid status is required'),
-  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
+  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']).withMessage('Valid terminal is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

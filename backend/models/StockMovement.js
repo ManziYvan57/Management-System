@@ -94,7 +94,7 @@ const StockMovementSchema = new mongoose.Schema({
   terminal: {
     type: String,
     required: [true, 'Terminal is required'],
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'],
     trim: true
   },
   isActive: {

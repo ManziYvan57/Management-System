@@ -31,7 +31,7 @@ const Inventory = () => {
   
   // Terminal tabs state
   const [activeTerminal, setActiveTerminal] = useState(userTerminal);
-  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']);
   
   // Data state
   const [inventory, setInventory] = useState([]);
@@ -1243,6 +1243,8 @@ const Inventory = () => {
                    <option value="Kampala">Kampala</option>
                    <option value="Nairobi">Nairobi</option>
                    <option value="Juba">Juba</option>
+                   <option value="Goma">Goma</option>
+                   <option value="Bor">Bor</option>
                  </select>
                </div>
 
@@ -1401,6 +1403,8 @@ const Inventory = () => {
                    <option value="Kampala">Kampala</option>
                    <option value="Nairobi">Nairobi</option>
                    <option value="Juba">Juba</option>
+                   <option value="Goma">Goma</option>
+                   <option value="Bor">Bor</option>
                  </select>
                </div>
 
@@ -1537,6 +1541,8 @@ const Inventory = () => {
                    <option value="Kampala">Kampala</option>
                    <option value="Nairobi">Nairobi</option>
                    <option value="Juba">Juba</option>
+                   <option value="Goma">Goma</option>
+                   <option value="Bor">Bor</option>
                  </select>
                </div>
               

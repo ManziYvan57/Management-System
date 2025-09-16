@@ -29,7 +29,7 @@ const Personnel = () => {
   
   // Terminal tabs state
   const [activeTerminal, setActiveTerminal] = useState(userTerminal);
-  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']);
   
   const [personnel, setPersonnel] = useState([]);
   const [loading, setLoading] = useState(true);

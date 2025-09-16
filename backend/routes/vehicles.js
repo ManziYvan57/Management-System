@@ -111,8 +111,46 @@ router.post('/', protect, authorize('vehicles', 'create'), [
   body('model').notEmpty().withMessage('Model is required'),
   body('year').isInt({ min: 1900, max: new Date().getFullYear() + 1 }).withMessage('Valid year is required'),
   body('seatingCapacity').isInt({ min: 1 }).withMessage('Seating capacity must be at least 1'),
-  body('terminals').isArray({ min: 1 }).withMessage('At least one terminal is required'),
-  body('terminals.*').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Valid terminal is required')
+  // Normalize and validate terminals robustly
+  body('terminals')
+    .customSanitizer((value) => {
+      const toTitle = (s) => typeof s === 'string' && s.length
+        ? s.trim().charAt(0).toUpperCase() + s.trim().slice(1).toLowerCase()
+        : s;
+      if (Array.isArray(value)) {
+        return value
+          .map((t) => toTitle(t))
+          .filter((t) => !!t);
+      }
+      if (typeof value === 'string') {
+        // If it's a JSON array string, try to parse it
+        const trimmed = value.trim();
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              return parsed.map((t) => toTitle(String(t))).filter((t) => !!t);
+            }
+          } catch (e) {
+            // fallthrough to comma split
+          }
+        }
+        // Support comma-separated strings or single string
+        const parts = trimmed.includes(',') ? trimmed.split(',') : [trimmed];
+        return parts.map((t) => toTitle(t)).filter((t) => !!t);
+      }
+      return [];
+    })
+    .isArray({ min: 1 }).withMessage('At least one terminal is required')
+    .bail()
+    .custom((arr) => {
+      const allowed = ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'];
+      if (!Array.isArray(arr)) return false;
+      // Deduplicate and ensure every value is allowed
+      const unique = Array.from(new Set(arr));
+      return unique.length === arr.length && arr.every((t) => allowed.includes(t));
+    })
+    .withMessage('Valid terminal is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -369,6 +407,26 @@ router.get('/available', protect, async (req, res) => {
       success: false,
       message: 'Error fetching available vehicles',
       error: error.message
+    });
+  }
+});
+
+// Temporary diagnostics: check allowed terminals on the live server
+// NOTE: Public (no auth) and safe to remove after verification
+router.get('/_diag/terminals', async (req, res) => {
+  try {
+    const path = Vehicle.schema.path('terminals');
+    const modelEnum = (path && path.caster && path.caster.enumValues) || [];
+
+    return res.status(200).json({
+      success: true,
+      data: { modelEnum }
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: 'Diagnostics error',
+      error: err.message
     });
   }
 });

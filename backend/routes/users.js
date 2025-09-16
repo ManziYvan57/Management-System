@@ -141,7 +141,7 @@ router.post('/', [
     .isIn(['super_admin', 'admin', 'managers'])
     .withMessage('Invalid role'),
   body('terminal')
-    .isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba'])
+    .isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'])
     .withMessage('Invalid terminal'),
   body('phone')
     .optional()

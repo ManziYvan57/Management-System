@@ -20,7 +20,7 @@ const validatePersonnel = [
 
   body('role').isIn(['driver', 'team_leader', 'customer_care', 'mechanic', 'supervisor', 'manager', 'admin', 'garage_staff', 'transport_staff', 'inventory_staff']).withMessage('Please select a valid role'),
   body('department').isIn(['operations', 'maintenance', 'customer_service', 'administration', 'finance', 'other']).withMessage('Please select a valid department'),
-  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Please select a valid terminal'),
+  body('terminal').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']).withMessage('Please select a valid terminal'),
 
   body('employmentStatus').optional().isIn(['active', 'inactive', 'suspended', 'terminated', 'on_leave']).withMessage('Please select a valid employment status'),
   body('licenseNumber').optional().trim(),

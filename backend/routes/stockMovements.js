@@ -196,7 +196,7 @@ router.post('/', protect, [
   body('reason').notEmpty().withMessage('Reason is required'),
   body('reference').optional().isString().withMessage('Reference must be a string'),
   body('referenceType').optional().isIn(['purchase_order', 'work_order', 'maintenance', 'manual', 'system', 'other']).withMessage('Invalid reference type'),
-  body('terminal').notEmpty().withMessage('Terminal is required').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Invalid terminal')
+  body('terminal').notEmpty().withMessage('Terminal is required').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']).withMessage('Invalid terminal')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

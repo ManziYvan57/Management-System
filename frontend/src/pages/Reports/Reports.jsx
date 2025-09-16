@@ -114,7 +114,9 @@ const Reports = () => {
     { value: 'Kigali', label: 'Kigali' },
     { value: 'Kampala', label: 'Kampala' },
     { value: 'Nairobi', label: 'Nairobi' },
-    { value: 'Juba', label: 'Juba' }
+    { value: 'Juba', label: 'Juba' },
+    { value: 'Goma', label: 'Goma' },
+    { value: 'Bor', label: 'Bor' }
   ];
 
   const handleGenerateReport = async (reportId, categoryId) => {

@@ -41,7 +41,9 @@ const Users = () => {
     { _id: 'Kigali', name: 'Kigali' },
     { _id: 'Kampala', name: 'Kampala' },
     { _id: 'Juba', name: 'Juba' },
-    { _id: 'Nairobi', name: 'Nairobi' }
+    { _id: 'Nairobi', name: 'Nairobi' },
+    { _id: 'Goma', name: 'Goma' },
+    { _id: 'Bor', name: 'Bor' }
   ]);
 
   // Fetch terminals from backend (fallback to defaults on error)
@@ -277,7 +279,9 @@ const Users = () => {
       'Kigali': 'badge-kigali',
       'Kampala': 'badge-kampala',
       'Juba': 'badge-juba',
-      'Nairobi': 'badge-nairobi'
+      'Nairobi': 'badge-nairobi',
+      'Goma': 'badge-goma',
+      'Bor': 'badge-bor'
     };
     return terminalClasses[terminal] || 'badge-default';
   };

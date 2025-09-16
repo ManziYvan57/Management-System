@@ -197,6 +197,8 @@ const EquipmentForm = ({ isOpen, onClose, onSubmit, mode = 'add', equipment = nu
                 <option value="Kampala">Kampala</option>
                 <option value="Juba">Juba</option>
                 <option value="Nairobi">Nairobi</option>
+                <option value="Goma">Goma</option>
+                <option value="Bor">Bor</option>
               </select>
               {errors.terminal && <span className="error-message">{errors.terminal}</span>}
             </div>

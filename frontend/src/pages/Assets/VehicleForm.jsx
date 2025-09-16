@@ -161,8 +161,15 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
     setLoading(true);
     try {
       // Clean up the data before submitting
+      const allowedTerminals = ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'];
+      const cleanedTerminals = (formData.terminals || [])
+        .map(t => (t || '').trim())
+        .filter(Boolean)
+        .map(t => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase())
+        .filter((t, idx, arr) => allowedTerminals.includes(t) && arr.indexOf(t) === idx);
       const submitData = {
         ...formData,
+        terminals: cleanedTerminals,
         assignedDriver: formData.assignedDriver.trim() === '' ? null : 
           (formData.assignedDriver && formData.assignedDriver.length === 24 ? formData.assignedDriver : null),
         purchaseCost: parseFloat(formData.purchaseCost) || 0,
@@ -173,6 +180,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
         fuelConsumption: parseFloat(formData.fuelConsumption) || 0
       };
       
+      console.log('Submitting vehicle payload:', submitData);
       await onSubmit(submitData);
       onClose();
     } catch (error) {
@@ -295,6 +303,8 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
                 <option value="Kampala">Kampala</option>
                 <option value="Juba">Juba</option>
                 <option value="Nairobi">Nairobi</option>
+                <option value="Goma">Goma</option>
+                <option value="Bor">Bor</option>
               </select>
               <small className="form-hint">Hold Ctrl (or Cmd on Mac) to select multiple terminals</small>
               {errors.terminals && <span className="error-message">{errors.terminals}</span>}

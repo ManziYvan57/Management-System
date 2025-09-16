@@ -63,7 +63,7 @@ const UserSchema = new mongoose.Schema({
   },
   terminal: {
     type: String,
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba'],
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'],
     required: [true, 'Terminal is required']
   },
   phone: {

@@ -180,7 +180,7 @@ router.post('/', protect, [
   body('items.*.unitCost').isFloat({ min: 0 }).withMessage('Unit cost must be positive'),
   body('expectedDelivery').optional().isISO8601().withMessage('Invalid delivery date'),
   body('paymentTerms').optional().isString().withMessage('Payment terms must be a string'),
-  body('terminal').notEmpty().withMessage('Terminal is required').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba']).withMessage('Invalid terminal')
+  body('terminal').notEmpty().withMessage('Terminal is required').isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']).withMessage('Invalid terminal')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
