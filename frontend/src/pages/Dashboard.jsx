@@ -21,7 +21,7 @@ const Dashboard = () => {
   const userTerminalId = user.terminalId || user?.terminal?._id || user?.terminal_id;
   const userRole = user.role || 'user';
   const [activeTerminal, setActiveTerminal] = useState(userTerminal);
-  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba']);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']);
 
   const [dashboardData, setDashboardData] = useState({
     garage: {},
@@ -1300,6 +1300,14 @@ const Dashboard = () => {
                   <div className="users-stat">
                     <span>Juba Terminal</span>
                     <strong>{dashboardData.users.jubaUsers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Goma Terminal</span>
+                    <strong>{dashboardData.users.gomaUsers || 0}</strong>
+                  </div>
+                  <div className="users-stat">
+                    <span>Bor Terminal</span>
+                    <strong>{dashboardData.users.borUsers || 0}</strong>
                   </div>
                 </div>
               </div>

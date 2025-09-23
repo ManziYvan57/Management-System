@@ -66,7 +66,7 @@ router.get('/', protect, async (req, res) => {
     // Terminal filtering - filter by vehicle terminal
     let vehicleQuery = {};
     if (terminal) {
-      vehicleQuery.terminal = terminal;
+      vehicleQuery.terminals = { $in: [terminal] };
     }
 
     // Pagination
@@ -87,7 +87,7 @@ router.get('/', protect, async (req, res) => {
       query.vehicle = { $in: vehicleIds };
       
       documents = await VehicleDocument.find(query)
-        .populate('vehicle', 'plateNumber make model year terminal')
+        .populate('vehicle', 'plateNumber make model year terminals')
         .populate('createdBy', 'firstName lastName')
         .populate('updatedBy', 'firstName lastName')
         .sort(sort)
@@ -95,7 +95,7 @@ router.get('/', protect, async (req, res) => {
         .limit(parseInt(limit));
     } else {
       documents = await VehicleDocument.find(query)
-        .populate('vehicle', 'plateNumber make model year terminal')
+        .populate('vehicle', 'plateNumber make model year terminals')
         .populate('createdBy', 'firstName lastName')
         .populate('updatedBy', 'firstName lastName')
         .sort(sort)
@@ -132,7 +132,7 @@ router.get('/vehicle/:vehicleId', protect, async (req, res) => {
     if (status && status !== 'all') query.status = status;
 
     const documents = await VehicleDocument.find(query)
-      .populate('vehicle', 'plateNumber make model year')
+      .populate('vehicle', 'plateNumber make model year terminals')
       .populate('createdBy', 'firstName lastName')
       .sort({ expiryDate: 1 });
 
@@ -150,7 +150,7 @@ router.get('/vehicle/:vehicleId', protect, async (req, res) => {
 router.get('/:id', protect, async (req, res) => {
   try {
     const document = await VehicleDocument.findById(req.params.id)
-      .populate('vehicle', 'plateNumber make model year')
+      .populate('vehicle', 'plateNumber make model year terminals')
       .populate('createdBy', 'firstName lastName')
       .populate('updatedBy', 'firstName lastName');
 
@@ -212,7 +212,7 @@ router.post('/', protect, [
     await document.save();
 
     // Populate references
-    await document.populate('vehicle', 'plateNumber make model year');
+    await document.populate('vehicle', 'plateNumber make model year terminals');
     await document.populate('createdBy', 'firstName lastName');
 
     res.status(201).json({
@@ -268,7 +268,7 @@ router.put('/:id', protect, [
     await document.save();
 
     // Populate references
-    await document.populate('vehicle', 'plateNumber make model year');
+    await document.populate('vehicle', 'plateNumber make model year terminals');
     await document.populate('createdBy', 'firstName lastName');
     await document.populate('updatedBy', 'firstName lastName');
 
@@ -316,7 +316,7 @@ router.get('/alerts/expiring', protect, async (req, res) => {
       expiryDate: { $gte: today, $lte: futureDate },
       isActive: true
     })
-    .populate('vehicle', 'plateNumber make model year')
+    .populate('vehicle', 'plateNumber make model year terminals')
     .populate('createdBy', 'firstName lastName')
     .sort({ expiryDate: 1 });
 
