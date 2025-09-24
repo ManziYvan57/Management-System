@@ -10,12 +10,14 @@ const router = express.Router();
 // @access  Public
 router.get('/terminals', (req, res) => {
   try {
-    const terminals = [
-      { id: 'Kigali', name: 'Kigali', country: 'Rwanda' },
-      { id: 'Kampala', name: 'Kampala', country: 'Uganda' },
-      { id: 'Nairobi', name: 'Nairobi', country: 'Kenya' },
-      { id: 'Juba', name: 'Juba', country: 'South Sudan' }
-    ];
+    // Dynamically get terminals from the Vehicle model schema
+    const terminalEnum = Vehicle.schema.path('terminals').caster.enumValues;
+
+    const terminals = terminalEnum.map(terminalName => ({
+      id: terminalName,
+      name: terminalName,
+      country: '' // Country info is not in the schema
+    }));
 
     res.json({
       success: true,
