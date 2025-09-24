@@ -54,7 +54,7 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
 
   const fetchVehicles = async () => {
     try {
-      const params = {};
+      const params = { select: 'true' };
       if (activeTerminal) params.terminal = activeTerminal;
       
       const response = await vehiclesAPI.getAll(params);
