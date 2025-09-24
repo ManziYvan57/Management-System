@@ -9,7 +9,18 @@ const { body, validationResult } = require('express-validator');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, fuelType, terminal } = req.query;
+    const { page = 1, limit = 10, search, status, fuelType, terminal, select } = req.query;
+
+    // If 'select' is true, return a simplified list for dropdowns
+    if (select === 'true') {
+      const vehicles = await Vehicle.find({ isActive: true })
+        .sort({ plateNumber: 1 })
+        .select('_id plateNumber');
+      return res.status(200).json({
+        success: true,
+        data: vehicles
+      });
+    }
     
     // Build query based on user role
     let query = { isActive: true };
