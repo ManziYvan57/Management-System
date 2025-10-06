@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaFileAlt, FaCalendar } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaFileAlt, FaCalendar, FaExclamationTriangle, FaCheckCircle, FaClock, FaDownload, FaUpload } from 'react-icons/fa';
 import { vehicleDocumentsAPI, vehiclesAPI } from '../../services/api';
 import VehicleDocumentForm from './VehicleDocumentForm';
 import Pagination from '../../components/Pagination';
@@ -24,18 +24,12 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalDocuments, setTotalDocuments] = useState(0);
-  const [itemsPerPage] = useState(5); // Lower limit for documents as they are grouped
-
-  useEffect(() => {
-    fetchDocuments();
-    fetchVehicles();
-  }, [activeTerminal, currentPage]);
+  const [itemsPerPage] = useState(5);
 
   const fetchDocuments = async () => {
     try {
       setLoading(true);
       setError(null);
-      
       const params = {
         page: currentPage,
         limit: itemsPerPage,
@@ -46,7 +40,6 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
         expiryStatus: expiryStatusFilter,
         terminal: activeTerminal
       };
-      
       const response = await vehicleDocumentsAPI.getAll(params);
       setDocuments(response.data || []);
       if (response.pagination) {
@@ -70,11 +63,29 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
     }
   };
 
+  useEffect(() => {
+    fetchVehicles();
+  }, [activeTerminal]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      } else {
+        fetchDocuments();
+      }
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm, documentTypeFilter, statusFilter, complianceFilter, expiryStatusFilter, activeTerminal]);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [currentPage]);
+
   const handleAddDocument = async (documentData) => {
     try {
       await vehicleDocumentsAPI.create(documentData);
       setShowAddForm(false);
-      // Go to the last page to see the new document
       const newTotalPages = Math.ceil((totalDocuments + 1) / itemsPerPage);
       if (currentPage === newTotalPages) {
         fetchDocuments();
@@ -92,7 +103,7 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
       await vehicleDocumentsAPI.update(id, documentData);
       setShowEditForm(false);
       setEditingDocument(null);
-      fetchDocuments(); // Refetch current page
+      fetchDocuments();
     } catch (err) {
       console.error('Error updating document:', err);
       throw err;
@@ -103,7 +114,6 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
     if (window.confirm('Are you sure you want to delete this document?')) {
       try {
         await vehicleDocumentsAPI.delete(id);
-        // If the last item on a page is deleted, go to the previous page
         if (documents.length === 1 && currentPage > 1) {
           setCurrentPage(currentPage - 1);
         } else {
@@ -115,19 +125,6 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
       }
     }
   };
-  
-  const handleSearchAndFilter = () => {
-    setCurrentPage(1);
-    fetchDocuments();
-  };
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-        handleSearchAndFilter();
-    }, 500); // Debounce search/filter input
-    return () => clearTimeout(handler);
-  }, [searchTerm, documentTypeFilter, statusFilter, complianceFilter, expiryStatusFilter, activeTerminal]);
-
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -138,7 +135,22 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
       case 'active': return 'status-active';
       case 'expired': return 'status-expired';
       case 'pending_renewal': return 'status-pending';
+      case 'suspended': return 'status-suspended';
+      case 'cancelled': return 'status-cancelled';
       default: return 'status-default';
+    }
+  };
+
+  const getDocumentTypeBadgeClass = (type) => {
+    switch (type) {
+      case 'insurance': return 'type-insurance';
+      case 'technical_control': return 'type-technical';
+      case 'registration': return 'type-registration';
+      case 'inspection_certificate': return 'type-inspection';
+      case 'emission_test': return 'type-emission';
+      case 'safety_certificate': return 'type-safety';
+      case 'compliance_certificate': return 'type-compliance';
+      default: return 'type-other';
     }
   };
 
@@ -146,13 +158,17 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
     switch (status) {
       case 'compliant': return 'compliance-compliant';
       case 'non_compliant': return 'compliance-non-compliant';
+      case 'pending_review': return 'compliance-pending';
+      case 'under_review': return 'compliance-under-review';
       default: return 'compliance-default';
     }
   };
 
   const getExpiryStatusClass = (daysUntilExpiry) => {
     if (daysUntilExpiry < 0) return 'expiry-expired';
+    if (daysUntilExpiry <= 7) return 'expiry-critical';
     if (daysUntilExpiry <= 30) return 'expiry-warning';
+    if (daysUntilExpiry <= 90) return 'expiry-notice';
     return 'expiry-valid';
   };
 
@@ -173,76 +189,121 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
 
   const groupedDocuments = groupDocumentsByVehicle(documents);
 
-  if (error) return <div className="error-state">Error: {error} <button onClick={fetchDocuments}>Retry</button></div>;
+  const closeViewForm = () => {
+    setShowViewForm(false);
+    setEditingDocument(null);
+  };
+
+  if (loading) return <div className="loading-state"><div className="loading-spinner"></div><p>Loading vehicle documents...</p></div>;
+  if (error) return <div className="error-state"><p>Error: {error}</p><button onClick={fetchDocuments}>Retry</button></div>;
 
   return (
     <div className="vehicle-documents-container">
       <div className="vehicle-documents-header">
-        <h2>Vehicle Document Management</h2>
-        <button className="add-button" onClick={() => setShowAddForm(true)}><FaPlus /> Add Document</button>
+        <div className="header-left">
+          <h2>Vehicle Document Management</h2>
+          <span className="documents-count">{totalDocuments} documents</span>
+        </div>
+        <div className="header-right">
+          <button className="add-button" onClick={() => setShowAddForm(true)}><FaPlus /> Add Document</button>
+        </div>
       </div>
 
       <div className="search-filter-container">
-        {/* Search and filter inputs here, simplified for brevity */}
-        <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        <form onSubmit={(e) => e.preventDefault()} className="search-form">
+          <div className="search-input-group">
+            <FaSearch className="search-icon" />
+            <input type="text" placeholder="Search by document number, title, authority..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
+        </form>
+        <div className="filter-controls">
+          <div className="filter-group">
+            <label>Document Type:</label>
+            <select value={documentTypeFilter} onChange={(e) => setDocumentTypeFilter(e.target.value)}>
+              <option value="">All Types</option>
+              <option value="insurance">Insurance</option>
+              <option value="technical_control">Technical Control</option>
+              <option value="registration">Registration</option>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label>Status:</label>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="loading-state"><div className="loading-spinner"></div><p>Loading documents...</p></div>
-      ) : documents.length === 0 ? (
-        <div className="empty-state">
+      <div className="table-container">
+        {documents.length === 0 ? (
+          <div className="empty-state">
             <FaFileAlt className="empty-icon" />
             <h3>No documents found</h3>
             <p>Add your first vehicle document to get started</p>
-        </div>
-      ) : (
-        <>
-          <div className="documents-list-container">
-            {Object.values(groupedDocuments).map(({ vehicle, documents: docs }) => (
-              <div key={vehicle?._id || 'unassigned'} className="vehicle-document-group">
-                <div className="vehicle-header">
-                  <FaFileAlt className="vehicle-icon" />
-                  <strong className="vehicle-plate">{getVehicleDisplay(vehicle)}</strong>
-                  <span className="document-count">{docs.length} document(s)</span>
-                </div>
-                <div className="documents-list">
-                  {docs.map(doc => (
-                    <div key={doc._id} className="document-item">
-                      <div className="document-main-info">
-                        <strong>{doc.title}</strong>
-                        <span className="document-number">#{doc.documentNumber}</span>
-                      </div>
-                      <div className="document-details">
-                        <span className={`status-badge ${getStatusBadgeClass(doc.status)}`}>{doc.status}</span>
-                        <span className={`compliance-badge ${getComplianceBadgeClass(doc.complianceStatus)}`}>{doc.complianceStatus}</span>
-                        <div className={`expiry-info ${getExpiryStatusClass(doc.daysUntilExpiry)}`}>
-                          <FaCalendar /> {formatDate(doc.expiryDate)}
-                        </div>
-                      </div>
-                      <div className="document-actions">
-                        <button onClick={() => { setEditingDocument(doc); setShowViewForm(true); }}><FaEye /></button>
-                        <button onClick={() => { setEditingDocument(doc); setShowEditForm(true); }}><FaEdit /></button>
-                        <button onClick={() => handleDeleteDocument(doc._id)}><FaTrash /></button>
+          </div>
+        ) : (
+          <>
+            <div className="documents-container">
+              {Object.values(groupedDocuments).map(({ vehicle, documents: docs }) => (
+                <div key={vehicle?._id || 'unassigned'} className="vehicle-document-group">
+                  <div className="vehicle-header">
+                    <div className="vehicle-info">
+                      <FaFileAlt className="vehicle-icon" />
+                      <div className="vehicle-details">
+                        <strong className="vehicle-plate">{getVehicleDisplay(vehicle)}</strong>
+                        <span className="document-count">{docs.length} document(s)</span>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                  <div className="documents-list">
+                    {docs.map((doc) => (
+                      <div key={doc._id} className="document-item">
+                        <div className="document-content-wrapper"> {/* This wrapper is the fix */}
+                          <div className="document-main-info">
+                            <div className="document-title"><strong>{doc.title}</strong><span className="document-number">#{doc.documentNumber}</span></div>
+                            <div className="document-authority"><span className="issuing-authority">{doc.issuingAuthority}</span></div>
+                            {doc.description && <div className="document-description"><span>{doc.description}</span></div>}
+                          </div>
+                          <div className="document-details">
+                            <div className="document-type"><span className={`document-type-badge ${getDocumentTypeBadgeClass(doc.documentType)}`}>{doc.documentType.replace('_', ' ')}</span></div>
+                            <div className="document-status"><span className={`status-badge ${getStatusBadgeClass(doc.status)}`}>{doc.status.replace('_', ' ')}</span></div>
+                            <div className="document-compliance"><span className={`compliance-badge ${getComplianceBadgeClass(doc.complianceStatus)}`}>{doc.complianceStatus.replace('_', ' ')}</span></div>
+                            <div className="document-expiry">
+                              <div className={`expiry-info ${getExpiryStatusClass(doc.daysUntilExpiry)}`}>
+                                <div className="expiry-date"><FaCalendar /><span>{formatDate(doc.expiryDate)}</span></div>
+                                {doc.daysUntilExpiry !== null && <div className="days-remaining">{doc.daysUntilExpiry < 0 ? <span className="expired">Expired {Math.abs(doc.daysUntilExpiry)} days ago</span> : <span>{doc.daysUntilExpiry} days remaining</span>}</div>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="document-actions">
+                          <button className="action-btn view-btn" onClick={() => { setEditingDocument(doc); setShowViewForm(true); }} title="View Document"><FaEye /></button>
+                          <button className="action-btn edit-btn" onClick={() => { setEditingDocument(doc); setShowEditForm(true); }} title="Edit Document"><FaEdit /></button>
+                          <button className="action-btn delete-btn" onClick={() => handleDeleteDocument(doc._id)} title="Delete Document"><FaTrash /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            totalItems={totalDocuments}
-            itemsPerPage={itemsPerPage}
-          />
-        </>
-      )}
+              ))}
+            </div>
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} totalItems={totalDocuments} itemsPerPage={itemsPerPage} />
+          </>
+        )}
+      </div>
 
       {showAddForm && <VehicleDocumentForm isOpen={showAddForm} onClose={() => setShowAddForm(false)} onSubmit={handleAddDocument} mode="add" vehicles={vehicles} />}
       {showEditForm && <VehicleDocumentForm isOpen={showEditForm} onClose={() => setEditingDocument(null)} onSubmit={(data) => handleEditDocument(editingDocument._id, data)} mode="edit" document={editingDocument} vehicles={vehicles} />}
-      {showViewForm && <VehicleDocumentForm isOpen={showViewForm} onClose={() => setEditingDocument(null)} mode="view" document={editingDocument} vehicles={vehicles} />}
+      {showViewForm && <VehicleDocumentForm 
+        isOpen={showViewForm} 
+        onClose={closeViewForm} 
+        onSubmit={closeViewForm} 
+        mode="view" 
+        document={editingDocument} 
+        vehicles={vehicles} />}
     </div>
   );
 };

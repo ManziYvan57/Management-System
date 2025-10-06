@@ -167,6 +167,14 @@
   border-bottom: none;
 }
 
+.document-content-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+}
+
 .document-main-info {
   flex: 1;
   display: flex;

@@ -156,6 +156,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (mode === 'view') return;
     if (!validateForm()) return;
     
     setLoading(true);

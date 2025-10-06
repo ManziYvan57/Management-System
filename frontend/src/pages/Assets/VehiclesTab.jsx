@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaBus } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaBus, FaUser, FaRoute } from 'react-icons/fa';
 import { vehiclesAPI } from '../../services/api';
 import VehicleForm from './VehicleForm';
 import Pagination from '../../components/Pagination';
@@ -34,15 +34,10 @@ const VehiclesTab = ({ activeTerminal }) => {
   const [totalVehicles, setTotalVehicles] = useState(0);
   const [itemsPerPage] = useState(5);
 
-  useEffect(() => {
-    fetchVehicles();
-  }, [activeTerminal, currentPage]);
-
   const fetchVehicles = async () => {
     try {
       setLoading(true);
       setError(null);
-      
       const params = {
         page: currentPage,
         limit: itemsPerPage,
@@ -51,10 +46,8 @@ const VehiclesTab = ({ activeTerminal }) => {
         fuelType: fuelTypeFilter,
         terminal: activeTerminal
       };
-      
       const response = await vehiclesAPI.getAll(params);
       setVehicles(response.data || []);
-      
       if (response.pagination) {
         setTotalPages(response.pagination.totalPages);
         setTotalVehicles(response.total || 0);
@@ -66,6 +59,21 @@ const VehiclesTab = ({ activeTerminal }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      } else {
+        fetchVehicles();
+      }
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm, statusFilter, fuelTypeFilter, activeTerminal]);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [currentPage]);
 
   const handleAddVehicle = async (vehicleData) => {
     try {
@@ -111,23 +119,30 @@ const VehiclesTab = ({ activeTerminal }) => {
     }
   };
 
-  const handleSearchAndFilter = () => {
-    setCurrentPage(1);
-    fetchVehicles();
-  };
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-        handleSearchAndFilter();
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [searchTerm, statusFilter, fuelTypeFilter, activeTerminal]);
-
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  // Other helper functions (getStatusBadgeClass, etc.) would be here
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'active': return 'status-active';
+      case 'inactive': return 'status-inactive';
+      case 'maintenance': return 'status-maintenance';
+      case 'out_of_service': return 'status-out-of-service';
+      case 'parked': return 'status-parked';
+      default: return 'status-default';
+    }
+  };
+
+  const getFuelTypeBadgeClass = (fuelType) => {
+    switch (fuelType) {
+      case 'Diesel': return 'fuel-diesel';
+      case 'Petrol': return 'fuel-petrol';
+      case 'Electric': return 'fuel-electric';
+      case 'Hybrid': return 'fuel-hybrid';
+      default: return 'fuel-other';
+    }
+  };
 
   if (loading) return <div className="loading-state"><div className="loading-spinner"></div><p>Loading vehicles...</p></div>;
   if (error) return <div className="error-state"><p>Error: {error}</p><button onClick={fetchVehicles}>Retry</button></div>;
@@ -135,23 +150,57 @@ const VehiclesTab = ({ activeTerminal }) => {
   return (
     <div className="vehicles-tab">
       <div className="tab-header">
-        <h2>Vehicle Fleet ({totalVehicles})</h2>
-        {hasPermission('assets', 'create') && (
+        <div className="header-left">
+          <h2>Vehicle Fleet</h2>
+          <span className="vehicle-count">{totalVehicles} vehicles</span>
+        </div>
+        <div className="header-right">
+          {hasPermission('assets', 'create') && (
             <button className="add-button" onClick={() => setShowAddForm(true)}><FaPlus /> Add Vehicle</button>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="search-filter-container">
-        <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-        {/* Filter dropdowns would go here */}
+        <form onSubmit={(e) => { e.preventDefault(); fetchVehicles(); }} className="search-form">
+          <div className="search-input-group">
+            <FaSearch className="search-icon" />
+            <input type="text" placeholder="Search by plate number, make, model..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
+        </form>
+        <div className="filter-controls">
+          <div className="filter-group">
+            <label>Status:</label>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="out_of_service">Out of Service</option>
+              <option value="parked">Parked</option>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label>Fuel Type:</label>
+            <select value={fuelTypeFilter} onChange={(e) => setFuelTypeFilter(e.target.value)}>
+              <option value="">All Fuel Types</option>
+              <option value="Diesel">Diesel</option>
+              <option value="Petrol">Petrol</option>
+              <option value="Electric">Electric</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="table-container">
         {vehicles.length === 0 ? (
-            <div className="empty-state">
-                <FaBus className="empty-icon" />
-                <h3>No vehicles found</h3>
-            </div>
+          <div className="empty-state">
+            <FaBus className="empty-icon" />
+            <h3>No vehicles found</h3>
+            <p>Add your first vehicle to get started</p>
+          </div>
         ) : (
           <>
             <table className="vehicles-table">
@@ -161,41 +210,57 @@ const VehiclesTab = ({ activeTerminal }) => {
                   <th>Make & Model</th>
                   <th>Year</th>
                   <th>Status</th>
-                  <th>Terminals</th>
+                  <th>Fuel Type</th>
+                  <th>Seating</th>
+                  <th>Assigned Driver</th>
+                  <th>Route</th>
+                  <th>Terminal</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {vehicles.map((vehicle) => (
                   <tr key={vehicle._id}>
-                    <td>{vehicle.plateNumber}</td>
-                    <td>{vehicle.make} {vehicle.model}</td>
+                    <td><div className="plate-number"><FaBus /><span>{vehicle.plateNumber}</span></div></td>
+                    <td><div className="vehicle-info"><strong>{vehicle.make}</strong><span>{vehicle.model}</span></div></td>
                     <td>{vehicle.year}</td>
-                    <td>{vehicle.status}</td>
-                    <td>{vehicle.terminals.join(', ')}</td>
+                    <td><span className={`status-badge ${getStatusBadgeClass(vehicle.status)}`}>{vehicle.status.replace('_', ' ')}</span></td>
+                    <td><span className={`fuel-badge ${getFuelTypeBadgeClass(vehicle.fuelType)}`}>{vehicle.fuelType}</span></td>
+                    <td>{vehicle.seatingCapacity} seats</td>
+                    <td>{vehicle.assignedDriver ? <div className="assigned-driver"><FaUser /><span>{vehicle.assignedDriver.firstName} {vehicle.assignedDriver.lastName}</span></div> : <span className="unassigned">Unassigned</span>}</td>
+                    <td>{vehicle.assignedRoute ? <div className="assigned-route"><FaRoute /><span>{vehicle.assignedRoute}</span></div> : <span className="no-route">No route</span>}</td>
                     <td>
-                      <button onClick={() => { setEditingVehicle(vehicle); setShowViewForm(true); }}><FaEye /></button>
-                      {hasPermission('assets', 'edit') && <button onClick={() => { setEditingVehicle(vehicle); setShowEditForm(true); }}><FaEdit /></button>}
-                      {hasPermission('assets', 'delete') && <button onClick={() => handleDeleteVehicle(vehicle._id)}><FaTrash /></button>}
+                      <div className="terminals-container">
+                        {vehicle.terminals?.map((terminal, index) => (
+                          <span key={index} className="terminal-badge">{terminal}</span>
+                        )) || <span className="terminal-badge">N/A</span>}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="action-btn view-btn" title="View Details" onClick={() => { setEditingVehicle(vehicle); setShowViewForm(true); }}><FaEye /></button>
+                        {hasPermission('assets', 'edit') && <button className="action-btn edit-btn" title="Edit Vehicle" onClick={() => { setEditingVehicle(vehicle); setShowEditForm(true); }}><FaEdit /></button>}
+                        {hasPermission('assets', 'delete') && <button className="action-btn delete-btn" title="Delete Vehicle" onClick={() => handleDeleteVehicle(vehicle._id)}><FaTrash /></button>}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              totalItems={totalVehicles}
-              itemsPerPage={itemsPerPage}
-            />
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} totalItems={totalVehicles} itemsPerPage={itemsPerPage} />
           </>
         )}
       </div>
 
       {showAddForm && <VehicleForm isOpen={showAddForm} onClose={() => setShowAddForm(false)} onSubmit={handleAddVehicle} mode="add" activeTerminal={activeTerminal} />}
-      {showEditForm && <VehicleForm isOpen={showEditForm} onClose={() => setEditingVehicle(null)} onSubmit={(data) => handleEditVehicle(editingVehicle._id, data)} mode="edit" vehicle={editingVehicle} activeTerminal={activeTerminal} />}
-      {showViewForm && <VehicleForm isOpen={showViewForm} onClose={() => setEditingVehicle(null)} mode="view" vehicle={editingVehicle} activeTerminal={activeTerminal} />}
+      {showEditForm && <VehicleForm isOpen={showEditForm} onClose={() => { setShowEditForm(false); setEditingVehicle(null); }} onSubmit={(data) => handleEditVehicle(editingVehicle._id, data)} mode="edit" vehicle={editingVehicle} activeTerminal={activeTerminal} />}
+      {showViewForm && <VehicleForm 
+        isOpen={showViewForm} 
+        onClose={() => { setShowViewForm(false); setEditingVehicle(null); }} 
+        onSubmit={() => { setShowViewForm(false); setEditingVehicle(null); }}
+        mode="view" 
+        vehicle={editingVehicle} 
+        activeTerminal={activeTerminal} />}
     </div>
   );
 };

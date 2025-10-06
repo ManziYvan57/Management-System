@@ -80,7 +80,7 @@ const VehicleSchema = new mongoose.Schema({
   status: {
     type: String,
     required: [true, 'Please provide vehicle status'],
-    enum: ['active', 'inactive', 'maintenance', 'out_of_service'],
+    enum: ['active', 'inactive', 'maintenance', 'out_of_service', 'parked'],
     default: 'active'
   },
   

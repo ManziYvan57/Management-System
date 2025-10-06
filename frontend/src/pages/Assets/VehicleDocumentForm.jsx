@@ -95,6 +95,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (mode === 'view') return;
     if (!validateForm()) return;
 
     setLoading(true);

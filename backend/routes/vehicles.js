@@ -97,8 +97,6 @@ router.get('/:id', protect, async (req, res) => {
       });
     }
     
-
-    
     res.status(200).json({
       success: true,
       data: vehicle
@@ -236,8 +234,6 @@ router.put('/:id', protect, authorize('vehicles', 'edit'), async (req, res) => {
       });
     }
     
-
-    
     // Check if plate number is being changed and if it already exists
     if (req.body.plateNumber && req.body.plateNumber !== vehicle.plateNumber) {
       const existingVehicle = await Vehicle.findOne({ 
@@ -253,8 +249,6 @@ router.put('/:id', protect, authorize('vehicles', 'edit'), async (req, res) => {
         });
       }
     }
-    
-
     
     // Remove createdBy from update data to prevent modification
     delete req.body.createdBy;
@@ -295,8 +289,6 @@ router.delete('/:id', protect, authorize('vehicles', 'delete'), async (req, res)
       });
     }
     
-
-    
     // Hard delete - actually remove the record from database
     await Vehicle.findByIdAndDelete(req.params.id);
     
@@ -335,6 +327,7 @@ router.get('/stats/overview', protect, async (req, res) => {
       inactiveVehicles,
       maintenanceVehicles,
       outOfServiceVehicles,
+      parkedVehicles,
       totalValue,
       totalMileage,
       fuelTypeStats,
@@ -345,6 +338,7 @@ router.get('/stats/overview', protect, async (req, res) => {
       Vehicle.countDocuments({ ...query, status: 'inactive' }),
       Vehicle.countDocuments({ ...query, status: 'maintenance' }),
       Vehicle.countDocuments({ ...query, status: 'out_of_service' }),
+      Vehicle.countDocuments({ ...query, status: 'parked' }),
       Vehicle.aggregate([
         { $match: query },
         { $group: { _id: null, total: { $sum: '$currentValue' } } }
@@ -373,6 +367,7 @@ router.get('/stats/overview', protect, async (req, res) => {
         inactiveVehicles,
         maintenanceVehicles,
         outOfServiceVehicles,
+        parkedVehicles,
         totalValue: totalValue[0]?.total || 0,
         totalMileage: totalMileage[0]?.total || 0,
         fuelTypeStats,

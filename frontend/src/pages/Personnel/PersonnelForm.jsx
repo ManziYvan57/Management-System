@@ -36,8 +36,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
     licenseType: '',
     licenseExpiryDate: '',
     drivingPoints: '',
-    assignedVehicle: '',
-    assignedRoute: '',
 
     // Performance and Training
     performanceRating: '',
@@ -132,8 +130,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
         licenseType: personnel.licenseType || '',
         licenseExpiryDate: personnel.licenseExpiryDate ? new Date(personnel.licenseExpiryDate).toISOString().split('T')[0] : '',
         drivingPoints: personnel.drivingPoints || '',
-        assignedVehicle: personnel.assignedVehicle || '',
-        assignedRoute: personnel.assignedRoute || '',
         performanceRating: personnel.performanceRating || '',
         lastEvaluationDate: personnel.lastEvaluationDate ? new Date(personnel.lastEvaluationDate).toISOString().split('T')[0] : '',
         trainingCompleted: personnel.trainingCompleted || [],
@@ -225,6 +221,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (mode === 'view') return;
     console.log('Form submitted!');
     console.log('Form data:', formData);
     
@@ -286,8 +283,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
           licenseType: '',
           licenseExpiryDate: '',
           drivingPoints: '',
-          assignedVehicle: '',
-          assignedRoute: '',
           performanceRating: '',
           lastEvaluationDate: '',
           trainingCompleted: [],
@@ -493,6 +488,7 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                   <option value="Juba">Juba</option>
                   <option value="Goma">Goma</option>
                   <option value="Bor">Bor</option>
+                  <option value="Other">Other</option>
                 </select>
                 {errors.terminal && <span className="error-message">{errors.terminal}</span>}
               </div>
@@ -582,31 +578,6 @@ const PersonnelForm = ({ isOpen, onClose, onSubmit, mode = 'add', personnel = nu
                     onChange={handleInputChange}
                     min="0"
                     max="100"
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="assignedVehicle">Assigned Vehicle</label>
-                  <input
-                    type="text"
-                    id="assignedVehicle"
-                    name="assignedVehicle"
-                    value={formData.assignedVehicle}
-                    onChange={handleInputChange}
-                    placeholder="Vehicle ID or plate number"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="assignedRoute">Assigned Route</label>
-                  <input
-                    type="text"
-                    id="assignedRoute"
-                    name="assignedRoute"
-                    value={formData.assignedRoute}
-                    onChange={handleInputChange}
-                    placeholder="Route name or ID"
                   />
                 </div>
               </div>

@@ -143,7 +143,7 @@ const Garage = () => {
         ] = await Promise.all([
           garageAPI.getWorkOrders({ terminal: activeTerminal, page: workOrdersPage, limit: itemsPerPage }),
           garageAPI.getMaintenanceSchedules({ terminal: activeTerminal, page: maintenancePage, limit: itemsPerPage }),
-          vehiclesAPI.getAll({ terminal: activeTerminal }),
+          vehiclesAPI.getAll({ terminal: activeTerminal, select: 'true' }),
           inventoryAPI.getAll({ terminal: activeTerminal }),
           garageAPI.getStats({ terminal: activeTerminal })
         ]);
@@ -1388,4 +1388,4 @@ const Garage = () => {
    );
  };
 
-export default Garage; 
+export default Garage;

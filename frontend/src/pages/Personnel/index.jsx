@@ -824,7 +824,7 @@ const Personnel = () => {
             setShowViewForm(false);
             setViewingPersonnel(null);
           }}
-          onSubmit={() => {}}
+          onSubmit={() => { setShowViewForm(false); setViewingPersonnel(null); }}
           mode="view"
           personnel={viewingPersonnel}
         />
