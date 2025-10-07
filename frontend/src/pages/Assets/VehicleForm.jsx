@@ -3,6 +3,8 @@ import { FaTimes, FaBus, FaSave } from 'react-icons/fa';
 import { personnelAPI } from '../../services/api';
 import './Assets.css';
 
+const MAX_DRIVERS_TO_FETCH = 1000;
+
 const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, activeTerminal = 'Kigali' }) => {
   const [formData, setFormData] = useState({
     plateNumber: '',
@@ -45,26 +47,26 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
     return routes;
   };
 
-  // Fetch drivers from the current terminal
-  const fetchDrivers = async () => {
-    try {
-      setLoadingDrivers(true);
-      // Use general personnel API with role filter as workaround
-      const response = await personnelAPI.getAll({ 
-        terminal: activeTerminal,
-        role: 'driver',
-        employmentStatus: 'active'
-      });
-      setDrivers(response.data || []);
-    } catch (error) {
-      console.error('Error fetching drivers:', error);
-      setDrivers([]);
-    } finally {
-      setLoadingDrivers(false);
-    }
-  };
-
-  useEffect(() => {
+      // Fetch drivers from the current terminal
+      const fetchDrivers = async () => {
+        try {
+          setLoadingDrivers(true);
+          // Use general personnel API with role filter as workaround
+          const response = await personnelAPI.getAll({ 
+            terminal: activeTerminal,
+            role: 'driver',
+            employmentStatus: 'active',
+            select: 'firstName,lastName',
+            limit: 1000 // Fetch up to 1000 drivers
+          });
+          setDrivers(response.data || []);
+        } catch (error) {
+          console.error('Error fetching drivers:', error);
+          setDrivers([]);
+        } finally {
+          setLoadingDrivers(false);
+        }
+      };  useEffect(() => {
     if ((mode === 'edit' || mode === 'view') && vehicle) {
       const vehicleData = {
         plateNumber: vehicle.plateNumber || '',
