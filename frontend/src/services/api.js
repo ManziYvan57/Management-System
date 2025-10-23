@@ -178,11 +178,30 @@ export const dashboardAPI = {
 // Module API functions
 export const garageAPI = {
   getWorkOrders: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/garage/work-orders${queryString ? `?${queryString}` : ''}`);
+    // Convert params to URLSearchParams properly
+    const queryParams = new URLSearchParams();
+    
+    // Add all parameters, handling arrays and objects
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams.append(key, params[key]);
+      }
+    });
+    
+    const queryString = queryParams.toString();
+    const url = `/garage/work-orders${queryString ? `?${queryString}` : ''}`;
+    
+    console.log('📡 API Call - getWorkOrders:', {
+      params,
+      queryString,
+      url
+    });
+    
+    return apiRequest(url);
   },
   
   createWorkOrder: async (workOrderData) => {
+    console.log('📡 API Call - createWorkOrder:', workOrderData);
     return apiRequest('/garage/work-orders', {
       method: 'POST',
       body: JSON.stringify(workOrderData)
@@ -190,35 +209,57 @@ export const garageAPI = {
   },
   
   getMaintenanceSchedules: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/garage/maintenance-schedules${queryString ? `?${queryString}` : ''}`);
+    const queryParams = new URLSearchParams();
+    
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams.append(key, params[key]);
+      }
+    });
+    
+    const queryString = queryParams.toString();
+    const url = `/garage/maintenance-schedules${queryString ? `?${queryString}` : ''}`;
+    
+    console.log('📡 API Call - getMaintenanceSchedules:', {
+      params,
+      queryString,
+      url
+    });
+    
+    return apiRequest(url);
   },
   
   createMaintenanceSchedule: async (maintenanceData) => {
+    console.log('📡 API Call - createMaintenanceSchedule:', maintenanceData);
     return apiRequest('/garage/maintenance-schedules', {
       method: 'POST',
       body: JSON.stringify(maintenanceData)
     });
   },
   
-  getVehicles: async () => {
-    return apiRequest('/garage/vehicles');
-  },
-  
-  getMechanics: async () => {
-    return apiRequest('/garage/mechanics');
-  },
-  
-  getParts: async () => {
-    return apiRequest('/garage/parts');
-  },
-  
   getStats: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/garage/stats${queryString ? `?${queryString}` : ''}`);
+    const queryParams = new URLSearchParams();
+    
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams.append(key, params[key]);
+      }
+    });
+    
+    const queryString = queryParams.toString();
+    const url = `/garage/stats${queryString ? `?${queryString}` : ''}`;
+    
+    console.log('📡 API Call - getStats:', {
+      params,
+      queryString,
+      url
+    });
+    
+    return apiRequest(url);
   },
   
   updateWorkOrder: async (id, workOrderData) => {
+    console.log('📡 API Call - updateWorkOrder:', { id, workOrderData });
     return apiRequest(`/garage/work-orders/${id}`, {
       method: 'PUT',
       body: JSON.stringify(workOrderData)
@@ -226,6 +267,7 @@ export const garageAPI = {
   },
   
   updateMaintenanceSchedule: async (id, maintenanceData) => {
+    console.log('📡 API Call - updateMaintenanceSchedule:', { id, maintenanceData });
     return apiRequest(`/garage/maintenance-schedules/${id}`, {
       method: 'PUT',
       body: JSON.stringify(maintenanceData)
@@ -233,12 +275,14 @@ export const garageAPI = {
   },
   
   deleteWorkOrder: async (id) => {
+    console.log('📡 API Call - deleteWorkOrder:', id);
     return apiRequest(`/garage/work-orders/${id}`, {
       method: 'DELETE'
     });
   },
   
   deleteMaintenanceSchedule: async (id) => {
+    console.log('📡 API Call - deleteMaintenanceSchedule:', id);
     return apiRequest(`/garage/maintenance-schedules/${id}`, {
       method: 'DELETE'
     });

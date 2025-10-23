@@ -374,10 +374,17 @@ router.get('/stats', protect, async (req, res) => {
     };
     
     if (terminal) {
-      workOrderQuery.terminal = terminal;
-      maintenanceQuery.terminal = terminal;
-      vehicleQuery.terminal = terminal;
-      personnelQuery.terminal = terminal;
+      const vehiclesInTerminal = await Vehicle.find({ 
+        terminals: { $in: [terminal] },
+        isActive: true 
+      }).select('_id');
+      
+      const vehicleIds = vehiclesInTerminal.map(v => v._id);
+      
+      workOrderQuery.vehicle = { $in: vehicleIds };
+      maintenanceQuery.vehicle = { $in: vehicleIds };
+      vehicleQuery.terminals = { $in: [terminal] }; // Correctly filter vehicles by terminal
+      personnelQuery.terminal = terminal; // Assuming personnel have a direct terminal field
     }
 
     const totalWorkOrders = await WorkOrder.countDocuments(workOrderQuery);
