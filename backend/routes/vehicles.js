@@ -13,7 +13,11 @@ router.get('/', protect, async (req, res) => {
 
     // If 'select' is true, return a simplified list for dropdowns
     if (select === 'true') {
-      const vehicles = await Vehicle.find({ isActive: true })
+      const query = { isActive: true };
+      if (terminal) {
+        query.terminals = { $in: [terminal] };
+      }
+      const vehicles = await Vehicle.find(query)
         .sort({ plateNumber: 1 })
         .select('_id plateNumber');
       return res.status(200).json({
