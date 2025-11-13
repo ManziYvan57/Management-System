@@ -5,6 +5,11 @@ const Vehicle = require('../models/Vehicle');
 const { protect } = require('../middleware/auth');
 const router = express.Router();
 
+// File upload deps
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
 // Get all vehicle documents with filtering and pagination
 router.get('/', protect, async (req, res) => {
   try {
@@ -393,6 +398,174 @@ router.post('/bulk-update-status', protect, async (req, res) => {
   } catch (error) {
     console.error('Error bulk updating documents:', error);
     res.status(500).json({ success: false, message: 'Failed to bulk update documents' });
+  }
+});
+
+// -----------------------------
+// Attachments: upload/list/download
+// -----------------------------
+
+// Preload document middleware (for attachment routes)
+async function loadDocument(req, res, next) {
+  try {
+    const doc = await VehicleDocument.findById(req.params.id);
+    if (!doc || !doc.isActive) {
+      return res.status(404).json({ success: false, message: 'Document not found' });
+    }
+    req.document = doc;
+    next();
+  } catch (err) {
+    console.error('Error loading document for attachments:', err);
+    return res.status(400).json({ success: false, message: 'Invalid document ID' });
+  }
+}
+
+// Configure multer storage
+// Allow overriding the upload base directory via env (e.g., FILE_UPLOAD_DIR=/tmp/uploads on Render)
+const baseUploadsDir = process.env.FILE_UPLOAD_DIR
+  ? path.resolve(process.env.FILE_UPLOAD_DIR)
+  : path.join(__dirname, '..', 'uploads');
+const vehicleDocsBaseDir = path.join(baseUploadsDir, 'vehicle-documents');
+console.log('[Uploads] Base directory:', baseUploadsDir);
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    try {
+      const vehicleId = req.document.vehicle.toString();
+      const documentId = req.document._id.toString();
+      const dest = path.join(vehicleDocsBaseDir, vehicleId, documentId);
+      try {
+        fs.mkdirSync(dest, { recursive: true });
+      } catch (mkdirErr) {
+        console.error('[Uploads] mkdir failed:', mkdirErr, 'dest:', dest);
+        return cb(mkdirErr);
+      }
+      console.log('[Uploads] Destination resolved:', dest);
+      cb(null, dest);
+    } catch (e) {
+      console.error('[Uploads] Destination error:', e);
+      cb(e);
+    }
+  },
+  filename: function (req, file, cb) {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const safeBase = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, `${unique}-${safeBase}`);
+  }
+});
+
+const allowedMimes = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  // Some browsers/platforms fallback to octet-stream; allow it for now
+  'application/octet-stream'
+]);
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+  fileFilter: (req, file, cb) => {
+    if (allowedMimes.has(file.mimetype)) return cb(null, true);
+    return cb(new Error('Unsupported file type'));
+  }
+});
+
+// List attachments for a document
+router.get('/:id/attachments', protect, loadDocument, async (req, res) => {
+  try {
+    const attachments = req.document.attachments || [];
+    res.json({ success: true, data: attachments });
+  } catch (err) {
+    console.error('Error listing attachments:', err);
+    res.status(500).json({ success: false, message: 'Failed to list attachments' });
+  }
+});
+
+// Upload an attachment (with Multer error handling)
+router.post('/:id/attachments', protect, loadDocument, async (req, res) => {
+  upload.single('file')(req, res, async (err) => {
+    if (err) {
+      console.error('Multer upload error:', err);
+      // Common Multer errors
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ success: false, message: 'File too large (max 20MB)' });
+      }
+      return res.status(400).json({ success: false, message: err.message || 'Upload failed' });
+    }
+
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+      }
+      const vehicleId = req.document.vehicle.toString();
+      const documentId = req.document._id.toString();
+
+      const relativeUrl = `/uploads/vehicle-documents/${vehicleId}/${documentId}/${req.file.filename}`;
+      console.log('[Uploads] Saved file:', {
+        vehicleId,
+        documentId,
+        storedAs: req.file.filename,
+        path: req.file.path,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+
+      const attachment = {
+        fileName: req.file.filename,
+        fileUrl: relativeUrl,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
+        uploadedAt: new Date()
+      };
+
+      req.document.attachments = req.document.attachments || [];
+      req.document.attachments.push(attachment);
+      await req.document.save();
+
+      res.status(201).json({ success: true, message: 'File uploaded successfully', data: attachment });
+    } catch (e) {
+      console.error('Error saving attachment to document:', e);
+      res.status(500).json({ success: false, message: 'Failed to save attachment' });
+    }
+  });
+});
+
+// Download an attachment
+router.get('/:id/attachments/:attachmentId/download', protect, loadDocument, async (req, res) => {
+  try {
+    const { attachmentId } = req.params;
+    const attachment = (req.document.attachments || []).find(a => a._id?.toString() === attachmentId);
+    if (!attachment) {
+      return res.status(404).json({ success: false, message: 'Attachment not found' });
+    }
+
+    const baseDir = path.join(__dirname, '..');
+    const relative = attachment.fileUrl.replace(/^\/+/, '');
+    const absPath = path.resolve(baseDir, relative);
+    const uploadsRoot = path.resolve(baseUploadsDir);
+
+    // Ensure the file is inside the uploads directory
+    if (!absPath.startsWith(uploadsRoot)) {
+      return res.status(400).json({ success: false, message: 'Invalid file path' });
+    }
+
+    if (!fs.existsSync(absPath)) {
+      return res.status(404).json({ success: false, message: 'File not found on server' });
+    }
+
+    // Suggest original filename if we can infer
+    const suggestedName = attachment.fileName?.split('-').slice(1).join('-') || 'document';
+    res.download(absPath, suggestedName);
+  } catch (err) {
+    console.error('Error downloading attachment:', err);
+    res.status(500).json({ success: false, message: 'Failed to download attachment' });
   }
 });
 
