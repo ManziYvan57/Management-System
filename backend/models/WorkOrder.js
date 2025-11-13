@@ -16,7 +16,19 @@ const workOrderSchema = new mongoose.Schema({
     required: [true, 'Vehicle is required']
   },
   
-  // Terminal is inherited from vehicle - no need for separate field
+  // Terminal where this work order was created
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'],
+    index: true
+  },
+
+  // Creator of the work order
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
   
   // Work order details
   workType: {
@@ -235,6 +247,8 @@ workOrderSchema.index({ workType: 1 });
 workOrderSchema.index({ priority: 1 });
 workOrderSchema.index({ scheduledDate: 1 });
 workOrderSchema.index({ createdAt: -1 });
+workOrderSchema.index({ terminal: 1 });
+workOrderSchema.index({ createdBy: 1 });
 
 // Pre-save middleware to generate work order number
 workOrderSchema.pre('save', async function(next) {

@@ -12,7 +12,7 @@ const router = express.Router();
 // GET /api/garage/work-orders - Get all work orders
 router.get('/work-orders', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, priority, workType, vehicle, terminal } = req.query;
+    const { page = 1, limit = 20, status, priority, workType, vehicle, terminal: terminalParam } = req.query;
     const skip = (page - 1) * limit;
     const query = {};
 
@@ -21,20 +21,19 @@ router.get('/work-orders', protect, async (req, res) => {
     if (workType && workType !== 'all') query.workType = workType;
     if (vehicle && vehicle !== 'all') query.vehicle = vehicle;
 
-    // Filter by terminal through vehicle terminals
-    let workOrders;
-    if (terminal && terminal !== 'all') {
-      // Find vehicles that operate in this terminal
-      const vehiclesInTerminal = await Vehicle.find({ 
-        terminals: { $in: [terminal] },
-        isActive: true 
-      }).select('_id');
-      
-      const vehicleIds = vehiclesInTerminal.map(v => v._id);
-      query.vehicle = { $in: vehicleIds };
+    // Enforce terminal scoping on record terminal, not vehicle terminals
+    const isPrivileged = req.user && (req.user.role === 'super_admin' || req.user.role === 'admin');
+    let effectiveTerminal = req.user && req.user.terminal;
+    if (isPrivileged && typeof terminalParam === 'string') {
+      if (terminalParam === 'all') {
+        effectiveTerminal = undefined; // admins can view all terminals
+      } else {
+        effectiveTerminal = terminalParam;
+      }
     }
+    if (effectiveTerminal) query.terminal = effectiveTerminal;
 
-    workOrders = await WorkOrder.find(query)
+    const workOrders = await WorkOrder.find(query)
       .populate('vehicle', 'plateNumber make model assignedRoute terminals')
       .sort({ dateCreated: -1 })
       .skip(skip)
@@ -78,6 +77,7 @@ router.post('/work-orders', protect, [
 
     const workOrderData = {
       ...req.body,
+      terminal: req.user.terminal,
       createdBy: req.user._id
     };
 
@@ -129,7 +129,7 @@ router.post('/work-orders', protect, [
 // GET /api/garage/maintenance-schedules - Get all maintenance schedules
 router.get('/maintenance-schedules', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, priority, maintenanceType, vehicle, terminal } = req.query;
+    const { page = 1, limit = 20, status, priority, maintenanceType, vehicle, terminal: terminalParam } = req.query;
     const skip = (page - 1) * limit;
     const query = {};
 
@@ -138,20 +138,19 @@ router.get('/maintenance-schedules', protect, async (req, res) => {
     if (maintenanceType && maintenanceType !== 'all') query.maintenanceType = maintenanceType;
     if (vehicle && vehicle !== 'all') query.vehicle = vehicle;
 
-    // Filter by terminal through vehicle terminals
-    let maintenanceSchedules;
-    if (terminal && terminal !== 'all') {
-      // Find vehicles that operate in this terminal
-      const vehiclesInTerminal = await Vehicle.find({ 
-        terminals: { $in: [terminal] },
-        isActive: true 
-      }).select('_id');
-      
-      const vehicleIds = vehiclesInTerminal.map(v => v._id);
-      query.vehicle = { $in: vehicleIds };
+    // Enforce terminal scoping on record terminal, not vehicle terminals
+    const isPrivileged = req.user && (req.user.role === 'super_admin' || req.user.role === 'admin');
+    let effectiveTerminal = req.user && req.user.terminal;
+    if (isPrivileged && typeof terminalParam === 'string') {
+      if (terminalParam === 'all') {
+        effectiveTerminal = undefined; // admins can view all terminals
+      } else {
+        effectiveTerminal = terminalParam;
+      }
     }
+    if (effectiveTerminal) query.terminal = effectiveTerminal;
 
-    maintenanceSchedules = await MaintenanceSchedule.find(query)
+    const maintenanceSchedules = await MaintenanceSchedule.find(query)
       .populate('vehicle', 'plateNumber make model assignedRoute terminals')
       .sort({ nextDue: 1 })
       .skip(skip)
@@ -195,6 +194,7 @@ router.post('/maintenance-schedules', protect, [
 
     const maintenanceData = {
       ...req.body,
+      terminal: req.user.terminal,
       createdBy: req.user._id
     };
 
@@ -372,19 +372,22 @@ router.get('/stats', protect, async (req, res) => {
       role: { $in: ['mechanic', 'technician'] },
       employmentStatus: 'active'
     };
-    
-    if (terminal) {
-      const vehiclesInTerminal = await Vehicle.find({ 
-        terminals: { $in: [terminal] },
-        isActive: true 
-      }).select('_id');
-      
-      const vehicleIds = vehiclesInTerminal.map(v => v._id);
-      
-      workOrderQuery.vehicle = { $in: vehicleIds };
-      maintenanceQuery.vehicle = { $in: vehicleIds };
-      vehicleQuery.terminals = { $in: [terminal] }; // Correctly filter vehicles by terminal
-      personnelQuery.terminal = terminal; // Assuming personnel have a direct terminal field
+
+    const isPrivileged = req.user && (req.user.role === 'super_admin' || req.user.role === 'admin');
+    let effectiveTerminal = req.user && req.user.terminal;
+    if (isPrivileged && typeof terminal === 'string') {
+      if (terminal === 'all') {
+        effectiveTerminal = undefined; // admins can view all terminals
+      } else {
+        effectiveTerminal = terminal;
+      }
+    }
+
+    if (effectiveTerminal) {
+      workOrderQuery.terminal = effectiveTerminal;
+      maintenanceQuery.terminal = effectiveTerminal;
+      vehicleQuery.terminals = { $in: [effectiveTerminal] };
+      personnelQuery.terminal = effectiveTerminal;
     }
 
     const totalWorkOrders = await WorkOrder.countDocuments(workOrderQuery);

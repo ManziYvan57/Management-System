@@ -8,7 +8,19 @@ const maintenanceScheduleSchema = new mongoose.Schema({
     required: [true, 'Vehicle is required']
   },
   
-  // Terminal is inherited from vehicle - no need for separate field
+  // Terminal where this maintenance schedule was created
+  terminal: {
+    type: String,
+    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'],
+    index: true
+  },
+
+  // Creator of the maintenance schedule
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
   
   // Maintenance type and details
   maintenanceType: {
@@ -206,6 +218,8 @@ maintenanceScheduleSchema.index({ status: 1 });
 maintenanceScheduleSchema.index({ priority: 1 });
 maintenanceScheduleSchema.index({ maintenanceType: 1 });
 maintenanceScheduleSchema.index({ assignedMechanic: 1 });
+maintenanceScheduleSchema.index({ terminal: 1 });
+maintenanceScheduleSchema.index({ createdBy: 1 });
 
 // Virtual for days until due
 maintenanceScheduleSchema.virtual('daysUntilDue').get(function() {
