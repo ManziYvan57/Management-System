@@ -82,9 +82,16 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
     fetchDocuments();
   }, [currentPage]);
 
-  const handleAddDocument = async (documentData) => {
+  const handleAddDocument = async (documentData, files = []) => {
     try {
-      await vehicleDocumentsAPI.create(documentData);
+      const created = await vehicleDocumentsAPI.create(documentData);
+      const createdDoc = created?.data || created;
+      const docId = createdDoc?._id || createdDoc?.id;
+      if (docId && files && files.length > 0) {
+        for (const file of files) {
+          await vehicleDocumentsAPI.uploadAttachment(docId, file);
+        }
+      }
       setShowAddForm(false);
       const newTotalPages = Math.ceil((totalDocuments + 1) / itemsPerPage);
       if (currentPage === newTotalPages) {
@@ -98,9 +105,14 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
     }
   };
 
-  const handleEditDocument = async (id, documentData) => {
+  const handleEditDocument = async (id, documentData, files = []) => {
     try {
       await vehicleDocumentsAPI.update(id, documentData);
+      if (files && files.length > 0) {
+        for (const file of files) {
+          await vehicleDocumentsAPI.uploadAttachment(id, file);
+        }
+      }
       setShowEditForm(false);
       setEditingDocument(null);
       fetchDocuments();
@@ -291,39 +303,37 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
                                 <li key={att._id} className="attachment-item">
                                   <span className="attachment-name">{att.fileName.split('-').slice(1).join('-') || att.fileName}</span>
                                   <span className="attachment-meta">{Math.round((att.fileSize || 0)/1024)} KB</span>
-                                  <a
+                                  <button
                                     className="attachment-download"
-                                    href={vehicleDocumentsAPI.getAttachmentDownloadUrl(doc._id, att._id)}
+                                    onClick={async () => {
+                                      try {
+                                        const url = vehicleDocumentsAPI.getAttachmentDownloadUrl(doc._id, att._id);
+                                        const token = localStorage.getItem('token');
+                                        const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+                                        if (!res.ok) {
+                                          throw new Error(`Download failed (${res.status})`);
+                                        }
+                                        const blob = await res.blob();
+                                        const link = document.createElement('a');
+                                        link.href = URL.createObjectURL(blob);
+                                        link.download = att.fileName.split('-').slice(1).join('-') || att.fileName || 'document';
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        URL.revokeObjectURL(link.href);
+                                        link.remove();
+                                      } catch (err) {
+                                        console.error('Download failed', err);
+                                        alert('Failed to download file');
+                                      }
+                                    }}
                                     title="Download"
                                   >
                                     <FaDownload /> Download
-                                  </a>
+                                  </button>
                                 </li>
                               ))}
                             </ul>
                           )}
-                          <div className="attachment-upload">
-                            <label className="upload-label">
-                              <FaUpload /> Upload file
-                              <input
-                                type="file"
-                                style={{ display: 'none' }}
-                                onChange={async (e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  try {
-                                    await vehicleDocumentsAPI.uploadAttachment(doc._id, file);
-                                    await fetchDocuments();
-                                  } catch (err) {
-                                    console.error('Upload failed', err);
-                                    alert('Failed to upload file');
-                                  } finally {
-                                    e.target.value = '';
-                                  }
-                                }}
-                              />
-                            </label>
-                          </div>
                         </div>
                         <div className="document-actions">
                           <button className="action-btn view-btn" onClick={() => { setEditingDocument(doc); setShowViewForm(true); }} title="View Document"><FaEye /></button>

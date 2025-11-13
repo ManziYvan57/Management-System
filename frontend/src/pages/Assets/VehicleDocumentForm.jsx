@@ -17,6 +17,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
 
 
   const [loading, setLoading] = useState(false);
+  const [files, setFiles] = useState([]);
   const [errors, setErrors] = useState({});
 
   const documentTypeOptions = [
@@ -100,7 +101,7 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
 
     setLoading(true);
     try {
-      await onSubmit(formData);
+      await onSubmit(formData, files);
     } catch (error) {
       console.error('Error saving document:', error);
     } finally {
@@ -291,6 +292,30 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
               rows="3"
               disabled={mode === 'view'}
             />
+          </div>
+
+          <div className="form-section">
+            <h3>Attachments</h3>
+            <div className="form-group">
+              <label htmlFor="attachments">Upload files</label>
+              <input
+                id="attachments"
+                type="file"
+                multiple
+                onChange={(e) => {
+                  const selected = Array.from(e.target.files || []);
+                  setFiles(selected);
+                }}
+                disabled={mode === 'view'}
+              />
+              {files && files.length > 0 && (
+                <div className="selected-files">
+                  {files.map((f, idx) => (
+                    <div key={idx} className="selected-file-item">{f.name} ({Math.round(f.size/1024)} KB)</div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-actions">
