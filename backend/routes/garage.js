@@ -75,9 +75,32 @@ router.post('/work-orders', protect, [
       });
     }
 
+    // Determine terminal for this record
+    const isPrivileged = req.user && (req.user.role === 'super_admin' || req.user.role === 'admin');
+    const requestedTerminal = typeof req.body.terminal === 'string' ? req.body.terminal.trim() : '';
+    let recordTerminal = req.user.terminal;
+    if (requestedTerminal) {
+      if (isPrivileged || requestedTerminal === req.user.terminal) {
+        recordTerminal = requestedTerminal;
+      } else {
+        return res.status(403).json({ success: false, message: 'Not allowed to create records for other terminals' });
+      }
+    }
+
+    // Validate that the vehicle actually belongs to the chosen terminal when the vehicle has terminals constraint
+    const vehicleDoc = await Vehicle.findById(req.body.vehicle).select('terminals');
+    if (!vehicleDoc) {
+      return res.status(400).json({ success: false, message: 'Vehicle not found' });
+    }
+    if (Array.isArray(vehicleDoc.terminals) && vehicleDoc.terminals.length > 0) {
+      if (!vehicleDoc.terminals.includes(recordTerminal)) {
+        return res.status(400).json({ success: false, message: `Vehicle is not assigned to terminal '${recordTerminal}'` });
+      }
+    }
+
     const workOrderData = {
       ...req.body,
-      terminal: req.user.terminal,
+      terminal: recordTerminal,
       createdBy: req.user._id
     };
 
@@ -192,9 +215,32 @@ router.post('/maintenance-schedules', protect, [
       });
     }
 
+    // Determine terminal for this record
+    const isPrivileged = req.user && (req.user.role === 'super_admin' || req.user.role === 'admin');
+    const requestedTerminal = typeof req.body.terminal === 'string' ? req.body.terminal.trim() : '';
+    let recordTerminal = req.user.terminal;
+    if (requestedTerminal) {
+      if (isPrivileged || requestedTerminal === req.user.terminal) {
+        recordTerminal = requestedTerminal;
+      } else {
+        return res.status(403).json({ success: false, message: 'Not allowed to create records for other terminals' });
+      }
+    }
+
+    // Validate that the vehicle actually belongs to the chosen terminal when the vehicle has terminals constraint
+    const vehicleDoc = await Vehicle.findById(req.body.vehicle).select('terminals');
+    if (!vehicleDoc) {
+      return res.status(400).json({ success: false, message: 'Vehicle not found' });
+    }
+    if (Array.isArray(vehicleDoc.terminals) && vehicleDoc.terminals.length > 0) {
+      if (!vehicleDoc.terminals.includes(recordTerminal)) {
+        return res.status(400).json({ success: false, message: `Vehicle is not assigned to terminal '${recordTerminal}'` });
+      }
+    }
+
     const maintenanceData = {
       ...req.body,
-      terminal: req.user.terminal,
+      terminal: recordTerminal,
       createdBy: req.user._id
     };
 
