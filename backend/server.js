@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express'
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -209,10 +209,6 @@ const connectDB = async () => {
     });
 
     console.log('✅ MongoDB Connected Successfully!');
-    console.log(`   📍 Host: ${conn.connection.host}`);
-    console.log(`   🗄️  Database: ${conn.connection.name}`);
-    console.log(`   🔗 Connection State: ${conn.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
-    console.log('🎉 Database connection established and ready!');
     
   } catch (error) {
     console.error('❌ MongoDB connection failed!');
@@ -228,24 +224,14 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     console.log('🚀 Starting Trinity Management System...');
-    console.log('='.repeat(60));
     
     // Connect to database
     await connectDB();
     
     // Start server
     app.listen(PORT, () => {
-      console.log('='.repeat(60));
       console.log('🎉 Trinity Management System API Started Successfully!');
-      console.log('='.repeat(60));
       console.log(`🌐 Server URL: http://localhost:${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-      console.log(`🔗 Health Check: http://localhost:${PORT}/health`);
-      console.log(`📚 API Base: http://localhost:${PORT}${apiPrefix}`);
-      console.log(`🔐 Auth Endpoint: http://localhost:${PORT}${apiPrefix}/auth`);
-      console.log('='.repeat(60));
-      console.log('✅ Server is ready to handle requests!');
-      console.log('='.repeat(60));
     });
   } catch (error) {
     console.error('❌ Server startup failed!');
