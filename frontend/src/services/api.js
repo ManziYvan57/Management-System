@@ -26,6 +26,11 @@ export const apiRequest = async (endpoint, options = {}) => {
     ...options
   };
 
+  // If sending FormData, let the browser set the Content-Type with boundary
+  if (defaultOptions.body && typeof FormData !== 'undefined' && defaultOptions.body instanceof FormData) {
+    delete defaultOptions.headers['Content-Type'];
+  }
+
   // Add auth token if available
   const token = localStorage.getItem('token');
   if (token) {
@@ -652,6 +657,22 @@ export const vehicleDocumentsAPI = {
   getComplianceSummary: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/vehicle-documents/compliance-summary${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  // Attachments
+  listAttachments: async (documentId) => {
+    return apiRequest(`/vehicle-documents/${documentId}/attachments`);
+  },
+  uploadAttachment: async (documentId, file) => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiRequest(`/vehicle-documents/${documentId}/attachments`, {
+      method: 'POST',
+      body: form
+    });
+  },
+  getAttachmentDownloadUrl: (documentId, attachmentId) => {
+    return buildApiUrl(`/vehicle-documents/${documentId}/attachments/${attachmentId}/download`);
   },
   
   bulkUpdateStatus: async (documentIds, status) => {

@@ -279,6 +279,52 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
                             </div>
                           </div>
                         </div>
+                        <div className="document-attachments">
+                          <div className="attachments-header">
+                            <strong>Attachments</strong>
+                          </div>
+                          {(!doc.attachments || doc.attachments.length === 0) ? (
+                            <div className="no-attachments">No files uploaded</div>
+                          ) : (
+                            <ul className="attachments-list">
+                              {doc.attachments.map((att) => (
+                                <li key={att._id} className="attachment-item">
+                                  <span className="attachment-name">{att.fileName.split('-').slice(1).join('-') || att.fileName}</span>
+                                  <span className="attachment-meta">{Math.round((att.fileSize || 0)/1024)} KB</span>
+                                  <a
+                                    className="attachment-download"
+                                    href={vehicleDocumentsAPI.getAttachmentDownloadUrl(doc._id, att._id)}
+                                    title="Download"
+                                  >
+                                    <FaDownload /> Download
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          <div className="attachment-upload">
+                            <label className="upload-label">
+                              <FaUpload /> Upload file
+                              <input
+                                type="file"
+                                style={{ display: 'none' }}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  try {
+                                    await vehicleDocumentsAPI.uploadAttachment(doc._id, file);
+                                    await fetchDocuments();
+                                  } catch (err) {
+                                    console.error('Upload failed', err);
+                                    alert('Failed to upload file');
+                                  } finally {
+                                    e.target.value = '';
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
                         <div className="document-actions">
                           <button className="action-btn view-btn" onClick={() => { setEditingDocument(doc); setShowViewForm(true); }} title="View Document"><FaEye /></button>
                           <button className="action-btn edit-btn" onClick={() => { setEditingDocument(doc); setShowEditForm(true); }} title="Edit Document"><FaEdit /></button>
