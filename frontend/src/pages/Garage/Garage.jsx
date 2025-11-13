@@ -106,6 +106,11 @@ const Garage = () => {
   // Handle terminal tab change
   const handleTerminalChange = (terminal) => {
     setActiveTerminal(terminal);
+    // Persist selection so API layer can send X-Terminal header
+    try { localStorage.setItem('selectedTerminal', terminal); } catch (e) {}
+    // Keep form state in sync with visible terminal
+    setNewWorkOrder(prev => ({ ...prev, terminal }));
+    setNewMaintenance(prev => ({ ...prev, terminal }));
     setWorkOrdersPage(1); // Reset to first page when changing terminal
     setMaintenancePage(1); // Reset to first page when changing terminal
   };
@@ -128,6 +133,12 @@ const Garage = () => {
   };
 
   // Fetch data from API
+  // Keep form terminal in sync if the active tab changes
+  useEffect(() => {
+    setNewWorkOrder(prev => ({ ...prev, terminal: activeTerminal }));
+    setNewMaintenance(prev => ({ ...prev, terminal: activeTerminal }));
+  }, [activeTerminal]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -281,24 +292,26 @@ const Garage = () => {
     setIsSubmittingWorkOrder(true);
     
     try {
-             const workOrderData = {
-         ...newWorkOrder,
-         scheduledDate: newWorkOrder.scheduledDate || new Date().toISOString().split('T')[0],
-         partsUsed: selectedParts.map(part => ({
-           inventoryItem: part.inventoryItem,
-           itemName: part.itemName,
-           quantity: parseInt(part.quantity),
-           unitCost: parseFloat(part.unitCost),
-           totalCost: parseFloat(part.totalCost)
-         }))
-       };
+      const workOrderData = {
+        ...newWorkOrder,
+        // ensure we send the visible terminal even if form state got out of sync
+        terminal: newWorkOrder.terminal || activeTerminal,
+        scheduledDate: newWorkOrder.scheduledDate || new Date().toISOString().split('T')[0],
+        partsUsed: selectedParts.map(part => ({
+          inventoryItem: part.inventoryItem,
+          itemName: part.itemName,
+          quantity: parseInt(part.quantity),
+          unitCost: parseFloat(part.unitCost),
+          totalCost: parseFloat(part.totalCost)
+        }))
+      };
       
       const response = await garageAPI.createWorkOrder(workOrderData);
       
-             // Create stock movements for parts used
-       if (selectedParts.length > 0) {
-         await createStockMovement(selectedParts, response.data._id, response.data.workOrderNumber);
-       }
+      // Create stock movements for parts used
+      if (selectedParts.length > 0) {
+        await createStockMovement(selectedParts, response.data._id, response.data.workOrderNumber);
+      }
       
       // Refresh the data
       await refreshData();
@@ -311,6 +324,7 @@ const Garage = () => {
         title: '',
         description: '',
         scheduledDate: '',
+        terminal: activeTerminal,
         partsUsed: []
       });
       setSelectedParts([]);
@@ -354,7 +368,7 @@ const Garage = () => {
         interval: 1,
         nextDue: '',
         priority: 'medium',
-        terminal: '',
+        terminal: activeTerminal,
         requiredParts: []
       });
       setSelectedParts([]);

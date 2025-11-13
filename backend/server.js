@@ -61,7 +61,6 @@ const limiter = rateLimit({
            (req.ip === '127.0.0.1' || req.ip === '::1' || req.ip.includes('localhost'));
   }
 });
-app.use('/api/', limiter);
 
 // CORS configuration - More permissive for development
 const corsOptions = {
@@ -99,9 +98,13 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'X-Terminal', 'x-terminal']
+  allowedHeaders: ['Content-Type', 'content-type', 'Authorization', 'authorization', 'X-Requested-With', 'Accept', 'Origin', 'X-Terminal', 'x-terminal']
 };
 app.use(cors(corsOptions));
+// Respond to preflight requests explicitly for all routes
+app.options('*', cors(corsOptions));
+// Apply rate limiting after CORS so preflight gets CORS headers
+app.use('/api/', limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
