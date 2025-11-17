@@ -32,6 +32,9 @@ const supplierRoutes = require('./routes/suppliers');
 const purchaseOrderRoutes = require('./routes/purchaseOrders');
 const stockMovementRoutes = require('./routes/stockMovements');
 
+// Database connection
+const connectDB = require('./config/database');
+
 // Import middleware
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
@@ -195,28 +198,8 @@ app.use(notFound);
 app.use(errorHandler);
 
 // MongoDB connection
-const connectDB = async () => {
-  try {
-    console.log('🔌 Attempting to connect to MongoDB...');
-    
-    const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://trinitybussexpress:QIgksegX0rIFqe1e@trinitymanagementsystem.f7jcjip.mongodb.net/trinity_management_system?retryWrites=true&w=majority';
-
-    console.log('📡 Connecting to MongoDB Atlas...');
-    
-    const conn = await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-
-    console.log('✅ MongoDB Connected Successfully!');
-    
-  } catch (error) {
-    console.error('❌ MongoDB connection failed!');
-    console.error('   Error:', error.message);
-    console.error('   Please check your MongoDB URI and network connection.');
-    process.exit(1);
-  }
-};
+// Uses shared database configuration which reads MongoDB URI from environment variables.
+// Make sure MONGODB_URI (and optionally MONGODB_URI_PROD) are set in your .env or hosting env.
 
 // Start server
 const PORT = process.env.PORT || 5000;
