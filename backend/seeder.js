@@ -30,7 +30,9 @@ const createDefaultUsers = async () => {
       {
         username: 'admin',
         email: 'admin@trinity.com',
-        password: 'Admin123!',
+        // NOTE: This will be hashed by the User model before saving.
+        // Login credentials: username=admin, password=admin123
+        password: 'admin123',
         firstName: 'System',
         lastName: 'Administrator',
         role: 'super_admin',
@@ -56,7 +58,7 @@ const createDefaultUsers = async () => {
     console.log('ADMIN:');
     console.log('  Username: admin');
     console.log('  Email: admin@trinity.com');
-    console.log('  Password: Admin123!');
+    console.log('  Password: admin123');
     console.log('  Terminal: Kigali');
     console.log('  ---');
 

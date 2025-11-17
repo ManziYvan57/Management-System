@@ -5,9 +5,9 @@ export const API_CONFIG = {
     baseURL: 'http://localhost:5000',
     apiPrefix: '/api'
   },
-  // Production (Render) - UPDATE THIS URL!
+  // Production (Render) - friend backend on Render
   production: {
-    baseURL: 'https://trinity-management-system.onrender.com', // ✅ Your actual Render URL
+    baseURL: 'https://management-system-08nb.onrender.com',
     apiPrefix: '/api'
   }
 };

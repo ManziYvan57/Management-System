@@ -6,15 +6,6 @@ const { body, validationResult } = require('express-validator');
 const TransportModels = require('../models/Transport');
 const { Route, Trip, DailySchedule } = TransportModels;
 
-// Debug: Check what models were imported
-console.log('🔍 Transport models import check:', {
-  TransportModels: Object.keys(TransportModels),
-  Route: !!Route,
-  Trip: !!Trip,
-  DailySchedule: !!DailySchedule,
-  RouteModelName: Route ? Route.modelName : 'undefined',
-  RouteCollectionName: Route ? Route.collection.name : 'undefined'
-});
 const Vehicle = require('../models/Vehicle');
 const Personnel = require('../models/Personnel');
 const VehicleDocument = require('../models/VehicleDocument');
