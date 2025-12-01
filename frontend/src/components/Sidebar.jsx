@@ -27,48 +27,12 @@ const Sidebar = ({ user }) => {
       action: 'view'
     },
     { 
-      path: '/garage', 
-      icon: <FaCogs />, 
-      text: 'Garage',
-      module: 'garage',
-      action: 'view'
-    },
-    { 
-      path: '/inventory', 
-      icon: <FaBoxes />, 
-      text: 'Inventory',
-      module: 'inventory',
-      action: 'view'
-    },
-    { 
       path: '/assets', 
       icon: <FaBus />, 
       text: 'Assets',
       module: 'assets',
       action: 'view'
     },
-    { 
-      path: '/personnel', 
-      icon: <FaUsers />, 
-      text: 'Personnel',
-      module: 'personnel',
-      action: 'view'
-    },
-    { 
-      path: '/reports', 
-      icon: <FaChartBar />, 
-      text: 'Reports',
-      module: 'reports',
-      action: 'view'
-    },
-    // Transport Operations - Temporarily disabled for future updates
-    // { 
-    //   path: '/transport', 
-    //   icon: <FaShippingFast />, 
-    //   text: 'Transport Operations',
-    //   module: 'transport',
-    //   action: 'view'
-    // },
     { 
       path: '/users', 
       icon: <FaUserCog />, 

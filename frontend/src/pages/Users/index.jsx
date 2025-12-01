@@ -38,12 +38,7 @@ const Users = () => {
 
   // Terminals state
   const [terminals, setTerminals] = useState([
-    { _id: 'Kigali', name: 'Kigali' },
-    { _id: 'Kampala', name: 'Kampala' },
-    { _id: 'Juba', name: 'Juba' },
-    { _id: 'Nairobi', name: 'Nairobi' },
-    { _id: 'Goma', name: 'Goma' },
-    { _id: 'Bor', name: 'Bor' }
+    { _id: 'Kigali', name: 'Kigali' }
   ]);
 
   // Fetch terminals from backend (fallback to defaults on error)
@@ -276,12 +271,7 @@ const Users = () => {
 
   const getTerminalBadgeClass = (terminal) => {
     const terminalClasses = {
-      'Kigali': 'badge-kigali',
-      'Kampala': 'badge-kampala',
-      'Juba': 'badge-juba',
-      'Nairobi': 'badge-nairobi',
-      'Goma': 'badge-goma',
-      'Bor': 'badge-bor'
+      'Kigali': 'badge-kigali'
     };
     return terminalClasses[terminal] || 'badge-default';
   };

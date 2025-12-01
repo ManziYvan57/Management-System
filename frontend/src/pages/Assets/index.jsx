@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import Layout from '../../components/Layout';
-import { FaCar, FaTools, FaFileAlt, FaWarehouse, FaBuilding } from 'react-icons/fa';
+import { FaCar, FaFileAlt, FaWarehouse, FaBuilding } from 'react-icons/fa';
 import VehiclesTab from './VehiclesTab';
-import EquipmentTab from './EquipmentTab';
 import VehicleDocumentsTab from './VehicleDocumentsTab';
 import './Assets.css';
 
@@ -13,8 +12,9 @@ const Assets = () => {
   const userRole = user.role || 'user';
   
   // Terminal tabs state
-  const [activeTerminal, setActiveTerminal] = useState(userTerminal);
-  const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']);
+  const [activeTerminal, setActiveTerminal] = useState('Kigali');
+  // const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']);
+  const [availableTerminals, setAvailableTerminals] = useState(['Kigali']);
   
   const [activeTab, setActiveTab] = useState('vehicles');
 
@@ -24,12 +24,6 @@ const Assets = () => {
       label: 'Vehicles',
       icon: <FaCar />,
       component: <VehiclesTab activeTerminal={activeTerminal} />
-    },
-    {
-      id: 'equipment',
-      label: 'Equipment',
-      icon: <FaTools />,
-      component: <EquipmentTab activeTerminal={activeTerminal} />
     },
     {
       id: 'documents',

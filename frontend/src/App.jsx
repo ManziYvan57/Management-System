@@ -3,12 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
-import Garage from './pages/Garage/Garage';
-import Inventory from './pages/Inventory';
-import Assets from './pages/Assets';
-import Personnel from './pages/Personnel';
-import Reports from './pages/Reports/Reports';
-// import Transport from './pages/Transport'; // Temporarily disabled
+import Assets from './pages/Assets/';
 import Users from './pages/Users';
 
 // Protected Route Component
@@ -38,26 +33,6 @@ function App() {
           } 
         />
         <Route 
-          path="/garage" 
-          element={
-            <ProtectedRoute>
-              <Layout title="Garage Management">
-                <Garage />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/inventory" 
-          element={
-            <ProtectedRoute>
-              <Layout title="Inventory Management">
-                <Inventory />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
           path="/assets" 
           element={
             <ProtectedRoute>
@@ -67,37 +42,6 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        <Route 
-          path="/personnel" 
-          element={
-            <ProtectedRoute>
-              <Layout title="Personnel Management">
-                <Personnel />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/reports" 
-          element={
-            <ProtectedRoute>
-              <Layout title="Reports & Analytics">
-                <Reports />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        />
-        {/* Transport Operations - Temporarily disabled for future updates */}
-        {/* <Route 
-          path="/transport" 
-          element={
-            <ProtectedRoute>
-              <Layout title="Transport Operations">
-                <Transport />
-              </Layout>
-            </ProtectedRoute>
-          } 
-        /> */}
         <Route 
           path="/users" 
           element={
