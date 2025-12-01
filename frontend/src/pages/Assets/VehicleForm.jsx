@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaBus, FaSave } from 'react-icons/fa';
-import { personnelAPI } from '../../services/api';
 import './Assets.css';
-
-const MAX_DRIVERS_TO_FETCH = 1000;
 
 const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, activeTerminal = 'Kigali' }) => {
   const [formData, setFormData] = useState({
@@ -12,13 +9,11 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
     model: '',
     year: new Date().getFullYear(),
     status: 'active',
-    terminals: [],
+    terminals: ['Kigali'],
     seatingCapacity: 0,
     fuelType: 'Diesel',
     mileage: 0,
     fuelConsumption: 0,
-    assignedDriver: '',
-    assignedRoute: '',
     purchaseCost: 0,
     purchaseDate: new Date().toISOString().split('T')[0],
     currentValue: 0
@@ -26,47 +21,8 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [availableRoutes, setAvailableRoutes] = useState([]);
-  const [drivers, setDrivers] = useState([]);
-  const [loadingDrivers, setLoadingDrivers] = useState(false);
 
-  // Generate route options based on selected terminals
-  const generateRoutes = (terminals) => {
-    if (!terminals || terminals.length < 2) {
-      return [];
-    }
-    
-    const routes = [];
-    // Generate unique bidirectional routes between selected terminals
-    for (let i = 0; i < terminals.length; i++) {
-      for (let j = i + 1; j < terminals.length; j++) {
-        const route = `${terminals[i]}-${terminals[j]}`;
-        routes.push(route);
-      }
-    }
-    return routes;
-  };
-
-      // Fetch drivers from the current terminal
-      const fetchDrivers = async () => {
-        try {
-          setLoadingDrivers(true);
-          // Use general personnel API with role filter as workaround
-          const response = await personnelAPI.getAll({ 
-            terminal: activeTerminal,
-            role: 'driver',
-            employmentStatus: 'active',
-            select: 'firstName,lastName',
-            limit: 1000 // Fetch up to 1000 drivers
-          });
-          setDrivers(response.data || []);
-        } catch (error) {
-          console.error('Error fetching drivers:', error);
-          setDrivers([]);
-        } finally {
-          setLoadingDrivers(false);
-        }
-      };  useEffect(() => {
+  useEffect(() => {
     if ((mode === 'edit' || mode === 'view') && vehicle) {
       const vehicleData = {
         plateNumber: vehicle.plateNumber || '',
@@ -74,34 +30,19 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
         model: vehicle.model || '',
         year: vehicle.year || new Date().getFullYear(),
         status: vehicle.status || 'active',
-        terminals: vehicle.terminals || [],
+        terminals: vehicle.terminals || ['Kigali'],
         seatingCapacity: vehicle.seatingCapacity || 0,
         fuelType: vehicle.fuelType || 'Diesel',
         mileage: vehicle.mileage || 0,
         fuelConsumption: vehicle.fuelConsumption || 0,
-        assignedDriver: vehicle.assignedDriver?._id || '',
-        assignedRoute: vehicle.assignedRoute || '',
         purchaseCost: vehicle.purchaseCost || 0,
         purchaseDate: vehicle.purchaseDate ? new Date(vehicle.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         currentValue: vehicle.currentValue || 0
       };
       
       setFormData(vehicleData);
-      
-      // Generate routes for existing vehicle terminals
-      if (vehicle.terminals && vehicle.terminals.length >= 2) {
-        const routes = generateRoutes(vehicle.terminals);
-        setAvailableRoutes(routes);
-      }
     }
   }, [mode, vehicle]);
-
-  // Fetch drivers when component loads
-  useEffect(() => {
-    if (isOpen) {
-      fetchDrivers();
-    }
-  }, [isOpen, activeTerminal]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -117,33 +58,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
     }
   };
 
-  const handleTerminalChange = (e) => {
-    const selectedTerminals = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData(prev => ({
-      ...prev,
-      terminals: selectedTerminals
-    }));
-    
-    // Generate routes based on selected terminals
-    const routes = generateRoutes(selectedTerminals);
-    setAvailableRoutes(routes);
-    
-    // Clear assigned route if it's not valid for new terminals
-    if (formData.assignedRoute && !routes.includes(formData.assignedRoute)) {
-      setFormData(prev => ({
-        ...prev,
-        assignedRoute: ''
-      }));
-    }
-    
-    // Clear error when user selects terminals
-    if (errors.terminals) {
-      setErrors(prev => ({
-        ...prev,
-        terminals: ''
-      }));
-    }
-  };
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -173,8 +88,6 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
       const submitData = {
         ...formData,
         terminals: cleanedTerminals,
-        assignedDriver: formData.assignedDriver.trim() === '' ? null : 
-          (formData.assignedDriver && formData.assignedDriver.length === 24 ? formData.assignedDriver : null),
         purchaseCost: parseFloat(formData.purchaseCost) || 0,
         currentValue: parseFloat(formData.currentValue) || 0,
         seatingCapacity: parseInt(formData.seatingCapacity) || 0,
@@ -291,26 +204,15 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
             </div>
 
             <div className="form-group">
-              <label htmlFor="terminals">Terminals * (Select multiple for cross-border vehicles)</label>
-              <select
+              <label htmlFor="terminals">Terminal *</label>
+              <input
+                type="text"
                 id="terminals"
                 name="terminals"
-                multiple
-                value={formData.terminals}
-                onChange={handleTerminalChange}
-                className={errors.terminals ? 'error' : ''}
-                disabled={mode === 'view'}
-                style={{ minHeight: '100px' }}
-              >
-                <option value="Kigali">Kigali</option>
-                <option value="Kampala">Kampala</option>
-                <option value="Juba">Juba</option>
-                <option value="Nairobi">Nairobi</option>
-                <option value="Goma">Goma</option>
-                <option value="Bor">Bor</option>
-              </select>
-              <small className="form-hint">Hold Ctrl (or Cmd on Mac) to select multiple terminals</small>
-              {errors.terminals && <span className="error-message">{errors.terminals}</span>}
+                value="Kigali"
+                disabled
+              />
+              <small className="form-hint">System is configured for Kigali terminal only</small>
             </div>
           </div>
 
@@ -410,66 +312,17 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
 
            <div className="form-row">
              <div className="form-group">
-               <label htmlFor="purchaseDate">Purchase Date</label>
-               <input
-                 type="date"
-                 id="purchaseDate"
-                 name="purchaseDate"
-                 value={formData.purchaseDate}
-                 onChange={handleInputChange}
-                 disabled={mode === 'view'}
-               />
+                 <label htmlFor="purchaseDate">Purchase Date</label>
+                 <input
+                   type="date"
+                   id="purchaseDate"
+                   name="purchaseDate"
+                   value={formData.purchaseDate}
+                   onChange={handleInputChange}
+                   disabled={mode === 'view'}
+                 />
+               </div>
              </div>
-
-             <div className="form-group">
-               <label htmlFor="assignedDriver">Assigned Driver</label>
-               <select
-                 id="assignedDriver"
-                 name="assignedDriver"
-                 value={formData.assignedDriver}
-                 onChange={handleInputChange}
-                 disabled={mode === 'view' || loadingDrivers}
-                 className={loadingDrivers ? 'loading' : ''}
-               >
-                 <option value="">Select a driver (optional)</option>
-                 {drivers.map((driver) => (
-                   <option key={driver._id} value={driver._id}>
-                     {driver.firstName} {driver.lastName}
-                   </option>
-                 ))}
-               </select>
-               {loadingDrivers && (
-                 <small className="form-hint">Loading drivers...</small>
-               )}
-               {!loadingDrivers && drivers.length === 0 && (
-                 <small className="form-hint">No drivers available in {activeTerminal} terminal</small>
-               )}
-             </div>
-           </div>
-
-           <div className="form-row">
-             <div className="form-group">
-               <label htmlFor="assignedRoute">Assigned Route</label>
-               <select
-                 id="assignedRoute"
-                 name="assignedRoute"
-                 value={formData.assignedRoute}
-                 onChange={handleInputChange}
-                 disabled={mode === 'view' || availableRoutes.length === 0}
-                 className={availableRoutes.length === 0 ? 'disabled' : ''}
-               >
-                 <option value="">Select a route</option>
-                 {availableRoutes.map((route, index) => (
-                   <option key={index} value={route}>
-                     {route.replace('-', ' ⇄ ')}
-                   </option>
-                 ))}
-               </select>
-               {availableRoutes.length === 0 && (
-                 <small className="form-hint">Select at least 2 terminals to see available routes</small>
-               )}
-             </div>
-           </div>
 
           <div className="form-actions">
             <button type="button" className="cancel-button" onClick={onClose}>

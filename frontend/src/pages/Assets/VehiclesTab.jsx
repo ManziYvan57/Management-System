@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaBus, FaUser, FaRoute } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaFilter, FaEdit, FaTrash, FaEye, FaBus } from 'react-icons/fa';
 import { vehiclesAPI } from '../../services/api';
 import VehicleForm from './VehicleForm';
 import Pagination from '../../components/Pagination';
@@ -212,8 +212,6 @@ const VehiclesTab = ({ activeTerminal }) => {
                   <th>Status</th>
                   <th>Fuel Type</th>
                   <th>Seating</th>
-                  <th>Assigned Driver</th>
-                  <th>Route</th>
                   <th>Terminal</th>
                   <th>Actions</th>
                 </tr>
@@ -227,8 +225,6 @@ const VehiclesTab = ({ activeTerminal }) => {
                     <td><span className={`status-badge ${getStatusBadgeClass(vehicle.status)}`}>{vehicle.status.replace('_', ' ')}</span></td>
                     <td><span className={`fuel-badge ${getFuelTypeBadgeClass(vehicle.fuelType)}`}>{vehicle.fuelType}</span></td>
                     <td>{vehicle.seatingCapacity} seats</td>
-                    <td>{vehicle.assignedDriver ? <div className="assigned-driver"><FaUser /><span>{vehicle.assignedDriver.firstName} {vehicle.assignedDriver.lastName}</span></div> : <span className="unassigned">Unassigned</span>}</td>
-                    <td>{vehicle.assignedRoute ? <div className="assigned-route"><FaRoute /><span>{vehicle.assignedRoute}</span></div> : <span className="no-route">No route</span>}</td>
                     <td>
                       <div className="terminals-container">
                         {vehicle.terminals?.map((terminal, index) => (
