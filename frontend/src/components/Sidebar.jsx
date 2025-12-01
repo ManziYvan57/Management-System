@@ -2,13 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   FaHome, 
-  FaCogs, 
-  FaBoxes, 
   FaBus, 
-  FaUsers, 
-  FaRoute, 
-  FaChartBar,
-  FaShippingFast,
   FaUserCog
 } from 'react-icons/fa';
 import { RoleBasedAccess } from './RoleBasedAccess';
