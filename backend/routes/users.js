@@ -49,8 +49,6 @@ router.get('/', protect, authorize('super_admin', 'admin'), async (req, res) => 
 
     // Get total count
     const count = await User.countDocuments(query);
-      limit
-    });
 
     res.json({
       success: true,
