@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RoleBasedAccess } from '../../components/RoleBasedAccess';
-import { usersAPI, terminalsAPI } from '../../services/api';
+import { usersAPI } from '../../services/api';
 import './Users.css';
 
 const Users = () => {
@@ -41,21 +41,7 @@ const Users = () => {
     { _id: 'Kigali', name: 'Kigali' }
   ]);
 
-  // Fetch terminals from backend (fallback to defaults on error)
-  useEffect(() => {
-    const loadTerminals = async () => {
-      try {
-        const res = await terminalsAPI.getAll();
-        const list = res?.data || res?.terminals || res || [];
-        if (Array.isArray(list) && list.length > 0) {
-          setTerminals(list.map(t => ({ _id: t._id || t.id || t.code || t.name, name: t.name || t.code || t.label || t })));
-        }
-      } catch (e) {
-        console.warn('Terminals fetch failed, using defaults');
-      }
-    };
-    loadTerminals();
-  }, []);
+
 
   // Fetch users from API
   const fetchUsers = async () => {

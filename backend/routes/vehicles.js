@@ -56,7 +56,6 @@ router.get('/', protect, async (req, res) => {
     
     const vehicles = await Vehicle.find(query)
       .populate('createdBy', 'username firstName lastName')
-      .populate('assignedDriver', 'username firstName lastName')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -91,8 +90,7 @@ router.get('/', protect, async (req, res) => {
 router.get('/:id', protect, async (req, res) => {
   try {
     const vehicle = await Vehicle.findById(req.params.id)
-      .populate('createdBy', 'username firstName lastName')
-      .populate('assignedDriver', 'username firstName lastName');
+      .populate('createdBy', 'username firstName lastName');
     
     if (!vehicle) {
       return res.status(404).json({
@@ -195,8 +193,7 @@ router.post('/', protect, authorize('vehicles', 'create'), [
     const vehicle = await Vehicle.create(vehicleData);
     
     const populatedVehicle = await Vehicle.findById(vehicle._id)
-      .populate('createdBy', 'username firstName lastName')
-      .populate('assignedDriver', 'firstName lastName employeeId');
+      .populate('createdBy', 'username firstName lastName');
     
     res.status(201).json({
       success: true,
@@ -261,8 +258,7 @@ router.put('/:id', protect, authorize('vehicles', 'edit'), async (req, res) => {
       new: true,
       runValidators: true
     })
-    .populate('createdBy', 'username firstName lastName')
-    .populate('assignedDriver', 'firstName lastName employeeId');
+    .populate('createdBy', 'username firstName lastName');
     
     res.status(200).json({
       success: true,

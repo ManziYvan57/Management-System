@@ -60,11 +60,8 @@ const limiter = rateLimit({
 // CORS configuration - More permissive for development
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('🌐 CORS Origin check:', origin);
-    
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) {
-      console.log('✅ Allowing request with no origin');
       return callback(null, true);
     }
     
@@ -77,15 +74,12 @@ const corsOptions = {
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log('✅ Origin allowed:', origin);
       callback(null, true);
     } else {
       // For development, allow any localhost origin
       if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        console.log('✅ Localhost origin allowed:', origin);
         callback(null, true);
       } else {
-        console.log('❌ Origin blocked:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     }
