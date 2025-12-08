@@ -180,11 +180,8 @@ router.post('/', protect, [
     'insurance',
     'technical_control',
     'registration',
-    'inspection_certificate',
-    'emission_test',
-    'safety_certificate',
-    'compliance_certificate',
-    'other'
+    'speed_governor',
+    'gas_inspection'
   ]).withMessage('Invalid document type'),
   body('documentNumber').notEmpty().withMessage('Document number is required'),
   body('title').notEmpty().withMessage('Document title is required'),
@@ -237,11 +234,8 @@ router.put('/:id', protect, [
     'insurance',
     'technical_control',
     'registration',
-    'inspection_certificate',
-    'emission_test',
-    'safety_certificate',
-    'compliance_certificate',
-    'other'
+    'speed_governor',
+    'gas_inspection'
   ]).withMessage('Invalid document type'),
   body('documentNumber').optional().notEmpty().withMessage('Document number cannot be empty'),
   body('title').optional().notEmpty().withMessage('Document title cannot be empty'),
@@ -426,7 +420,6 @@ const baseUploadsDir = process.env.FILE_UPLOAD_DIR
   ? path.resolve(process.env.FILE_UPLOAD_DIR)
   : path.join(__dirname, '..', 'uploads');
 const vehicleDocsBaseDir = path.join(baseUploadsDir, 'vehicle-documents');
-console.log('[Uploads] Base directory:', baseUploadsDir);
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -437,13 +430,10 @@ const storage = multer.diskStorage({
       try {
         fs.mkdirSync(dest, { recursive: true });
       } catch (mkdirErr) {
-        console.error('[Uploads] mkdir failed:', mkdirErr, 'dest:', dest);
         return cb(mkdirErr);
       }
-      console.log('[Uploads] Destination resolved:', dest);
       cb(null, dest);
     } catch (e) {
-      console.error('[Uploads] Destination error:', e);
       cb(e);
     }
   },
@@ -508,14 +498,6 @@ router.post('/:id/attachments', protect, loadDocument, async (req, res) => {
       const documentId = req.document._id.toString();
 
       const relativeUrl = `/uploads/vehicle-documents/${vehicleId}/${documentId}/${req.file.filename}`;
-      console.log('[Uploads] Saved file:', {
-        vehicleId,
-        documentId,
-        storedAs: req.file.filename,
-        path: req.file.path,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-      });
 
       const attachment = {
         fileName: req.file.filename,
