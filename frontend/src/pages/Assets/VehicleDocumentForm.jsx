@@ -24,9 +24,8 @@ const VehicleDocumentForm = ({ document, onSubmit, onClose, isOpen, mode = 'add'
     { value: 'insurance', label: 'Insurance Certificate' },
     { value: 'registration', label: 'Vehicle Registration' },
     { value: 'technical_control', label: 'Technical Control Certificate' },
-    { value: 'inspection', label: 'Safety Inspection' },
-    { value: 'permit', label: 'Operating Permit' },
-    { value: 'other', label: 'Other Document' }
+    { value: 'speed_governor', label: 'Speed Governor' },
+    { value: 'gas_inspection', label: 'Gas Inspection' }
   ];
 
   const statusOptions = [

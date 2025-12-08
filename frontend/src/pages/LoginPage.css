@@ -11,9 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(1200px circle at 20% 10%, rgba(59, 130, 246, 0.15), transparent 35%),
-              radial-gradient(800px circle at 90% 20%, rgba(99, 102, 241, 0.12), transparent 40%),
-              linear-gradient(135deg, #0f172a 0%, #0b1220 100%);
+  background: #186761;
   padding: 20px;
   overflow: hidden;
   /* Prevent scrolling */

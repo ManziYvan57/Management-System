@@ -16,7 +16,7 @@ const Header = ({ user, onLogout }) => {
         </div>
 
         {/* System Name */}
-        <h1 className="system-title">Trinity Management System</h1>
+        <h1 className="system-title">Jali Transport Management System</h1>
       </div>
 
       <div className="header-right">

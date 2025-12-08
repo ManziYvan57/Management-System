@@ -53,7 +53,7 @@ const LoginPage = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Trinity Management System</h1>
+          <h1>Jali Transport Management System</h1>
           <p>Sign in to your account</p>
         </div>
 

@@ -16,11 +16,8 @@ const VehicleDocumentSchema = new mongoose.Schema({
       'insurance',
       'technical_control',
       'registration',
-      'inspection_certificate',
-      'emission_test',
-      'safety_certificate',
-      'compliance_certificate',
-      'other'
+      'speed_governor',
+      'gas_inspection'
     ]
   },
 

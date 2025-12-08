@@ -52,9 +52,9 @@ const Assets = () => {
         <div className="assets-header">
           <h2>Assets Management</h2>
           <div className="terminal-info">
-            <FaBuilding className="terminal-icon" />
-            <span>Current Terminal: <strong>{activeTerminal}</strong></span>
-          </div>
+             <FaBuilding className="terminal-icon" />
+             <span>Location: <strong>{activeTerminal}</strong></span>
+           </div>
         </div>
 
         {/* Terminal Tabs */}
@@ -66,8 +66,8 @@ const Assets = () => {
               onClick={() => handleTerminalChange(terminal)}
             >
               <FaWarehouse className="tab-icon" />
-              {terminal} Terminal
-            </button>
+               {terminal}
+              </button>
           ))}
         </div>
 

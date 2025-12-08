@@ -80,11 +80,11 @@ const Dashboard = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">
-          <h1>Trinity Management Dashboard</h1>
-          <div className="terminal-info">
-            <FaBuilding className="terminal-icon" />
-            <span>Current Terminal: <strong>{activeTerminal}</strong></span>
-          </div>
+          <h1>Jali Transport Dashboard</h1>
+           <div className="terminal-info">
+             <FaBuilding className="terminal-icon" />
+             <span>Location: <strong>{activeTerminal}</strong></span>
+           </div>
         </div>
         <div className="header-right">
           <div className="real-time-clock">

@@ -39,10 +39,10 @@ const Sidebar = ({ user }) => {
   return (
     <nav className="sidebar">
       <div className="sidebar-header">
-        <h3>Trinity Management</h3>
+        <h3>Jali Transport</h3>
         {user && (
           <div className="user-info">
-            <small>{user.terminal?.toUpperCase()} Terminal</small>
+            <small>{user.terminal?.toUpperCase()}</small>
             <small>{user.role?.replace('_', ' ').toUpperCase()}</small>
           </div>
         )}

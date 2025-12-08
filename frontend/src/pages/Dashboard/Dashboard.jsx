@@ -106,7 +106,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">
-          <h1>Trinity Management Dashboard</h1>
+          <h1>Jali Transport Dashboard</h1>
           <p>Comprehensive overview of all operations</p>
         </div>
         <div className="header-right">
@@ -758,22 +758,22 @@ const Dashboard = () => {
               </div>
 
               <div className="users-card">
-                <h4>Terminal Distribution</h4>
+                <h4>Location Distribution</h4>
                 <div className="users-stats">
                   <div className="users-stat">
-                    <span>Kigali Terminal</span>
+                    <span>Kigali</span>
                     <strong>{dashboardData.users.kigaliUsers || 0}</strong>
                   </div>
                   <div className="users-stat">
-                    <span>Kampala Terminal</span>
+                    <span>Kampala</span>
                     <strong>{dashboardData.users.kampalaUsers || 0}</strong>
                   </div>
                   <div className="users-stat">
-                    <span>Nairobi Terminal</span>
+                    <span>Nairobi</span>
                     <strong>{dashboardData.users.nairobiUsers || 0}</strong>
                   </div>
                   <div className="users-stat">
-                    <span>Juba Terminal</span>
+                    <span>Juba</span>
                     <strong>{dashboardData.users.jubaUsers || 0}</strong>
                   </div>
                 </div>
