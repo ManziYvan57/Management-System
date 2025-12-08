@@ -107,7 +107,7 @@ const Dashboard = () => {
             onClick={() => handleTerminalChange(terminal)}
           >
             <FaWarehouse className="tab-icon" />
-            {terminal} Terminal
+            {terminal}
           </button>
         ))}
       </div>
