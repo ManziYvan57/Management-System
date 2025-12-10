@@ -13,8 +13,6 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Please add an email'],
-    unique: true,
     match: [
       /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
       'Please add a valid email'
@@ -51,20 +49,10 @@ const UserSchema = new mongoose.Schema({
     enum: ['super_admin', 'admin', 'managers'],
     default: 'admin'
   },
-  route: {
+  company: {
     type: String,
-    enum: ['kampala-nairobi', 'goma-kampala', 'nairobi-kigali', 'kampala-kigali', 'kampala-juba', 'juba-bor', 'none'],
-    default: 'none'
-  },
-  fleetType: {
-    type: String,
-    enum: ['active', 'maintenance', 'both'],
-    default: 'both'
-  },
-  terminal: {
-    type: String,
-    enum: ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'],
-    required: [true, 'Terminal is required']
+    enum: ['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye'],
+    required: [true, 'Company is required']
   },
   phone: {
     type: String,
@@ -90,40 +78,11 @@ const UserSchema = new mongoose.Schema({
     type: Date
   },
   permissions: {
-    garage: {
-      view: { type: Boolean, default: true },
-      create: { type: Boolean, default: false },
-      edit: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
-    },
-    inventory: {
-      view: { type: Boolean, default: true },
-      create: { type: Boolean, default: false },
-      edit: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
-    },
     assets: {
       view: { type: Boolean, default: true },
       create: { type: Boolean, default: false },
       edit: { type: Boolean, default: false },
       delete: { type: Boolean, default: false }
-    },
-    personnel: {
-      view: { type: Boolean, default: true },
-      create: { type: Boolean, default: false },
-      edit: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
-    },
-    transport: {
-      view: { type: Boolean, default: true },
-      create: { type: Boolean, default: false },
-      edit: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false }
-    },
-    reports: {
-      view: { type: Boolean, default: true },
-      create: { type: Boolean, default: false },
-      export: { type: Boolean, default: false }
     },
     users: {
       view: { type: Boolean, default: false },
@@ -242,30 +201,15 @@ UserSchema.methods.resetLoginAttempts = function() {
   UserSchema.methods.setDefaultPermissions = function() {
     const rolePermissions = {
       super_admin: {
-        garage: { view: true, create: true, edit: true, delete: true },
-        inventory: { view: true, create: true, edit: true, delete: true },
         assets: { view: true, create: true, edit: true, delete: true },
-        personnel: { view: true, create: true, edit: true, delete: true },
-        transport: { view: true, create: true, edit: true, delete: true },
-        reports: { view: true, create: true, export: true },
         users: { view: true, create: true, edit: true, delete: true }
       },
       admin: {
-        garage: { view: true, create: true, edit: true, delete: false },
-        inventory: { view: true, create: true, edit: true, delete: false },
         assets: { view: true, create: true, edit: true, delete: false },
-        personnel: { view: true, create: true, edit: true, delete: false },
-        transport: { view: true, create: true, edit: true, delete: false },
-        reports: { view: true, create: true, export: true },
         users: { view: true, create: false, edit: false, delete: false }
       },
       managers: {
-        garage: { view: true, create: false, edit: false, delete: false },
-        inventory: { view: true, create: false, edit: false, delete: false },
         assets: { view: true, create: false, edit: false, delete: false },
-        personnel: { view: true, create: false, edit: false, delete: false },
-        transport: { view: true, create: false, edit: false, delete: false },
-        reports: { view: true, create: false, export: false },
         users: { view: false, create: false, edit: false, delete: false }
       }
     };

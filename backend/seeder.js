@@ -8,7 +8,7 @@ const createDefaultUsers = async () => {
     await mongoose.connect(
       process.env.NODE_ENV === 'production' 
         ? process.env.MONGODB_URI_PROD 
-        : process.env.MONGODB_URI || 'mongodb://localhost:27017/trinity_management_system',
+        : process.env.MONGODB_URI || 'mongodb://localhost:27017/jali_transport_management_system',
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
@@ -29,14 +29,12 @@ const createDefaultUsers = async () => {
     const testUsers = [
       {
         username: 'admin',
-        email: 'admin@trinity.com',
-        // NOTE: This will be hashed by the User model before saving.
-        // Login credentials: username=admin, password=admin123
-        password: 'admin123',
+        email: 'admin@jalitransport.com',
+        password: 'TempPass123!',
         firstName: 'System',
         lastName: 'Administrator',
         role: 'super_admin',
-        terminal: 'Kigali',
+        company: 'Kigali',
         route: 'none',
         fleetType: 'both',
         department: 'management',
@@ -57,9 +55,9 @@ const createDefaultUsers = async () => {
     console.log('=====================================');
     console.log('ADMIN:');
     console.log('  Username: admin');
-    console.log('  Email: admin@trinity.com');
-    console.log('  Password: admin123');
-    console.log('  Terminal: Kigali');
+    console.log('  Email: admin@jalitransport.com');
+    console.log('  Password: Check auto-generated password');
+    console.log('  Company: Kigali');
     console.log('  ---');
 
     console.log('\n🔐 Use this account to test all features of the system.');
@@ -69,10 +67,9 @@ const createDefaultUsers = async () => {
     console.error('❌ Error creating users:', error);
   } finally {
     await mongoose.disconnect();
-    console.log('🔌 Disconnected from MongoDB');
+    console.log('\n✅ Database connection closed');
     process.exit(0);
   }
 };
 
-// Run the seeder
 createDefaultUsers();

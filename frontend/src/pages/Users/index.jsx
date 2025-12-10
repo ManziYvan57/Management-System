@@ -25,8 +25,8 @@ const Users = () => {
     lastName: '',
     email: '',
     role: 'admin',
-    terminal: 'Kigali',
-    terminalId: '',
+    company: 'Kigali',
+    companyId: '',
     phone: ''
   });
 
@@ -36,9 +36,15 @@ const Users = () => {
     confirmPassword: ''
   });
 
-  // Terminals state
-  const [terminals, setTerminals] = useState([
-    { _id: 'Kigali', name: 'Kigali' }
+  // Company locations state
+  const [companies, setCompanies] = useState([
+    { _id: 'Kigali', name: 'Kigali' },
+    { _id: 'Musanze', name: 'Musanze' },
+    { _id: 'Nyabugogo', name: 'Nyabugogo' },
+    { _id: 'Muhanga', name: 'Muhanga' },
+    { _id: 'Rusizi', name: 'Rusizi' },
+    { _id: 'Rubavu', name: 'Rubavu' },
+    { _id: 'Huye', name: 'Huye' }
   ]);
 
 
@@ -106,13 +112,13 @@ const Users = () => {
     }));
   };
 
-  const handleTerminalChange = (e) => {
+  const handleCompanyChange = (e) => {
     const value = e.target.value;
-    const selected = terminals.find(t => String(t._id) === String(value) || t.name === value);
+    const selected = companies.find(t => String(t._id) === String(value) || t.name === value);
     setNewUser(prev => ({
       ...prev,
-      terminal: selected?.name || value,
-      terminalId: selected?._id || ''
+      company: selected?.name || value,
+      companyId: selected?._id || ''
     }));
   };
 
@@ -128,9 +134,9 @@ const Users = () => {
     e.preventDefault();
     try {
       const payload = { ...newUser };
-      if (!payload.terminalId) {
-        const selected = terminals.find(t => t.name === payload.terminal);
-        if (selected) payload.terminalId = selected._id;
+      if (!payload.companyId) {
+        const selected = companies.find(t => t.name === payload.company);
+        if (selected) payload.companyId = selected._id;
       }
       const response = await usersAPI.create(payload);
       if (response.success) {
@@ -147,8 +153,8 @@ const Users = () => {
           lastName: '',
           email: '',
           role: 'admin',
-          terminal: 'Kigali',
-          terminalId: '',
+          company: 'Kigali',
+          companyId: '',
           phone: ''
         });
         setShowAddForm(false);
@@ -255,11 +261,17 @@ const Users = () => {
     return roleClasses[role] || 'badge-default';
   };
 
-  const getTerminalBadgeClass = (terminal) => {
-    const terminalClasses = {
-      'Kigali': 'badge-kigali'
+  const getCompanyBadgeClass = (company) => {
+    const companyClasses = {
+      'Kigali': 'badge-kigali',
+      'Musanze': 'badge-musanze',
+      'Nyabugogo': 'badge-nyabugogo',
+      'Muhanga': 'badge-muhanga',
+      'Rusizi': 'badge-rusizi',
+      'Rubavu': 'badge-rubavu',
+      'Huye': 'badge-huye'
     };
-    return terminalClasses[terminal] || 'badge-default';
+    return companyClasses[company] || 'badge-default';
   };
 
   const formatRole = (role) => {
@@ -362,7 +374,7 @@ const Users = () => {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Role</th>
-                  <th>Terminal</th>
+                  <th>Company</th>
                   <th>Status</th>
                   <th>Created</th>
                   <th>Password</th>
@@ -381,8 +393,8 @@ const Users = () => {
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${getTerminalBadgeClass(user.terminal)}`}>
-                        {user.terminal}
+                      <span className={`badge ${getCompanyBadgeClass(user.company)}`}>
+                        {user.company}
                       </span>
                     </td>
                     <td>
@@ -535,14 +547,14 @@ const Users = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Terminal:</label>
+                  <label>Company:</label>
                   <select
-                    name="terminal"
-                    value={newUser.terminalId || newUser.terminal}
-                    onChange={handleTerminalChange}
+                    name="company"
+                    value={newUser.companyId || newUser.company}
+                    onChange={handleCompanyChange}
                     required
                   >
-                    {terminals.map(t => (
+                    {companies.map(t => (
                       <option key={String(t._id)} value={String(t._id)}>{t.name}</option>
                     ))}
                   </select>
@@ -639,22 +651,22 @@ const Users = () => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Terminal:</label>
+                  <label>Company:</label>
                   <select
-                    name="terminal"
-                    value={editingUser.terminalId || editingUser.terminal}
+                    name="company"
+                    value={editingUser.companyId || editingUser.company}
                     onChange={(e) => {
                       const value = e.target.value;
-                      const selected = terminals.find(t => String(t._id) === String(value) || t.name === value);
+                      const selected = companies.find(t => String(t._id) === String(value) || t.name === value);
                       setEditingUser({
                         ...editingUser,
-                        terminal: selected?.name || value,
-                        terminalId: selected?._id || ''
+                        company: selected?.name || value,
+                        companyId: selected?._id || ''
                       });
                     }}
                     required
                   >
-                    {terminals.map(t => (
+                    {companies.map(t => (
                       <option key={String(t._id)} value={String(t._id)}>{t.name}</option>
                     ))}
                   </select>

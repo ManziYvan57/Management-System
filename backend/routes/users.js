@@ -91,9 +91,9 @@ router.post('/', [
   body('role')
     .isIn(['super_admin', 'admin', 'managers'])
     .withMessage('Invalid role'),
-  body('terminal')
-    .isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'])
-    .withMessage('Invalid terminal'),
+  body('company')
+    .isIn(['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye'])
+    .withMessage('Invalid company'),
   body('phone')
     .optional()
     .trim()
@@ -109,7 +109,7 @@ router.post('/', [
       });
     }
 
-    const { username, firstName, lastName, email, role, terminal, phone } = req.body;
+    const { username, firstName, lastName, email, role, company, phone } = req.body;
 
     // Check if username already exists
     const existingUser = await User.findOne({ username });
@@ -140,7 +140,7 @@ router.post('/', [
       email,
       password: tempPassword, // Required field, will be replaced by pre-save hook
       role,
-      terminal,
+      company,
       phone: phone || '',
       isActive: true
     });
@@ -156,7 +156,7 @@ router.post('/', [
         lastName: user.lastName,
         email: user.email,
         role: user.role,
-        terminal: user.terminal,
+        company: user.company,
         phone: user.phone,
         isActive: user.isActive,
         createdAt: user.createdAt
@@ -227,7 +227,11 @@ router.put('/:id', [
     .optional()
     .trim()
     .isLength({ max: 20 })
-    .withMessage('Phone number cannot be more than 20 characters')
+    .withMessage('Phone number cannot be more than 20 characters'),
+  body('company')
+    .optional()
+    .isIn(['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye'])
+    .withMessage('Invalid company')
 ], protect, authorize('super_admin', 'admin'), async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -238,7 +242,7 @@ router.put('/:id', [
       });
     }
 
-    const { firstName, lastName, email, role, phone, isActive } = req.body;
+    const { firstName, lastName, email, role, phone, company, isActive } = req.body;
 
     // Check if user exists
     const user = await User.findById(req.params.id);
@@ -268,6 +272,7 @@ router.put('/:id', [
     if (email !== undefined) updateFields.email = email;
     if (role !== undefined) updateFields.role = role;
     if (phone !== undefined) updateFields.phone = phone;
+    if (company !== undefined) updateFields.company = company;
     if (isActive !== undefined) updateFields.isActive = isActive;
 
     const updatedUser = await User.findByIdAndUpdate(

@@ -10,7 +10,7 @@ const xss = require('xss-clean');
 const path = require('path');
 require('dotenv').config();
 
-// Trinity Management System Backend - CORS and Rate Limiting Fixed
+// Jali Transport Management System Backend - CORS and Rate Limiting Fixed
 // VEHICLE DOCUMENTS ROUTES INCLUDED - DEPLOYMENT TEST
 // LATEST VERSION - COMMIT f53f07f - AUTH MIDDLEWARE FIXED
 // STOCK MOVEMENTS & SUPPLIERS UPDATE - FORCE REDEPLOY - COMMIT c9d0e1f
@@ -69,7 +69,7 @@ const corsOptions = {
       'http://localhost:3002', 
       'http://localhost:3000',
       'http://localhost:3001',
-      'https://trinity-management-system.onrender.com',
+      'https://jali-transport-management.onrender.com',
       'https://your-frontend-domain.com'
     ];
     
@@ -116,7 +116,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.get('/', (req, res) => {
   res.status(200).json({
     status: 'success',
-    message: '🚀 Trinity Management System API is running successfully!',
+    message: '🚀 Jali Transport Management System API is running successfully!',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
@@ -137,7 +137,7 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',
-    message: 'Trinity Management System API is running',
+    message: 'Jali Transport Management System API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
   });
@@ -175,14 +175,14 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    console.log('🚀 Starting Trinity Management System...');
+    console.log('🚀 Starting Jali Transport Management System...');
     
     // Connect to database
     await connectDB();
     
     // Start server
     app.listen(PORT, () => {
-      console.log('🎉 Trinity Management System API Started Successfully!');
+      console.log('🎉 Jali Transport Management System API Started Successfully!');
       console.log(`🌐 Server URL: http://localhost:${PORT}`);
     });
   } catch (error) {

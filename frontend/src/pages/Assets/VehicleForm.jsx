@@ -9,7 +9,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
     model: '',
     year: new Date().getFullYear(),
     status: 'active',
-    terminals: ['Kigali'],
+    company: ['Kigali'],
     seatingCapacity: 0,
     fuelType: 'Diesel',
     mileage: 0,
@@ -30,7 +30,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
         model: vehicle.model || '',
         year: vehicle.year || new Date().getFullYear(),
         status: vehicle.status || 'active',
-        terminals: vehicle.terminals || ['Kigali'],
+        company: vehicle.company || ['Kigali'],
         seatingCapacity: vehicle.seatingCapacity || 0,
         fuelType: vehicle.fuelType || 'Diesel',
         mileage: vehicle.mileage || 0,
@@ -65,7 +65,7 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
     if (!formData.plateNumber.trim()) newErrors.plateNumber = 'Plate number is required';
     if (!formData.make.trim()) newErrors.make = 'Make is required';
     if (!formData.model.trim()) newErrors.model = 'Model is required';
-    if (!formData.terminals || formData.terminals.length === 0) newErrors.terminals = 'At least one terminal is required';
+    if (!formData.company || formData.company.length === 0) newErrors.company = 'At least one company is required';
     if (formData.seatingCapacity <= 0) newErrors.seatingCapacity = 'Seating capacity must be greater than 0';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -79,15 +79,15 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
     setLoading(true);
     try {
       // Clean up the data before submitting
-      const allowedTerminals = ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'];
-      const cleanedTerminals = (formData.terminals || [])
-        .map(t => (t || '').trim())
+      const allowedCompanies = ['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye'];
+      const cleanedCompanies = (formData.company || [])
+        .map(c => (c || '').trim())
         .filter(Boolean)
-        .map(t => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase())
-        .filter((t, idx, arr) => allowedTerminals.includes(t) && arr.indexOf(t) === idx);
+        .map(c => c.charAt(0).toUpperCase() + c.slice(1).toLowerCase())
+        .filter((c, idx, arr) => allowedCompanies.includes(c) && arr.indexOf(c) === idx);
       const submitData = {
         ...formData,
-        terminals: cleanedTerminals,
+        company: cleanedCompanies,
         purchaseCost: parseFloat(formData.purchaseCost) || 0,
         currentValue: parseFloat(formData.currentValue) || 0,
         seatingCapacity: parseInt(formData.seatingCapacity) || 0,
@@ -204,15 +204,15 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
             </div>
 
             <div className="form-group">
-              <label htmlFor="terminals">Terminal *</label>
+              <label htmlFor="company">Company *</label>
               <input
                 type="text"
-                id="terminals"
-                name="terminals"
+                id="company"
+                name="company"
                 value="Kigali"
                 disabled
               />
-              <small className="form-hint">System is configured for Kigali terminal only</small>
+              <small className="form-hint">System is configured for Kigali company only</small>
             </div>
           </div>
 

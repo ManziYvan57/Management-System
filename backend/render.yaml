@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: trinity-management-system-backend
+    name: jali-transport-management-backend
     env: node
     plan: free
     buildCommand: npm install

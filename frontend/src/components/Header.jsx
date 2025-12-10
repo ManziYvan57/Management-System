@@ -8,7 +8,7 @@ const Header = ({ user, onLogout }) => {
         {/* System Logo */}
         <div className="logo-container">
           <img 
-            src="/images/company-logo.jpeg" 
+            src="/images/company-logo.png" 
             alt="Company Logo" 
             className="logo-img"
             onError={(e) => e.target.style.display = 'none'}

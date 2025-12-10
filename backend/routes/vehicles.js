@@ -9,13 +9,13 @@ const { body, validationResult } = require('express-validator');
 // @access  Private
 router.get('/', protect, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, fuelType, terminal, select } = req.query;
+    const { page = 1, limit = 10, search, status, fuelType, company, select } = req.query;
 
     // If 'select' is true, return a simplified list for dropdowns
     if (select === 'true') {
       const query = { isActive: true };
-      if (terminal) {
-        query.terminals = { $in: [terminal] };
+      if (company) {
+        query.company = { $in: [company] };
       }
       const vehicles = await Vehicle.find(query)
         .sort({ plateNumber: 1 })
@@ -29,9 +29,9 @@ router.get('/', protect, async (req, res) => {
     // Build query based on user role
     let query = { isActive: true };
     
-    // Filter by terminal - check if terminal is in terminals array
-    if (terminal) {
-      query.terminals = { $in: [terminal] };
+    // Filter by company - check if company is in company array
+    if (company) {
+      query.company = { $in: [company] };
     }
     
     // Search functionality
@@ -122,16 +122,16 @@ router.post('/', protect, authorize('vehicles', 'create'), [
   body('model').notEmpty().withMessage('Model is required'),
   body('year').isInt({ min: 1900, max: new Date().getFullYear() + 1 }).withMessage('Valid year is required'),
   body('seatingCapacity').isInt({ min: 1 }).withMessage('Seating capacity must be at least 1'),
-  // Normalize and validate terminals robustly
-  body('terminals')
+  // Normalize and validate companies robustly
+  body('company')
     .customSanitizer((value) => {
       const toTitle = (s) => typeof s === 'string' && s.length
         ? s.trim().charAt(0).toUpperCase() + s.trim().slice(1).toLowerCase()
         : s;
       if (Array.isArray(value)) {
         return value
-          .map((t) => toTitle(t))
-          .filter((t) => !!t);
+          .map((c) => toTitle(c))
+          .filter((c) => !!c);
       }
       if (typeof value === 'string') {
         // If it's a JSON array string, try to parse it
@@ -140,7 +140,7 @@ router.post('/', protect, authorize('vehicles', 'create'), [
           try {
             const parsed = JSON.parse(trimmed);
             if (Array.isArray(parsed)) {
-              return parsed.map((t) => toTitle(String(t))).filter((t) => !!t);
+              return parsed.map((c) => toTitle(String(c))).filter((c) => !!c);
             }
           } catch (e) {
             // fallthrough to comma split
@@ -148,20 +148,20 @@ router.post('/', protect, authorize('vehicles', 'create'), [
         }
         // Support comma-separated strings or single string
         const parts = trimmed.includes(',') ? trimmed.split(',') : [trimmed];
-        return parts.map((t) => toTitle(t)).filter((t) => !!t);
+        return parts.map((c) => toTitle(c)).filter((c) => !!c);
       }
       return [];
     })
-    .isArray({ min: 1 }).withMessage('At least one terminal is required')
+    .isArray({ min: 1 }).withMessage('At least one company is required')
     .bail()
     .custom((arr) => {
-      const allowed = ['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'];
+      const allowed = ['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye'];
       if (!Array.isArray(arr)) return false;
       // Deduplicate and ensure every value is allowed
       const unique = Array.from(new Set(arr));
-      return unique.length === arr.length && arr.every((t) => allowed.includes(t));
+      return unique.length === arr.length && arr.every((c) => allowed.includes(c));
     })
-    .withMessage('Valid terminal is required')
+    .withMessage('Valid company is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

@@ -31,9 +31,9 @@ router.post('/register', [
   body('role')
     .isIn(['super_admin', 'admin', 'managers'])
     .withMessage('Invalid role'),
-  body('terminal')
-    .isIn(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor'])
-    .withMessage('Invalid terminal')
+  body('company')
+    .isIn(['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye'])
+    .withMessage('Invalid company')
 ], protect, authorize('super_admin', 'admin'), async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -44,7 +44,7 @@ router.post('/register', [
       });
     }
 
-    const { username, email, password, firstName, lastName, role, terminal, phone } = req.body;
+    const { username, email, password, firstName, lastName, role, company, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -66,7 +66,7 @@ router.post('/register', [
       firstName,
       lastName,
       role,
-      terminal,
+      company,
       phone
     });
 
@@ -83,7 +83,7 @@ router.post('/register', [
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        terminal: user.terminal,
+        company: user.company,
         permissions: user.permissions
       }
     });

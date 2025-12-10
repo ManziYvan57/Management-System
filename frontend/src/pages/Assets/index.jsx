@@ -8,13 +8,12 @@ import './Assets.css';
 const Assets = () => {
   // Get user information from localStorage
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userTerminal = user.terminal || 'Kigali';
+  const userCompany = user.company || 'Kigali';
   const userRole = user.role || 'user';
   
-  // Terminal tabs state
-  const [activeTerminal, setActiveTerminal] = useState('Kigali');
-  // const [availableTerminals, setAvailableTerminals] = useState(['Kigali', 'Kampala', 'Nairobi', 'Juba', 'Goma', 'Bor']);
-  const [availableTerminals, setAvailableTerminals] = useState(['Kigali']);
+  // Company tabs state
+  const [activeCompany, setActiveCompany] = useState('Kigali');
+  const [availableCompanies, setAvailableCompanies] = useState(['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye']);
   
   const [activeTab, setActiveTab] = useState('vehicles');
 
@@ -23,28 +22,28 @@ const Assets = () => {
       id: 'vehicles',
       label: 'Vehicles',
       icon: <FaCar />,
-      component: <VehiclesTab activeTerminal={activeTerminal} />
+      component: <VehiclesTab activeTerminal={activeCompany} />
     },
     {
       id: 'documents',
       label: 'Documents',
       icon: <FaFileAlt />,
-      component: <VehicleDocumentsTab activeTerminal={activeTerminal} />
+      component: <VehicleDocumentsTab activeTerminal={activeCompany} />
     }
   ];
 
-  // Handle terminal tab change
-  const handleTerminalChange = (terminal) => {
-    setActiveTerminal(terminal);
+  // Handle company tab change
+  const handleCompanyChange = (company) => {
+    setActiveCompany(company);
   };
 
-  // Get terminals available to user based on role
-  const getUserTerminals = () => {
-    // For now, show all terminals to admin users (including 'admin' role)
+  // Get companies available to user based on role
+  const getUserCompanies = () => {
+    // For now, show all companies to admin users (including 'admin' role)
     if (userRole === 'super_admin' || userRole === 'admin' || userRole === 'Admin') {
-      return availableTerminals;
+      return availableCompanies;
     }
-    return [userTerminal]; // Regular users only see their terminal
+    return [userCompany]; // Regular users only see their company
   };
 
   return (
@@ -53,20 +52,20 @@ const Assets = () => {
           <h2>Assets Management</h2>
           <div className="terminal-info">
              <FaBuilding className="terminal-icon" />
-             <span>Location: <strong>{activeTerminal}</strong></span>
+             <span>Location: <strong>{activeCompany}</strong></span>
            </div>
         </div>
 
-        {/* Terminal Tabs */}
+        {/* Company Tabs */}
         <div className="terminal-tabs">
-          {getUserTerminals().map((terminal) => (
+          {getUserCompanies().map((company) => (
             <button
-              key={terminal}
-              className={`terminal-tab ${activeTerminal === terminal ? 'active' : ''}`}
-              onClick={() => handleTerminalChange(terminal)}
+              key={company}
+              className={`terminal-tab ${activeCompany === company ? 'active' : ''}`}
+              onClick={() => handleCompanyChange(company)}
             >
               <FaWarehouse className="tab-icon" />
-               {terminal}
+               {company}
               </button>
           ))}
         </div>

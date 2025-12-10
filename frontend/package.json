@@ -1,7 +1,7 @@
 {
-  "name": "trinity-management-system-frontend",
+  "name": "jali-transport-management-system-frontend",
   "version": "1.0.0",
-  "description": "Frontend for Trinity Integrated Transport, Garage, Stock, Asset, and Driver Performance Management System",
+  "description": "Frontend for Jali Transport Management System",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,7 +1,7 @@
 {
-  "name": "trinity-management-system-backend",
+  "name": "jali-transport-management-system-backend",
   "version": "1.0.0",
-  "description": "Backend API for Trinity Integrated Transport, Garage, Stock, Asset, and Driver Performance Management System",
+  "description": "Backend API for Jali Transport Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,7 +12,8 @@
     "test-server": "node test-server.js"
   },
   "keywords": [
-    "trinity",
+    "jali",
+    "transport",
     "management",
     "transport",
     "garage",
@@ -22,7 +23,7 @@
     "api",
     "mongodb"
   ],
-  "author": "Trinity Transporter and Distributors Co Ltd",
+  "author": "Jali Transport",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
