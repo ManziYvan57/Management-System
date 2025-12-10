@@ -14,6 +14,7 @@ router.post('/register', [
     .isLength({ min: 3, max: 50 })
     .withMessage('Username must be between 3 and 50 characters'),
   body('email')
+    .optional()
     .isEmail()
     .normalizeEmail()
     .withMessage('Please provide a valid email'),
@@ -47,14 +48,19 @@ router.post('/register', [
     const { username, email, password, firstName, lastName, role, company, phone } = req.body;
 
     // Check if user already exists
+    const orConditions = [{ username }];
+    if (email) {
+      orConditions.push({ email });
+    }
+    
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
+      $or: orConditions
     });
 
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        error: 'User with this email or username already exists'
+        error: email ? 'User with this email or username already exists' : 'Username already exists'
       });
     }
 

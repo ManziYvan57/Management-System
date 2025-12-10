@@ -202,12 +202,12 @@ const Users = () => {
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     try {
-      // Ensure we send terminalId too
+      // Ensure we send companyId too
       const payload = { ...editingUser };
-      const selected = terminals.find(t => t.name === payload.terminal || String(t._id) === String(payload.terminalId));
+      const selected = companies.find(c => c.name === payload.company || String(c._id) === String(payload.companyId));
       if (selected) {
-        payload.terminal = selected.name;
-        payload.terminalId = selected._id;
+        payload.company = selected.name;
+        payload.companyId = selected._id;
       }
       const response = await usersAPI.update(editingUser._id, payload);
       if (response.success) {
@@ -521,7 +521,6 @@ const Users = () => {
                     name="email"
                     value={newUser.email}
                     onChange={handleInputChange}
-                    required
                   />
                 </div>
                 <div className="form-group">
