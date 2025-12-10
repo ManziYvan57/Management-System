@@ -138,6 +138,10 @@ const Users = () => {
         const selected = companies.find(t => t.name === payload.company);
         if (selected) payload.companyId = selected._id;
       }
+      // Remove empty email field (send undefined instead of empty string)
+      if (!payload.email || payload.email.trim() === '') {
+        delete payload.email;
+      }
       const response = await usersAPI.create(payload);
       if (response.success) {
         // Show the auto-generated password to the admin
@@ -208,6 +212,10 @@ const Users = () => {
       if (selected) {
         payload.company = selected.name;
         payload.companyId = selected._id;
+      }
+      // Remove empty email field (send undefined instead of empty string)
+      if (!payload.email || payload.email.trim() === '') {
+        delete payload.email;
       }
       const response = await usersAPI.update(editingUser._id, payload);
       if (response.success) {

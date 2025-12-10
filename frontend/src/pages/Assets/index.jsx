@@ -11,8 +11,8 @@ const Assets = () => {
   const userCompany = user.company || 'Kigali';
   const userRole = user.role || 'user';
   
-  // Company tabs state
-  const [activeCompany, setActiveCompany] = useState('Kigali');
+  // Company tabs state - initialize with user's company
+  const [activeCompany, setActiveCompany] = useState(userCompany);
   const [availableCompanies, setAvailableCompanies] = useState(['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye']);
   
   const [activeTab, setActiveTab] = useState('vehicles');

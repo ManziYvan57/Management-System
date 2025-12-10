@@ -184,7 +184,7 @@ router.post('/login', [
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        terminal: user.terminal,
+        company: user.company,
         permissions: user.permissions,
         lastLogin: user.lastLogin
       }
@@ -214,7 +214,7 @@ router.get('/me', protect, async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        terminal: user.terminal,
+        company: user.company,
         permissions: user.permissions,
         lastLogin: user.lastLogin,
         isActive: user.isActive
@@ -283,7 +283,7 @@ router.put('/profile', [
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        terminal: user.terminal,
+        company: user.company,
         permissions: user.permissions,
         phone: user.phone
       }

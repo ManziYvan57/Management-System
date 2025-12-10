@@ -11,9 +11,16 @@ import './Dashboard.css';
 const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userCompany = user.company || 'Kigali';
+  const userRole = user.role || 'user';
 
-  const [activeTerminal, setActiveTerminal] = useState('Kigali');
-  const [availableTerminals, setAvailableTerminals] = useState(['Kigali']);
+  // Initialize with user's company, allow admins to switch
+  const [activeTerminal, setActiveTerminal] = useState(userCompany);
+  const [availableTerminals, setAvailableTerminals] = useState(
+    userRole === 'super_admin' || userRole === 'admin' 
+      ? ['Kigali', 'Musanze', 'Nyabugogo', 'Muhanga', 'Rusizi', 'Rubavu', 'Huye']
+      : [userCompany]
+  );
 
   const [dashboardData, setDashboardData] = useState({
     totalVehicles: 0,
