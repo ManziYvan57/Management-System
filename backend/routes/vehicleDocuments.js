@@ -20,7 +20,7 @@ router.get('/', protect, async (req, res) => {
       complianceStatus,
       expiryStatus,
       search,
-      terminal,
+      company,
       page = 1,
       limit = 10,
       sortBy = 'expiryDate',
@@ -68,10 +68,10 @@ router.get('/', protect, async (req, res) => {
       }
     }
 
-    // Terminal filtering - filter by vehicle terminal
+    // Company filtering - filter by vehicle company
     let vehicleQuery = {};
-    if (terminal) {
-      vehicleQuery.terminals = { $in: [terminal] };
+    if (company) {
+      vehicleQuery.company = { $in: [company] };
     }
 
     // Pagination
@@ -81,18 +81,18 @@ router.get('/', protect, async (req, res) => {
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    // Execute query with terminal filtering
+    // Execute query with company filtering
     let documents;
-    if (terminal) {
-      // If terminal filter is provided, first find vehicles in that terminal
-      const vehiclesInTerminal = await Vehicle.find(vehicleQuery).select('_id');
-      const vehicleIds = vehiclesInTerminal.map(v => v._id);
+    if (company) {
+      // If company filter is provided, first find vehicles in that company
+      const vehiclesInCompany = await Vehicle.find(vehicleQuery).select('_id');
+      const vehicleIds = vehiclesInCompany.map(v => v._id);
       
       // Add vehicle filter to query
       query.vehicle = { $in: vehicleIds };
       
       documents = await VehicleDocument.find(query)
-        .populate('vehicle', 'plateNumber make model year terminals')
+        .populate('vehicle', 'plateNumber make model year company')
         .populate('createdBy', 'firstName lastName')
         .populate('updatedBy', 'firstName lastName')
         .sort(sort)
@@ -100,7 +100,7 @@ router.get('/', protect, async (req, res) => {
         .limit(parseInt(limit));
     } else {
       documents = await VehicleDocument.find(query)
-        .populate('vehicle', 'plateNumber make model year terminals')
+        .populate('vehicle', 'plateNumber make model year company')
         .populate('createdBy', 'firstName lastName')
         .populate('updatedBy', 'firstName lastName')
         .sort(sort)
@@ -137,7 +137,7 @@ router.get('/vehicle/:vehicleId', protect, async (req, res) => {
     if (status && status !== 'all') query.status = status;
 
     const documents = await VehicleDocument.find(query)
-      .populate('vehicle', 'plateNumber make model year terminals')
+      .populate('vehicle', 'plateNumber make model year company')
       .populate('createdBy', 'firstName lastName')
       .sort({ expiryDate: 1 });
 
@@ -155,7 +155,7 @@ router.get('/vehicle/:vehicleId', protect, async (req, res) => {
 router.get('/:id', protect, async (req, res) => {
   try {
     const document = await VehicleDocument.findById(req.params.id)
-      .populate('vehicle', 'plateNumber make model year terminals')
+      .populate('vehicle', 'plateNumber make model year company')
       .populate('createdBy', 'firstName lastName')
       .populate('updatedBy', 'firstName lastName');
 
@@ -214,7 +214,7 @@ router.post('/', protect, [
     await document.save();
 
     // Populate references
-    await document.populate('vehicle', 'plateNumber make model year terminals');
+    await document.populate('vehicle', 'plateNumber make model year company');
     await document.populate('createdBy', 'firstName lastName');
 
     res.status(201).json({
@@ -267,7 +267,7 @@ router.put('/:id', protect, [
     await document.save();
 
     // Populate references
-    await document.populate('vehicle', 'plateNumber make model year terminals');
+    await document.populate('vehicle', 'plateNumber make model year company');
     await document.populate('createdBy', 'firstName lastName');
     await document.populate('updatedBy', 'firstName lastName');
 
@@ -315,7 +315,7 @@ router.get('/alerts/expiring', protect, async (req, res) => {
       expiryDate: { $gte: today, $lte: futureDate },
       isActive: true
     })
-    .populate('vehicle', 'plateNumber make model year terminals')
+    .populate('vehicle', 'plateNumber make model year company')
     .populate('createdBy', 'firstName lastName')
     .sort({ expiryDate: 1 });
 

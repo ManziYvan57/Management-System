@@ -212,7 +212,7 @@ const VehiclesTab = ({ activeTerminal }) => {
                   <th>Status</th>
                   <th>Fuel Type</th>
                   <th>Seating</th>
-                  <th>Terminal</th>
+                  <th>Company</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -226,10 +226,14 @@ const VehiclesTab = ({ activeTerminal }) => {
                     <td><span className={`fuel-badge ${getFuelTypeBadgeClass(vehicle.fuelType)}`}>{vehicle.fuelType}</span></td>
                     <td>{vehicle.seatingCapacity} seats</td>
                     <td>
-                      <div className="terminals-container">
-                        {vehicle.terminals?.map((terminal, index) => (
-                          <span key={index} className="terminal-badge">{terminal}</span>
-                        )) || <span className="terminal-badge">N/A</span>}
+                      <div className="company-container">
+                        {vehicle.company && vehicle.company.length > 0 ? (
+                          vehicle.company.map((company, index) => (
+                            <span key={index} className="company-badge">{company}</span>
+                          ))
+                        ) : (
+                          <span className="company-badge">N/A</span>
+                        )}
                       </div>
                     </td>
                     <td>

@@ -44,7 +44,7 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
                 status: status,
                 complianceStatus: compliance,
                 expiryStatus: expiry,
-                terminal: activeTerminal
+                company: activeTerminal
             };
 
             // Clean up undefined/null parameters
@@ -78,9 +78,9 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
         try {
             const response = await vehiclesAPI.getAll({
                 limit: 1000,
-                terminal: activeTerminal // Filter vehicles by active terminal
+                company: activeTerminal // Filter vehicles by active company
             });
-            console.log('Fetched vehicles for terminal', activeTerminal, ':', response.data?.length || 0, 'vehicles');
+            console.log('Fetched vehicles for company', activeTerminal, ':', response.data?.length || 0, 'vehicles');
             setVehicles(response.data || []);
         } catch (err) {
             console.error('Error fetching vehicles:', err);
@@ -171,7 +171,7 @@ const VehicleDocumentsTab = ({ activeTerminal }) => {
                 status: statusFilter,
                 complianceStatus: complianceFilter,
                 expiryStatus: expiryStatusFilter,
-                terminal: activeTerminal
+                company: activeTerminal
             };
 
             Object.keys(params).forEach(key => {
