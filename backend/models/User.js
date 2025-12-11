@@ -210,6 +210,7 @@ UserSchema.methods.resetLoginAttempts = function() {
         users: { view: true, create: false, edit: false, delete: false }
       },
       managers: {
+        reports: { view: true },
         assets: { view: true, create: false, edit: false, delete: false },
         users: { view: false, create: false, edit: false, delete: false }
       }

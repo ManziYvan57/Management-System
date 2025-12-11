@@ -42,7 +42,7 @@ const Sidebar = ({ user }) => {
         <h3>Jali Transport</h3>
         {user && (
           <div className="user-info">
-            <small>{user.terminal?.toUpperCase()}</small>
+            <small>{user.company?.toUpperCase() || user.terminal?.toUpperCase()}</small>
             <small>{user.role?.replace('_', ' ').toUpperCase()}</small>
           </div>
         )}

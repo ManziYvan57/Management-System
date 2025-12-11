@@ -134,14 +134,16 @@ const Users = () => {
     e.preventDefault();
     try {
       const payload = { ...newUser };
-      if (!payload.companyId) {
-        const selected = companies.find(t => t.name === payload.company);
-        if (selected) payload.companyId = selected._id;
+      // Ensure company name is set correctly
+      if (payload.companyId) {
+        const selected = companies.find(t => t._id === payload.companyId);
+        if (selected) payload.company = selected.name;
       }
-      // Remove empty email field (send undefined instead of empty string)
+      // Remove empty email field and companyId (not needed in API)
       if (!payload.email || payload.email.trim() === '') {
         delete payload.email;
       }
+      delete payload.companyId;
       const response = await usersAPI.create(payload);
       if (response.success) {
         // Show the auto-generated password to the admin
@@ -206,17 +208,17 @@ const Users = () => {
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     try {
-      // Ensure we send companyId too
       const payload = { ...editingUser };
-      const selected = companies.find(c => c.name === payload.company || String(c._id) === String(payload.companyId));
-      if (selected) {
-        payload.company = selected.name;
-        payload.companyId = selected._id;
+      // Ensure company name is set correctly
+      if (payload.companyId) {
+        const selected = companies.find(c => String(c._id) === String(payload.companyId));
+        if (selected) payload.company = selected.name;
       }
-      // Remove empty email field (send undefined instead of empty string)
+      // Remove empty email field and companyId (not needed in API)
       if (!payload.email || payload.email.trim() === '') {
         delete payload.email;
       }
+      delete payload.companyId;
       const response = await usersAPI.update(editingUser._id, payload);
       if (response.success) {
         alert('User updated successfully!');

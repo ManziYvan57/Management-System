@@ -44,7 +44,7 @@ const VehiclesTab = ({ activeTerminal }) => {
         search: searchTerm,
         status: statusFilter,
         fuelType: fuelTypeFilter,
-        terminal: activeTerminal
+        company: activeTerminal
       };
       const response = await vehiclesAPI.getAll(params);
       setVehicles(response.data || []);

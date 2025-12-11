@@ -205,14 +205,29 @@ const VehicleForm = ({ isOpen, onClose, onSubmit, mode = 'add', vehicle = null, 
 
             <div className="form-group">
               <label htmlFor="company">Company *</label>
-              <input
-                type="text"
+              <select
                 id="company"
                 name="company"
-                value="Kigali"
-                disabled
-              />
-              <small className="form-hint">System is configured for Kigali company only</small>
+                value={formData.company[0] || 'Kigali'}
+                onChange={(e) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    company: [e.target.value]
+                  }));
+                }}
+                disabled={mode === 'view'}
+                className={errors.company ? 'error' : ''}
+              >
+                <option value="">Select a company</option>
+                <option value="Kigali">Kigali</option>
+                <option value="Musanze">Musanze</option>
+                <option value="Nyabugogo">Nyabugogo</option>
+                <option value="Muhanga">Muhanga</option>
+                <option value="Rusizi">Rusizi</option>
+                <option value="Rubavu">Rubavu</option>
+                <option value="Huye">Huye</option>
+              </select>
+              {errors.company && <span className="error-message">{errors.company}</span>}
             </div>
           </div>
 

@@ -30,7 +30,7 @@ const createDefaultUsers = async () => {
       {
         username: 'admin',
         email: 'admin@jalitransport.com',
-        password: 'TempPass123!',
+        password: 'admin123',
         firstName: 'System',
         lastName: 'Administrator',
         role: 'super_admin',
