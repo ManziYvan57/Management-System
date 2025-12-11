@@ -41,7 +41,7 @@ const Dashboard = () => {
         setLoading(true);
         setError(null);
         
-        const vehiclesRes = await vehiclesAPI.getStats({ terminal: activeTerminal });
+        const vehiclesRes = await vehiclesAPI.getStats({ company: activeTerminal });
         
         setDashboardData({
           totalVehicles: vehiclesRes.data?.totalVehicles || 0,

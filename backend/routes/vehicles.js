@@ -311,14 +311,14 @@ router.delete('/:id', protect, authorize('vehicles', 'delete'), async (req, res)
 // @access  Private
 router.get('/stats/overview', protect, async (req, res) => {
   try {
-    const { terminal } = req.query;
+    const { company } = req.query;
     
-    // Build query based on user role and terminal
+    // Build query based on user role and company
     let query = { isActive: true };
     
-    // Filter by terminal - check if terminal is in terminals array
-    if (terminal) {
-      query.terminals = { $in: [terminal] };
+    // Filter by company - check if company is in company array
+    if (company) {
+      query.company = { $in: [company] };
     }
     
     const [

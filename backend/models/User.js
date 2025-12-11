@@ -79,6 +79,9 @@ const UserSchema = new mongoose.Schema({
     type: Date
   },
   permissions: {
+    reports: {
+      view: { type: Boolean, default: false }
+    },
     assets: {
       view: { type: Boolean, default: true },
       create: { type: Boolean, default: false },
